@@ -1,0 +1,23 @@
+.moodle-actionmenu.custom-menu {
+  width: 100% !important;
+  float: unset !important;
+
+  .dropdown-item {
+    width: auto;
+    cursor: pointer;
+
+    img {
+      margin-right: 5px;
+    }
+
+    .tabindex {
+      &:focus {
+        outline: .2rem solid transparent;
+        color: #212529;
+        background-color: #d7ebfc;
+        -webkit-box-shadow: 0 -0.2rem #d7ebfc, 0 0.2rem #343a40;
+        box-shadow: 0 -0.2rem #d7ebfc, 0 0.2rem #343a40;
+      }
+    }
+  }
+}

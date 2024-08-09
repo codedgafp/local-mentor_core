@@ -1,0 +1,157 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_mentor_core/sheet/session-sheet
+
+    This template renders a list of sessions.
+
+    Example context (json):
+    {
+        "sessions": [{
+                "id" : 1,
+                "fullname" : "Session 1",
+                "courseurl" : "http://mentor.gouv.fr/course/view.php?id=xxx",
+                "isinprogress" : true,
+                "isopenedregistration" : true,
+                "isarchived" : false,
+                "completed" : false
+                "isreported" : false,
+                "iscanceled" : false,
+                "isenrol" : true,
+                "placesnotlimited" : false,
+                "placesavailable" : 5,
+                "placesavailablemoreone" : 6,
+                "sessionstartdate" : "18/03/22",
+                "sessionenddate" : "30/03/22",
+                "sessiononedaydate" : false
+            }
+        ]
+    }
+}}
+
+
+{{#sessions}}
+    <div id="session-sheet-{{id}}" class="mentor-sheet session-sheet sidenav closed">
+        <div class="header">
+            <div class="row">
+                <p class="left close-sheet close-session-sheet">
+                    <button aria-label="{{# str }} close, local_mentor_core {{/str}} {{fullname}}">{{# pix }} return, local_mentor_core{{/ pix }}</button>
+                    {{#fullname}}
+                        {{fullname}}
+                    {{/fullname}}
+                    {{^fullname}}
+                        {{name}}
+                    {{/fullname}}
+                </p>
+                {{#isinprogress}}
+                    <div class="right in-progress">
+                        <div class="circle-in-progress"></div> {{# str }} inprogress, local_mentor_core {{/str}}
+                    </div>
+                {{/isinprogress}}
+                {{^isinprogress}}
+                    {{# isopenedregistration }}
+                        <div class="right opened-registration">
+                            <div class="circle-opened-registration"></div> {{# str }} openedregistration, local_mentor_core {{/str}}
+                        </div>
+                    {{/isopenedregistration}}
+                    {{^ isopenedregistration }}
+                        <div class="right finished">
+                            {{# isarchived }}
+                                {{# str }} archived, local_mentor_core {{/str}}
+                            {{/ isarchived }}
+                            {{# completed }}
+                                {{# str }} finished, local_mentor_core {{/str}}
+                            {{/ completed }}
+                            {{# isreported }}
+                                {{# str }} reported, local_mentor_core {{/str}}
+                            {{/ isreported }}
+                            {{# iscanceled }}
+                                {{# str }} cancelled, local_mentor_core {{/str}}
+                            {{/ iscanceled }}
+                        </div>
+                    {{/isopenedregistration}}
+                {{/isinprogress}}
+            </div>
+            <div class="row">
+                <div class="left">
+                    {{#isenrol}}
+                        <p>{{# str }} alreadyregistered, local_mentor_core {{/str}}</p>
+                    {{/isenrol}}
+                    {{^isenrol}}
+                        {{^placesnotlimited}}
+                            {{#placesavailable}}
+                                <p>
+                                    {{#placesavailablemoreone}}
+                                        {{# str }} placesavailable, local_mentor_core, <span class="important-value">{{placesavailable}}</span> {{/str}}
+                                    {{/placesavailablemoreone}}
+                                    {{^placesavailablemoreone}}
+                                        {{# str }} placeavailable, local_mentor_core, <span class="important-value">{{placesavailable}}</span> {{/str}}
+                                    {{/placesavailablemoreone}}
+                                </p>
+                            {{/placesavailable}}
+                        {{/placesnotlimited}}
+                    {{/isenrol}}
+                </div>
+                <div class="right modality">
+                    <p>
+                        {{#sessionenddate}}
+                            {{#sessiononedaydate}}
+                                {{# str }} ondate, local_mentor_core, {{sessionstartdate}} {{/str}}
+                            {{/sessiononedaydate}}
+                            {{^sessiononedaydate}}
+                                {{# str }} fromto, local_mentor_core, { "from": "{{sessionstartdate}}", "to": "{{sessionenddate}}" } {{/str}}
+                            {{/sessiononedaydate}}
+                        {{/sessionenddate}}
+                        {{^sessionenddate}}
+                            {{# sessionstartdate}}
+                                {{# str }} fromdate, local_mentor_core, {{sessionstartdate}} {{/str}}
+                            {{/sessionstartdate}}
+                        {{/sessionenddate}}
+                    </p>
+                    {{#isenrol}}
+                        <a class="session-link" href="{{{ courseurl }}}">{{# str }} access, local_mentor_core {{/str}}</a>
+                    {{/isenrol}}
+                    {{^isenrol}}
+                        <button class="btn btn-primary registration
+                                    {{#placesnotlimited}}
+                                            enrolment-button
+                                        {{/placesnotlimited}}
+                            {{^placesnotlimited}}
+                                {{#placesavailable}}
+                                            enrolment-button
+                                        {{/placesavailable}}
+                            {{/placesnotlimited}}"
+                                data-sessionid="{{id}}"
+                            {{^placesnotlimited}}
+                                {{^placesavailable}}
+                                disabled
+                                {{/placesavailable}}
+                            {{/placesnotlimited}}
+                        >
+                            {{#placesavailable}}
+                                {{# str }} registration, local_mentor_core {{/str}}
+                            {{/placesavailable}}
+                            {{^placesavailable}}
+                                {{# str }} complete, local_mentor_core {{/str}}
+                            {{/placesavailable}}
+                        </button>
+                    {{/isenrol}}
+                </div>
+            </div>
+        </div>
+    </div>
+{{/sessions}}

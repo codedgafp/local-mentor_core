@@ -1,0 +1,132 @@
+@import "session-sheet";
+@import "training-sheet";
+
+.session-sheet, .training-sheet {
+  &.sidenav {
+    border-top: 6px solid rgb(7, 98, 200);
+    height: 100%;
+    width: 0;
+    max-width: 1280px;
+    position: fixed;
+    z-index: 10000;
+    top: 0;
+    background-color: #FFFFFF;
+    overflow-x: hidden;
+    right: 0;
+    transition: 0.5s;
+  }
+
+  .copy-link {
+    cursor: pointer;
+    color: #000091;
+    text-decoration: none;
+    background-color: transparent;
+    border: none;
+
+    &:hover {
+      text-decoration: underline;
+      color: inherit;
+    }
+
+    &:focus {
+      outline: none;
+      border: none;
+    }
+  }
+
+  .btn-primary:disabled {
+    color: #6a6a6a !important;
+    opacity: 1 !important;
+    background-color: rgba(16, 16, 16, 0.3) !important;
+  }
+
+  .close-sheet {
+    font-size: 24px;
+    font-weight: bold;
+    color: #000091;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #000091;
+      display: inline;
+    }
+
+    button {
+      border: none;
+      background: none;
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  &.mentor-sheet {
+    &.opened {
+      display: block;
+      width: 66%;
+
+      @media (max-width: 1366px) {
+        width: 73%;
+      }
+
+      @media (max-width: 667px) {
+        width: 100%;
+      }
+    }
+
+    &.closed {
+      display: none;
+      width: 0;
+    }
+  }
+}
+
+#page-local-catalog-index, #page-my-index {
+  .confirm-dialog {
+    z-index: 10001;
+
+    @media (max-width: 667px) {
+      max-width: 98%;
+    }
+
+    #enrolment-popup-message {
+      min-height: 210px !important;
+      max-height: 75vh !important;
+      height: auto !important;
+    }
+
+    #enrolment-popup-message,
+    #enrolment-popup,
+    #enrolment-popup-with-key {
+
+      #enrolmentkey-container {
+        text-align: center;
+        margin-top: 50px;
+      }
+
+      .enrolment-warning {
+        color: red;
+        font-size: 0.9em;
+        position: absolute;
+        text-align: center;
+        bottom: 0;
+        left: 0;
+        right: 0;
+      }
+    }
+
+    #enrolment-popup-message,
+    #enrolment-popup {
+      display: flex;
+      justify-content: center;
+    }
+
+    #enrolment-popup {
+      align-items: center;
+    }
+  }
+}

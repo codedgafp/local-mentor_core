@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/mentor_core/db" VERSION="20150717" COMMENT="XMLDB file for Moodle trainings local"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+    <TABLES>
+        <TABLE NAME="training" COMMENT="">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Identifiant unique"/>
+                <FIELD NAME="courseshortname" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Id of course"/>
+                <FIELD NAME="status" TYPE="char" LENGTH="45" NOTNULL="false" SEQUENCE="false" COMMENT="Statut"/>
+                <FIELD NAME="thumbnail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Thumbnail of training"/>
+                <FIELD NAME="traininggoal" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Goal of training"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT=""/>
+                <KEY NAME="fk_trainings_course" TYPE="foreign" FIELDS="courseshortname" REFTABLE="course" REFFIELDS="shortname" COMMENT=""/>
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="session" COMMENT="">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Identifiant unique"/>
+                <FIELD NAME="courseshortname" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Id of course"/>
+                <FIELD NAME="status" TYPE="char" LENGTH="45" NOTNULL="true" SEQUENCE="false" COMMENT="Statut"/>
+                <FIELD NAME="trainingid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Id of training"/>
+                <FIELD NAME="opento" TYPE="char" LENGTH="455" NOTNULL="false" SEQUENCE="false" COMMENT="Open to other entities"/>
+                <FIELD NAME="sessionstartdate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Session start date"/>
+                <FIELD NAME="sessionenddate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Session end date"/>
+                <FIELD NAME="maxparticipants" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Max number of participants"/>
+
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT=""/>
+                <KEY NAME="fk_session_course" TYPE="foreign" FIELDS="courseshortname" REFTABLE="course" REFFIELDS="shortname" COMMENT=""/>
+                <KEY NAME="fk_session_training" TYPE="foreign" FIELDS="trainingid" REFTABLE="training" REFFIELDS="id" COMMENT=""/>
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="session_sharing" COMMENT="">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT=""/>
+                <FIELD NAME="sessionid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="session id"/>
+                <FIELD NAME="coursecategoryid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="course category id"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT=""/>
+                <KEY NAME="fk_mdl_session" TYPE="foreign" FIELDS="sessionid" REFTABLE="session" REFFIELDS="id" COMMENT=""/>
+                <KEY NAME="fk_mdl_courscategories" TYPE="foreign" FIELDS="coursecategoryid" REFTABLE="course_categories" REFFIELDS="id" COMMENT=""/>
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="user_completion" COMMENT="">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT=""/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="completion" TYPE="int" LENGTH="3" NOTNULL="false" SEQUENCE="false"
+                       COMMENT="The user completion percentage calculated for a course "/>
+                <FIELD NAME="lastupdate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT=""/>
+                <KEY NAME="fk_mdl_user" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id" COMMENT=""/>
+                <KEY NAME="fk_mdl_course" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id" COMMENT=""/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="user-course" UNIQUE="true" FIELDS="userid, courseid"/>
+                <INDEX NAME="user-course-completion" UNIQUE="false" FIELDS="userid, courseid, completion"/>
+            </INDEXES>
+        </TABLE>
+    </TABLES>
+</XMLDB>

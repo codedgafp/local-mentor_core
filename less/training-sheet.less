@@ -1,0 +1,242 @@
+@responsive-size: 800px;
+@training-sheet-padding: 30px;
+
+.training-sheet {
+  @media (max-width: 667px) {
+    font-size: 14px;
+  }
+
+  .training-sheet-bold {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1e1e1e;
+  }
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    padding: @training-sheet-padding;
+    background-color: #f2f2f9;
+    margin-bottom: 30px;
+
+    @media (max-width: 667px) {
+      padding: 20px 20px 10px;
+    }
+
+    .close-training-sheet {
+      @media (max-width: @responsive-size) {
+        padding-bottom: 10px;
+      }
+
+      button {
+        border: none;
+        background: none;
+        padding: 0;
+        margin: 0;
+      }
+    }
+
+    .teaser {
+      margin-left: auto;
+
+      .mentor-video {
+        width: 229px;
+      }
+
+      @media (max-width: 768px) {
+        margin-left: 0;
+      }
+
+      .picture {
+        width: 260px;
+        height: 100px;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        float: right;
+
+        @media (max-width: 768px) {
+          float: left;
+        }
+      }
+    }
+
+    .entity {
+      padding-top: 15px;
+
+      div {
+        float: right;
+        text-align: right;
+
+        @media (max-width: 768px) {
+          float: left;
+          text-align: left;
+        }
+      }
+    }
+
+    &.information {
+      margin-top: 11px;
+      margin-bottom: 24px;
+    }
+  }
+
+  .list-sessions {
+    margin-bottom: 30px !important;
+
+    .sessions-message {
+      margin-bottom: 42px;
+    }
+
+    .sessions-tile {
+      margin: 0 auto;
+
+      .session-tile {
+        height: 222px;
+        padding: 15px 16px 22px 16px;
+        border: solid 1.6px #e7e7e7;
+        background-color: #fff;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 30px;
+        text-align: left;
+
+        &:hover {
+          cursor: pointer;
+        }
+
+        &:focus {
+          outline: none;
+          background-color: #f8f8f8;
+        }
+
+        &.in-progress {
+          border-bottom: solid 4px #008941;
+        }
+
+        &.in-preparation {
+          border-bottom: solid 4px #000091;
+        }
+
+        .placesavailable {
+          height: 30px;
+        }
+
+        .detail {
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: baseline;
+          font-weight: bold;
+          text-align: left;
+          margin-top: 10px;
+
+          .status {
+            color: #000091;
+            text-transform: uppercase;
+            font-size: 14px;
+
+            @media (max-width: 1366px) {
+              font-size: 12px;
+            }
+          }
+        }
+
+        .complete {
+          color: #9c9c9c;
+        }
+
+        .name {
+          font-weight: 700;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+          text-align: left;
+          height: 48px;
+        }
+      }
+    }
+  }
+
+  .card {
+    margin: @training-sheet-padding;
+    margin-bottom: 0;
+    margin-top: 0;
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-top: 12px;
+    font-size: 16px;
+
+    @media (max-width: 667px) {
+      font-size: 11px;
+    }
+
+    .card-header {
+      padding: 0;
+      border: 0;
+      background-color: #fff;
+
+      .target-header {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 0 4px 0;
+        color: inherit;
+
+        .target-header-title {
+          @media (max-width: 667px) {
+            font-size: 14px;
+          }
+        }
+
+        &:hover {
+          text-decoration: none;
+        }
+
+        .target-header-right {
+          display: flex;
+          flex-direction: row;
+
+          .accordion-opening {
+            margin-left: .5rem;
+            margin-right: 8px;
+            background-repeat: no-repeat;
+            width: 16px;
+            height: 16px;
+            border: none;
+            background-color: transparent;
+            background-image: url("[[pix:local_mentor_core|close]]");
+
+            &.open {
+              background-image: url("[[pix:local_mentor_core|open]]");
+            }
+
+            &:focus {
+              outline: solid 2px #0a76f6;
+            }
+          }
+        }
+      }
+    }
+
+    .card-body {
+      padding: 9px 0 0 0;
+      max-width: 800px;
+      text-align: justify;
+      margin-bottom: 30px;
+
+      .sub-title {
+        padding-bottom: 6px;
+        margin-bottom: 16px;
+        font-weight: normal;
+        font-size: 1em;
+      }
+
+      &.card-body-tile {
+        max-width: none !important;
+      }
+    }
+  }
+}

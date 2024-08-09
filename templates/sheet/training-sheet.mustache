@@ -1,0 +1,146 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_mentor_core/sheet/training-sheet
+
+    This template renders a list of trainings.
+
+    Example context (json):
+    {
+        "trainings": [{
+                "id" : 1,
+                "name" : "training 1",
+                "entityname" : "Entity",
+                "producingorganization" : "DGAFP",
+                "traininggoal" : "",
+                "content" : "Content",
+                "sessions" : [
+                    "id" : 1
+                    "fullname" : "Session 1",
+                    "courseurl" : "http://mentor.gouv.fr/course/view.php?id=xxx",
+                    "isinprogress" : true,
+                    "sessionpermanent" : true,
+                    "isenrol" : true,
+                    "placesnotlimited" : false,
+                    "placesavailable" : 5,
+                    "placesavailablemoreone" : 6,
+                    "sessionstartdate" : "18/03/22",
+                    "sessionenddate" : "30/03/22",
+                    "sessiononedaydate" : false
+                ]
+            }
+        ]
+    }
+}}
+
+{{#trainings}}
+    <div id="training-sheet-{{id}}" class="mentor-sheet training-sheet sidenav closed">
+        <div class="header">
+            <div class="row">
+                <div class="col-lg-6 col-sm-12 close-sheet close-training-sheet">
+                    <button aria-label="{{# str }} close, local_mentor_core {{/str}} {{name}}">{{# pix }} return, local_mentor_core {{/ pix }}</button>
+                    <h1>{{name}}</h1>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    {{# str }} suggestedby, local_mentor_core, <span class="training-sheet-bold">{{entityname}}</span> {{/str}}
+                </div>
+            </div>
+            <div class="organization row">
+                <div>
+                    <div class="logo">
+                        <div class="picture" style="background-image: url('{{producingorganizationlogo}}')"
+                             aria-label="{{# str }} logoof, local_mentor_core, {{name}} {{/str}}"></div>
+                    </div>
+                </div>
+                <div class="contact">
+                    {{#producingorganization}}
+                        <p class="training-sheet-bold">
+                            {{producingorganization}}
+                        </p>
+                    {{/producingorganization}}
+                </div>
+                <div class="teaser">
+                    <div class="picture" style="background-image: url('{{thumbnail}}')"></div>
+                </div>
+            </div>
+        </div>
+        <div id="training-goal-{{id}}" class="card">
+            <div class="card-header" id="heading-traininggoal-{{id}}">
+                <button class="btn btn-link collapsed target-header" data-toggle="collapse" data-target="#collapse-traininggoal-{{id}}" aria-expanded="false"
+                        aria-controls="collapse-traininggoal-{{id}}">
+                    <h2 class="target-header-title">
+                        {{# str }} objectivesandcontent, local_mentor_core {{/str}}
+                    </h2>
+                    <div class="target-header-right">
+                        <button class="accordion-opening"></button>
+                    </div>
+                </button>
+            </div>
+            <div id="collapse-traininggoal-{{id}}" class="collapse" aria-labelledby="heading-traininggoal-{{id}}" data-parent="#training-goal-{{id}}">
+                <div class="card-body">
+                    {{#traininggoal}}
+                        <div>
+                            <h3 class="sub-title">
+                                {{# str }} objectives, local_mentor_core {{/str}}
+                            </h3>
+                            <p>
+                                {{{traininggoal}}}
+                            </p>
+                        </div>
+                    {{/traininggoal}}
+                    {{#content}}
+                        <div>
+                            <h3 class="sub-title">
+                                {{# str }} content, local_mentor_core {{/str}}
+                            </h3>
+                            <p>
+                                {{{content}}}
+                            </p>
+                        </div>
+                    {{/content}}
+                </div>
+            </div>
+        </div>
+        <div id="list-sessions-{{id}}" class="list-sessions card">
+            <div class="card-header opened" id="heading-list-sessions-{{id}}">
+                <button class="btn btn-link target-header" data-toggle="collapse" data-target="#collapse-list-sessions-{{id}}" aria-expanded="true"
+                        aria-controls="collapse-list-sessions-{{id}}">
+                    <h2 class="target-header-title">
+                        {{# str }} sessionsoffered, local_mentor_core {{/str}}
+                    </h2>
+                    <div class="target-header-right">
+                        <button class="accordion-opening open"></button>
+                    </div>
+                </button>
+            </div>
+            <div id="collapse-list-sessions-{{id}}" class="collapse show" aria-labelledby="heading-list-sessions-{{id}}" data-parent="#list-sessions-{{id}}">
+                <div class="card-body card-body-tile">
+                    <div class="sessions-message">
+                        {{# str }} sessionlisting, local_mentor_core {{/str}}
+                    </div>
+                    <div class="sessions-tile row">
+                        {{#sessions}}
+                            {{> local_mentor_core/sheet/session-tile }}
+                        {{/sessions}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{{/trainings}}

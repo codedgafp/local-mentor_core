@@ -1,0 +1,104 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_mentor_core/sheet/session-tile
+
+    This template renders a session tile.
+
+    Example context (json):
+    {
+        "id" : 1,
+        "fullname" : "Session 1",
+        "courseurl" : "http://mentor.gouv.fr/course/view.php?id=xxx",
+        "isinprogress" : true,
+        "sessionpermanent" : true,
+        "isenrol" : true,
+        "placesnotlimited" : false,
+        "placesavailable" : 5,
+        "placesavailablemoreone" : 6,
+        "sessionstartdate" : "18/03/22",
+        "sessionenddate" : "30/03/22",
+        "sessiononedaydate" : false
+    }
+}}
+
+
+<div class="col-md-12 col-lg-6 col-xl-4">
+    <button class="session-tile {{#isinprogress}}in-progress{{/isinprogress}}{{^isinprogress}}in-preparation{{/isinprogress}}" data-session-id="{{id}}">
+        <p class="name">
+            {{fullname}}
+        </p>
+        <p>
+            {{#sessionpermanent}}
+                {{# str }} permanentaccess, local_mentor_core {{/str}}
+            {{/sessionpermanent}}
+            {{^sessionpermanent}}
+                {{#sessionenddate}}
+                    {{#sessiononedaydate}}
+                        {{# str }} ondate, local_mentor_core, {{sessionstartdate}} {{/str}}
+                    {{/sessiononedaydate}}
+                    {{^sessiononedaydate}}
+                        {{# str }} fromto, local_mentor_core, { "from": "{{sessionstartdate}}", "to": "{{sessionenddate}}" } {{/str}}
+                    {{/sessiononedaydate}}
+                {{/sessionenddate}}
+                {{^sessionenddate}}
+                    {{# str }} fromdate, local_mentor_core, {{sessionstartdate}} {{/str}}
+                {{/sessionenddate}}
+            {{/sessionpermanent}}
+        </p>
+        <div class="placesavailable">
+            <p>
+                {{#isenrol}}
+                    {{# str }} alreadyregistered, local_mentor_core {{/str}}
+                {{/isenrol}}
+                {{^isenrol}}
+                    {{^placesnotlimited}}
+                        {{#placesavailable}}
+                            {{#placesavailablemoreone}}
+                                {{# str }} placesavailable, local_mentor_core, {{placesavailable}}{{/str}}
+                            {{/placesavailablemoreone}}
+                            {{^placesavailablemoreone}}
+                                {{# str }} placeavailable, local_mentor_core, {{placesavailable}}{{/str}}
+                            {{/placesavailablemoreone}}
+                        {{/placesavailable}}
+                        {{^placesavailable}}
+                            <span class="complete">
+                                {{# str }} placeavailable, local_mentor_core, 0{{/str}}
+                            </span>
+                        {{/placesavailable}}
+                    {{/placesnotlimited}}
+                {{/isenrol}}
+            </p>
+        </div>
+        <div class="detail">
+            <p class="modalities">{{sessionmodalities}}</p>
+            <p class="status">
+                {{#placesnotlimited}}
+                    {{# str }} moredetails, local_mentor_core {{/str}} ->
+                {{/placesnotlimited}}
+                {{^placesnotlimited}}
+                    {{#placesavailable}}
+                        {{# str }} moredetails, local_mentor_core {{/str}} ->
+                    {{/placesavailable}}
+                    {{^placesavailable}}
+                        {{# str }} complete, local_mentor_core {{/str}} ->
+                    {{/placesavailable}}
+                {{/placesnotlimited}}
+            </p>
+        </div>
+    </button>
+</div>

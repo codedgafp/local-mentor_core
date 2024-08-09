@@ -1,0 +1,42 @@
+<div class="action-menu moodle-actionmenu d-inline custom-menu" id="action-menu-{{ id }}" data-enhance="moodle-core-actionmenu">
+    <div class="menubar d-flex justify-content-center" id="action-menu-{{ id }}-menubar" role="menubar">
+        <div class="action-menu-trigger">
+            <div class="dropdown">
+                <a href="#" tabindex="0" class="d-inline-block  dropdown-toggle icon-no-margin" id="action-menu-toggle-{{ id }}" aria-label="Actions menu" data-toggle="dropdown"
+                   role="button" aria-haspopup="true" aria-expanded="false" aria-controls="action-menu-{{ id }}-menu">
+                    <i class="icon fa fa-cog fa-fw " title="{{# str }} actionmenu, local_mentor_core {{/str}}" aria-label="{{# str }} actionmenu, local_mentor_core {{/str}}"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right menu align-tr-br" id="action-menu-{{ id }}-menu" data-rel="menu-content" aria-labelledby="action-menu-toggle-{{ id }}"
+                     role="menu"
+                     data-align="tr-br">
+                    {{# items }}
+                        <div
+                                class="dropdown-item {{# class }}{{ class }}{{/ class }}"
+                            {{# id }}
+                                id="{{ id }}"
+                            {{/ id }}
+                                role="menuitem">
+                            {{# href }}
+                                <a href="{{ href }}" {{# target }} target="{{ target }}" {{/ target }}>
+                                    {{{ text }}}
+                                </a>
+                            {{/ href }}
+                            {{^ href }}
+                                <div
+                                        class="tabindex"
+                                        tabindex="0"
+                                    {{# onclick }}
+                                        onclick="{{ onclick }}"
+                                        onkeyup="if(event.key === 'Enter') this.click();"
+                                    {{/onclick}}
+                                >
+                                    {{{ text }}}
+                                </div>
+                            {{/ href }}
+                        </div>
+                    {{/items}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

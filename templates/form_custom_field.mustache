@@ -1,0 +1,48 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_mentor_core/form_custom_field
+
+    This template a form custom field.
+
+    Example context (json):
+    {
+        "label" : "Field name"
+        "warning_text" : "Text to show in title"
+        "help_text" : "Text to show in pop-in"
+        "help_icon_title" : "Text to show in title"
+        "html" : "<div>HTML to display</div>"
+    }
+}}
+<div class="form-group row fitem">
+    <div class="col-md-3 col-form-label d-flex pr-md-0">
+        {{ label }}
+        {{#warning_text}}
+            <div class="text-warning" title="{{ warning_text }}">
+                <i class="icon fa fa-exclamation-circle text-warning fa-fw " title="{{ warning_text }}" aria-label="{{ warning_text }}"></i>
+            </div>
+        {{/warning_text}}
+        {{#help_text}}
+            <a class="btn btn-link p-0" role="button" data-container="body" data-toggle="popover"
+               data-placement="right" data-content="{{ help_text }}"
+               data-html="true" tabindex="0" data-trigger="focus">
+                <i class="icon fa fa-question-circle text-info fa-fw" title="{{ help_icon_title }}" aria-label="{{ help_icon_title }}"></i>
+            </a>
+        {{/help_text}}
+    </div>
+    {{{ html }}}
+</div>

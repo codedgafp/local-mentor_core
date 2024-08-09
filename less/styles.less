@@ -1,0 +1,117 @@
+@import "datatables.less";
+@import "importcvs.less";
+@import "blocks";
+@import "catalog";
+@import "recyclebin";
+@import "duplicatesession";
+@import "custommenu";
+@import "moremenu";
+
+.local_mentor_core_report {
+  margin-top: 45px;
+
+  .generaltable {
+    margin-bottom: 25px;
+  }
+
+  .report-title {
+    margin-top: 25px;
+  }
+}
+
+.mentor-pagination {
+  padding-top: 20px;
+  justify-content: center;
+  margin-top: 30px;
+  margin-bottom: 20px;
+  padding-left: 0px;
+  display: flex;
+
+  .page-item {
+    display: flex;
+    align-items: center;
+
+    .page-link {
+      border: none;
+      background: none;
+      background-color: transparent !important;
+
+      &:hover {
+        cursor: pointer;
+      }
+
+      &:not([data-page="previous"]):not([data-page="next"]) {
+        width: 32px;
+        height: 32px;
+        padding: 4px 11px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      &.selected-page {
+        border: 2px solid #000091;
+        background-color: #000091 !important;
+        color: #FFF;
+        border-radius: 16px;
+      }
+
+      &[data-page="previous"] {
+        &::before {
+          content: "<";
+          margin-right: 10px;
+        }
+      }
+
+      &[data-page="next"] {
+        &::after {
+          content: ">";
+          margin-left: 10px;
+        }
+      }
+
+      &[data-page="next"],
+      &[data-page="previous"] {
+        @media (max-width: 640px) {
+          font-size: 0;
+
+          &::after,
+          &::before {
+            font-size: 14px;
+          }
+        }
+      }
+
+    }
+  }
+}
+
+.certifying {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 28px;
+  width: 118px;
+  border-radius: 4px;
+  background-color: #fee7fc;
+  font-weight: 700;
+  font-size: 12px;
+  color: #6e445a;
+  text-transform: uppercase;
+
+  @media (max-width: 950px) {
+    float: unset;
+    clear: both;
+  }
+
+  .icon {
+    height: 19px;
+    padding: 1px 0 0;
+    margin-right: 5px;
+  }
+
+  p {
+    margin-top: unset;
+    margin-bottom: unset;
+  }
+}

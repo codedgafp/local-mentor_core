@@ -1,0 +1,50 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_mentor_core/new_entity_form
+
+    This template renders a entity creation form.
+
+    Example context (json):
+    {
+        "extrahtml" : "<div>extra HTML to display</div>"
+    }
+}}
+
+
+<div id="entities-form-template">
+    <form id="entities-form">
+        <div>
+            <label for="entities-form-name">{{# str }} spacename, local_mentor_core {{/ str }} * </label>
+            <input type="text" id="entities-form-name" name="name">
+        </div>
+
+        <div>
+            <label for="entities-form-shortname">{{# str }} entityshortname, local_entities {{/ str }}<br/>{{# str }} maxcaracters, local_mentor_specialization, 18 {{/ str }} *
+            </label>
+            <input type="text" id="entities-form-shortname" name="shortname">
+        </div>
+
+        <div>
+            <label for="entities-form-email-responsible">{{# str }} responsiblename, local_mentor_core {{/ str }}</label>
+            <select id="entities-form-email-responsible" name="userid" class="custom-select"></select>
+        </div>
+        {{{ extrahtml }}}
+    </form>
+    <p class="entities-form-warning entities-form-warning-none">{{# str }} requiredfields, local_mentor_core {{/ str }}</p>
+    <p class="entities-form-maxlength entities-form-warning-none">{{# str }} entitynamelimit, local_mentor_core, 200 {{/ str }}</p>
+</div>

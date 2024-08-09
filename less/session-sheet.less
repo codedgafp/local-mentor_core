@@ -1,0 +1,162 @@
+@responsive-size: 800px;
+@training-sheet-padding: 30px;
+
+.session-sheet {
+
+  .important-value {
+    font-size: 20px;
+    color: #000091;
+    font-weight: bold;
+  }
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    padding: @training-sheet-padding;
+
+    @media (max-width: @responsive-size) {
+      text-align: center;
+    }
+
+    @media (max-width: 667px) {
+      padding: 20px 10px 10px;
+    }
+
+    p {
+      margin-bottom: 0;
+    }
+
+    .row {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      padding-top: 8px;
+      margin-right: 0;
+      margin-left: 0;
+
+      @media (max-width: @responsive-size) {
+        flex-direction: column;
+      }
+
+      .left, .right {
+        max-width: 50%;
+
+        @media (max-width: @responsive-size) {
+          max-width: 100%;
+          text-align: left;
+        }
+
+        @media (max-width: 667px) {
+          text-align: left;
+        }
+
+        &.in-progress {
+          font-size: 14px;
+          color: #008941;
+          font-weight: bold;
+
+          @media (max-width: 768px) {
+            text-align: right;
+          }
+
+          .circle-in-progress {
+            height: 8px;
+            width: 8px;
+            background-color: #008941;
+            border-radius: 50%;
+            display: inline-block;
+          }
+        }
+
+        &.opened-registration {
+          font-size: 14px;
+          color: #000091;
+          font-weight: bold;
+
+          .circle-opened-registration {
+            height: 8px;
+            width: 8px;
+            background-color: #000091;
+            border-radius: 50%;
+            display: inline-block;
+          }
+        }
+
+        &.finished {
+          font-size: 14px;
+          color: #9c9c9c;
+          font-weight: bold;
+        }
+
+        &.modality {
+          text-align: right;
+          display: flex;
+          flex-direction: column;
+
+          @media (max-width: @responsive-size) {
+            text-align: left;
+          }
+
+          @media (max-width: 667px) {
+            text-align: left;
+          }
+
+          .modality-status {
+            font-size: 16px;
+          }
+
+          .session-link {
+            color: #fff;
+            background-color: #000091;
+            padding: 7px 16px 9px 15px;
+            border: none;
+            padding-bottom: 4px;
+            padding-top: 4px;
+            margin-left: auto;
+
+            @media (max-width: @responsive-size) {
+              margin-right: auto;
+            }
+
+            @media (max-width: 667px) {
+              margin-left: 0;
+              margin-top: 10px;
+            }
+
+            &:hover {
+              text-decoration: none;
+              background-color: #3d95f8 !important;
+            }
+          }
+
+          button {
+            padding-bottom: 4px;
+
+            &.registration {
+              padding-top: 4px;
+              margin-left: auto;
+
+              @media (max-width: @responsive-size) {
+                margin-left: 0;
+                margin-top: 10px;
+                margin-right: auto;
+              }
+
+              @media (max-width: 667px) {
+                margin-left: 0;
+                margin-top: 10px;
+              }
+            }
+          }
+        }
+      }
+
+      .left {
+        @media (max-width: 667px) {
+          margin-bottom: 10px;
+        }
+      }
+    }
+  }
+}
