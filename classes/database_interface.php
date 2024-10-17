@@ -1699,7 +1699,7 @@ class database_interface {
 
             $this->sessions[$sessionid] = $this->db->get_record_sql('
                 SELECT
-                    s.*, co.fullname, co.shortname, co.timecreated, co.id as courseid, con.id as contextid
+                    s.*, co.fullname, co.shortname, co.timecreated, co.id as courseid, con.id as contextid, s.timecreated as sessiontimecreated
                 FROM
                     {session} s
                 JOIN

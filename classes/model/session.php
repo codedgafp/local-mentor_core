@@ -504,6 +504,14 @@ class session extends model {
             $this->courseshortname = $data->shortname;
         }
 
+        // Update timecreated if status is STATUS_OPENED_REGISTRATION
+        if (isset($data->status) && $data->status == self::STATUS_OPENED_REGISTRATION) {
+            $this->timecreated = time();
+            if (!$this->dbinterface->update_session($this)) {
+                throw new \moodle_exception('sessionupdatefailed', 'local_mentor_core');
+            }
+        }
+
         // Update the session course with form data.
         if (isset($data->fullname)) {
 
