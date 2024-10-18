@@ -667,11 +667,12 @@ class session_api {
      *
      * @param int $userid
      * @param bool $refresh
+     * @param string $searchText
      * @return stdClass[]|stdClass
      * @throws dml_exception
      * @throws moodle_exception
      */
-    public static function get_user_sessions($userid, $refresh = false, $sortbystatus = true) {
+    public static function get_user_sessions($userid, $refresh = false, $sortbystatus = true, $searchText = null) {
         global $OUTPUT;
 
         if (!$refresh) {
@@ -688,7 +689,7 @@ class session_api {
         $db = database_interface::get_instance();
 
         // Get all user session courses.
-        $enrolcourses = $db->get_user_sessions($userid);
+        $enrolcourses = $db->get_user_sessions($userid,$searchText);
 
         // To save session template.
         $enrolsessions = [];
@@ -743,9 +744,9 @@ class session_api {
         ];
 
         $favoritebutton = [
-            'yes' => '<button type="button" class="fa fa-star fav" aria-hidden="true" title="' .
+            'yes' => '<button type="button" class="fa fa-star fav"   title="' .
                      get_string('removefavourite', 'block_mytrainings') . '"></button>',
-            'no' => '<button type="button" class="fa fa-star-o fav " aria-hidden="true" title="' .
+            'no' => '<button type="button" class="fa fa-star-o fav "  title="' .
                     get_string('addfavourite', 'block_mytrainings') . '"></button>',
         ];
 

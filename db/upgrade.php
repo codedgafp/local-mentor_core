@@ -144,5 +144,25 @@ function xmldb_local_mentor_core_upgrade($oldversion) {
         }
     }
 
+    
+    apply_upgrades_scripts($oldversion);
+
+    local_mentor_specialization_init_config();
+
     return true;
+}
+/**
+ * retrieves scripts from files in ./updates/<new_version_number>.php and applies them if they have never been.
+ *
+ * @param int $oldversion
+ */
+function apply_upgrades_scripts($oldversion)
+{
+    $upgrade_scripts = glob(__DIR__ . '/updates/*.php');
+    sort($upgrade_scripts);
+
+    foreach ($upgrade_scripts as $script) {
+        $version = (int) basename($script, '.php');
+        if ($oldversion < $version) include($script);
+    }
 }

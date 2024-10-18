@@ -26,6 +26,7 @@
 namespace local_mentor_core;
 
 use core\event\course_category_deleted;
+use \core_course_category;
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/local/mentor_core/classes/database_interface.php');
@@ -761,6 +762,48 @@ class entity_api {
         return $renderer->get_new_sub_entity_form($extrahtml);
     }
 
+    /**
+     * Get delete subentity form
+     *
+     * @return string html
+     */
+    public static function get_delete_subentity_form() {
+        global $PAGE;
+        $specialization = specialization::get_instance();
+
+        $extrahtml = '';
+        $extrahtml = $specialization->get_specialization('get_delete_subentity_form_fields', $extrahtml);
+        $renderer = $PAGE->get_renderer('local_mentor_core', 'delete_subentity');
+
+        return $renderer->get_delete_subentity_form($extrahtml);
+    }
+
+    /**
+     * Get delete subentity form
+     *
+     */
+    public static function get_deletable_subentities($entityid, $searchtext = ''){
+        global $USER;
+        
+        $db = database_interface::get_instance();
+        return array_values($db->search_deletable_subentities($USER->id, $entityid, $searchtext,is_siteadmin()));
+    }
+
+    /**
+     * Delete subentity
+     */
+    public static function delete_subentity($subentityid){
+        global $DB;
+        $category = core_course_category::get($subentityid);
+        try{
+            $deletedcourses = $category->delete_full(false);
+            if(is_array($deletedcourses)){
+                return get_string('deletesubentitysuccessmessage', 'local_entities');
+            }
+        }catch(\moodle_exception $e){
+            return $e->getMessage();
+        }
+    }
 
     /**
      * Get main entity form

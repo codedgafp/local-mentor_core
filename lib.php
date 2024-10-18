@@ -35,6 +35,7 @@ require_once($CFG->dirroot . '/local/mentor_core/api/session.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/profile.php');
 require_once($CFG->dirroot . '/lib/completionlib.php');
 require_once($CFG->dirroot . '/local/mentor_core/forms/importcsv_form.php');
+require_once($CFG->dirroot . '/local/mentor_core/classes/helper/form_checker.php');
 
 /**
  * Set a moodle config
@@ -489,15 +490,10 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
 
         // Check if user exists.
         if (false === $ignoreline && isset($columns[$emailkey], $preview['validforcreation'])) {
-
             $email = $columns[$emailkey];
-            $emailstrtolower = strtolower($email);
-            $users = $DB->get_records_sql("
-                    SELECT id, email, username, suspended FROM {user} WHERE email = :email OR email = :emailstrtolower
-                ", ['email' => $email, 'emailstrtolower' => $emailstrtolower]);
+            $users = get_users_by_email($email, '', 'id, email, username, suspended');
 
-            // RG-60-10-42 : Mail used as a username for one user and as an email address for another user.
-            if (count($users) >= 2) {
+            if (count($users) > 1) {
                 $errors['list'][] = [
                     $linenumber,
                     get_string(
@@ -535,20 +531,21 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                         $addtoentity = $other['addtoentity'];
 
                         if (isset($other) && isset($other['areexternals']) && $other['areexternals'] == 1) {
-                            // MEN-187-RG003
-                            if ($mainentity && $mainentity->id == $entityid) {
-                                $warnings['list'][] = [
-                                    $linenumber,
-                                    get_string('importuserupdateexternal', 'local_mentor_core', $email),
-                                ];
-                            } else {
+                            if ($mainentity && $mainentity->id !== $entityid) {
                                 // MEN-187-RG004
                                 $arguments = new stdClass();
                                 $arguments->email = $email;
                                 $arguments->espace = $mainentity->get_name();
+                                    $errors['list'][] = [
+                                        $linenumber,
+                                        get_string('importuserupdateexternal_already_main_entity', 'local_mentor_core', $arguments),
+                                    ];
+                                $ignoreline = true;
+                            } else {
+                                // MEN-187-RG003 / MEN-187-RG005 / MEN-187-RG006
                                 $warnings['list'][] = [
                                     $linenumber,
-                                    get_string('importuserupdateexternal_already_main_entity', 'local_mentor_core', $arguments),
+                                    get_string('importuserupdateexternal', 'local_mentor_core', $email),
                                 ];
                             }
                         } else {
@@ -750,11 +747,7 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
     foreach ($userstoreactivate as $usertoreactivate) {
 
         $email = $usertoreactivate['email'];
-        $emailstrtolower = strtolower($email);
-
-        $user = $DB->get_record_sql("
-            SELECT * FROM {user} WHERE (email = :email OR email = :emailstrtolower) AND suspended = 1
-        ", ['email' => $email, 'emailstrtolower' => $emailstrtolower]);
+        $user = get_suspended_user_by_email($email);
 
         // Check if user exists.
         if ($user === false) {
@@ -766,13 +759,10 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
     }
 
     foreach ($userslist as $index => $line) {
-        $user = $DB->get_record_sql("
-            SELECT id FROM {user} WHERE email = :email OR email = :emailstrtolower
-        ", ['email' => $line['email'], 'emailstrtolower' => strtolower($line['email'])]);
+        $user = get_user_by_email($line['email'], 'id');
 
         // User not found : account creation.
         if (false === $user) {
-
             $user = new stdClass();
             $user->lastname = $line['lastname'];
             $user->firstname = $line['firstname'];
@@ -895,10 +885,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
     foreach ($userstoreactivate as $usertoreactivate) {
 
         $email = $usertoreactivate['email'];
-        $emailstrtolower = strtolower($email);
-        $user = $DB->get_record_sql("
-            SELECT * FROM {user} WHERE (email = :email OR email = :emailstrtolower) AND suspended = 1
-        ", ['email' => $email, 'emailstrtolower' => $emailstrtolower, 'username' => $email]);
+        $user = get_suspended_user_by_email($email);
 
         // Check if user exists.
         if ($user === false) {
@@ -917,11 +904,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
 
     foreach ($userslist as $index => $line) {
         $email = $line['email'];
-        $emailstrtolower = strtolower($email);
-
-        $user = $DB->get_record_sql("
-            SELECT id FROM {user} WHERE email = :email OR email = :emailstrtolower
-        ", ['email' => $email, 'emailstrtolower' => $emailstrtolower]);
+        $user = get_user_by_email($email, 'id');
 
         // User not found : account creation.
         if (false === $user) {
@@ -941,8 +924,8 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
 
             // utilisateurs externes
             if ($areexternals) {
-                $defaultmainentity = \local_mentor_specialization\mentor_entity::get_default_entity();
-                $defaultmainentity = $defaultmainentity ? \local_mentor_core\entity_api::get_entity($defaultmainentity->id) : null;
+                $defaultmentorentity = \local_mentor_specialization\mentor_entity::get_default_entity();
+                $defaultmainentity = $defaultmentorentity ? \local_mentor_core\entity_api::get_entity($defaultmentorentity->id) : null;
                 // MEN-187-RG001
                 $entity = $entityid ? \local_mentor_core\entity_api::get_entity($entityid) : null;
                 $mentorentity = $entity ? new \local_mentor_specialization\mentor_entity($entityid) : false;
@@ -992,7 +975,6 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
             // Get main and secondary entity user.
             $usermainentity = $dbinterface->get_profile_field_value($user->id, 'mainentity');
             $usersecondaryentities = $dbinterface->get_profile_field_value($user->id, 'secondaryentities');
-
             // Create old user data object for the update event.
             $olduserdata = new \stdClass();
             $olduserdata->id = $user->id;
@@ -1007,12 +989,28 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
 
             // utilisateurs externes
             if ($areexternals) {
+                $updateexternaluser = false;
                 $entity = \local_mentor_core\entity_api::get_entity($entityid);
-                // MEN-187-RG003
-                if ($entity && $usermainentity === $entity->get_name()) {
+                $profile = \local_mentor_core\profile_api::get_profile($user->id);
+                if($usermainentity && $usermainentity === $entity->get_name()) {
+                    // MEN-187-RG003
+                    $updateexternaluser = true;
+                } else if(!$usermainentity) {
+                    // MEN-187-RG005
+                    if ($entity->can_be_main_entity()) {
+                        $profile->set_main_entity($entity);
+                    // MEN-187-RG006
+                    } else {
+                        $defaultmentorentity = \local_mentor_specialization\mentor_entity::get_default_entity();
+                        // We have to transform entity via api to have an extedend object to fit user profile
+                        $defaultmainentity = $defaultmentorentity ? \local_mentor_core\entity_api::get_entity($defaultmentorentity->id) : null;
+                        $profile->set_main_entity($defaultmainentity);
+                    }
+                    $updateexternaluser = true;
+                }
+                if($updateexternaluser){
                     $dbinterface->set_profile_field_value($user->id, 'roleMentor', "utilisateurexterne");
                     toggle_external_user_role($user->id, $areexternals);
-                    $newuserdata->profile_field_roleMentor = "utilisateurexterne";
                 }
             } else {
                 // Update main entity user.

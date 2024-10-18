@@ -27,6 +27,7 @@ namespace local_mentor_core;
 
 use core\event\course_category_updated;
 use core_course_category;
+use local\mentor_specialization\classes\models\mentor_profile;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/local/mentor_core/classes/model/session.php');
@@ -372,6 +373,47 @@ class database_interface {
         ', ['userid' => $userid]);
     }
 
+    /**
+     * Get all sub entities
+     */
+    public function search_deletable_subentities($userid, $entityid, $searchtext,$is_siteadmin = false) {
+        $check_role_join = "";
+        $check_role_where = "";
+        if(!$is_siteadmin) {
+            $check_role_join .=    " JOIN {role_assignments} ra ON ra.contextid = ctx.id
+                              JOIN {role} r ON ra.roleid = r.id
+                              JOIN {user} u ON ra.userid = u.id ";  
+            $check_role_where .= " AND r.shortname = :rolename
+                                AND u.id = :userid ";                    
+        }
+        return $this->db->get_records_sql(
+            "SELECT cc.id as id, cc.name as name
+                FROM {course_categories} AS cc
+                JOIN {course_categories} AS cc2 ON cc.parent = cc2.id
+                JOIN {context} ctx ON ctx.instanceid = cc2.parent   "
+                . $check_role_join .
+                "  WHERE ctx.contextlevel = :contextlevel"
+                . $check_role_where .
+                    "  AND cc.name NOT IN ('Formations', 'Sessions')
+                    AND cc2.parent = :entityid
+                    AND ".$this->db->sql_like('cc.name', ':searchtext', false, false, false)."
+                    AND NOT EXISTS (
+                        SELECT 1 
+                        FROM {session} s
+                        JOIN {course} c ON s.courseshortname = c.shortname
+                        JOIN {course_categories} cc4 ON c.category = cc4.id
+                        WHERE cc4.parent = cc.id
+                    )
+                    AND NOT EXISTS (
+                        SELECT 1 
+                        FROM {course} c
+                        JOIN {course_categories} cc4 ON c.category = cc4.id
+                        WHERE cc4.parent = cc.id)
+                    ORDER BY cc.name ASC
+                ", 
+            ['entityid' => $entityid, 'contextlevel' => CONTEXT_COURSECAT, 'rolename' => profile_api::get_user_manager_role_name(), 'userid' => $userid, 'searchtext' => '%' . $this->db->sql_like_escape($searchtext) . '%']);
+    }
+
     /*****************************ROLE*****************************/
 
     /**
@@ -639,7 +681,7 @@ class database_interface {
 
         // Check in class cache.
         foreach ($this->mainentities as $entity) {
-            if (strtolower($entity->name) == strtolower($categoryname)) {
+            if (strtolower($entity->name) == strtolower($categoryname ?? '')) {
                 return $entity;
             }
         }
@@ -648,7 +690,7 @@ class database_interface {
         $this->get_all_main_categories(true);
 
         foreach ($this->mainentities as $entity) {
-            if (strtolower($entity->name) == strtolower($categoryname)) {
+            if (strtolower($entity->name) == strtolower($categoryname ?? '')) {
                 return $entity;
             }
         }
@@ -3796,15 +3838,64 @@ class database_interface {
      * Get user sessions where it is enrolled.
      *
      * @param int $userid
+     * @param string $searchText
      * @return array
      * @throws \dml_exception
      */
-    public function get_user_sessions($userid) {
+    public function get_user_sessions($userid, $searchText = null) {
 
         // Get all hidden entity and their sub-entity.
         $hiddencondition = '';
         if ($allhiddencategoriesids = $this->get_hidden_categories()) {
             $hiddencondition .= 'AND cc.parent NOT IN (' . $allhiddencategoriesids . ')';
+        }
+
+        $searchConditions = "";
+       if(!is_null($searchText))
+        {
+          $columns = ["t.typicaljob", "t.skills", "t.idsirh", "t.producingorganization", "t.producerorganizationshortname",
+                        "c.fullname", "c.summary", "s.courseshortname", "t.traininggoal", "cc.idnumber", "t.catchphrase", "name"];
+                        $searchConditions .= "  AND ( (";
+
+                        $searchTextArray = explode(",",$searchText);
+                        foreach($columns as $keyColumn => $columnValue)
+                        {
+                            if ($keyColumn === array_key_last($columns)) {
+                                $searchConditions .= " cc.parent IN (SELECT id
+                                                    FROM {course_categories}
+                                                    WHERE idnumber IS NOT NULL 
+                                                     AND ";
+                                foreach ($searchTextArray as $keySearchText=>$valueSearchText)
+                                { 
+                                    if( $keySearchText === 0){
+                                        $searchConditions .= "unaccent(lower(".$columnValue .")) like lower('%".$valueSearchText."%') 
+                                        OR unaccent(lower(idnumber)) like lower('%".$valueSearchText."%') 
+                                        ";
+                                    }else{
+                                        $searchConditions .= " AND unaccent(lower(".$columnValue .")) like lower('%".$valueSearchText."%') 
+                                         OR unaccent(lower(idnumber)) like lower('%".$valueSearchText."%') ";
+                                    } 
+                                }
+                            }else{
+                                foreach ($searchTextArray as $keySearchText=>$valueSearchText)
+                                { 
+                                    if( $keySearchText === 0){
+                                        $searchConditions .= "unaccent(lower(".$columnValue .")) like lower('%".$valueSearchText."%') ";
+                                    }else{
+                                        $searchConditions .= " AND unaccent(lower(".$columnValue .")) like lower('%".$valueSearchText."%') ";
+                                    } 
+                                } 
+                            }
+                                 
+                            
+                            
+                            if ($keyColumn != array_key_last($columns)) {
+                                $searchConditions .= " ) OR (";
+                            }
+                        }
+                      
+                        $searchConditions .= " ))) ";
+                                    
         }
 
         // Get user enrolled sessions.
@@ -3833,6 +3924,7 @@ class database_interface {
                 ct.contextlevel = :level AND
                 ct2.contextlevel = :levelbis
                ' . $hiddencondition . '
+                '. $searchConditions .'
             GROUP BY s.id, c.id, t.id, contextid, contexttrainingid
             ORDER BY s.sessionstartdate DESC, c.fullname
         ', [
@@ -3840,7 +3932,7 @@ class database_interface {
             'levelbis' => CONTEXT_COURSE,
             'userid' => $userid,
         ]);
-
+        
         // Get user favourite sessions.
         $userfavouritesessions = $this->db->get_records('favourite', [
             'userid' => $userid,
@@ -3921,7 +4013,6 @@ class database_interface {
                 $usersessions[$key]->coursedisplay = $sessioncourseoption->value;
             }
         }
-
         return $usersessions;
     }
 

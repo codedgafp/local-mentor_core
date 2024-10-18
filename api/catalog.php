@@ -24,6 +24,7 @@
  */
 
 namespace local_mentor_core;
+use \local_mentor_specialization\custom_notifications_service;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -48,7 +49,7 @@ class catalog_api {
      * @throws \moodle_exception
      */
     public static function get_params_renderer() {
-        global $USER;
+        global $USER, $DB;
 
         $specialization = specialization::get_instance();
 
@@ -82,6 +83,29 @@ class catalog_api {
             // Json encode amd data.
             $paramsrenderer->available_trainings = json_encode($trainings);
         }
+        //Show Notification button 
+        $paramsrenderer->showNotificationButton = true;
+         //Check if user has role admindedie or respformation
+        $admindedierole = $DB->get_record('role', array('shortname' => 'admindedie'), '*', MUST_EXIST);
+        $respformationrole = $DB->get_record('role', array('shortname' => 'respformation'), '*', MUST_EXIST);
+        $isAdmirDedieUser = $DB->get_records('role_assignments', array('userid' => $USER->id, 'roleid' => $admindedierole->id));
+        $isRfsUser = $DB->get_records('role_assignments', array('userid' => $USER->id, 'roleid' => $respformationrole->id));
+        if($isAdmirDedieUser  || $isRfsUser)
+        {
+            $paramsrenderer->showNotificationButton = false;
+        }
+                                   
+        //Params for notification modal
+        $paramsrenderer->notificationControllerGetData = "catalog";
+        $paramsrenderer->notificationFunctionGetData = "get_all_collections";
+        $paramsrenderer->notificationControllerGetUserPreferences = "catalog";
+        $paramsrenderer->notificationFunctionGetUserPreferences = "get_user_collection_notifications";
+        $paramsrenderer->notificationControllerSendData = "catalog";
+        $paramsrenderer->notificationFunctionSendData = "set_user_notifications";
+        $paramsrenderer->notificationTypeSendData = "CATALOG";
+        $paramsrenderer->notificationDataTitle = get_string('collection', 'local_catalog');
+        $paramsrenderer->notificationDataText = get_string('subscription_management_text', 'local_catalog');
+        $paramsrenderer->notificationAjaxFilePath =  '/local/catalog/ajax/ajax.php';
 
         return $paramsrenderer;
     }
@@ -172,4 +196,38 @@ class catalog_api {
         $specialization = specialization::get_instance();
         return $specialization->get_specialization('get_catalog_javascript', $defaultjs);
     }
+
+
+    /**
+     * Set user collection notifications 
+     *
+     * @return string
+     * @param string $type
+     * @throws coding_exception
+     * @throws moodle_exception
+     */
+    public static function set_user_notifications($notifications, $type):string {
+        $notifservice = custom_notifications_service::get_instance();
+        return $notifservice->set_user_notifications($notifications, $type);
+    }
+
+    /**
+     * get all mentor collections 
+     * @return array
+     */
+    public static function get_mentor_collections() {
+        $notifservice = custom_notifications_service::get_instance();
+        return $notifservice->get_mentor_collections();
+    }
+
+    /**
+     * get user collections notifications
+     * @param string $type
+     * @return array
+     */
+    public static function get_user_collection_notifications($type) {
+        $notifservice = custom_notifications_service::get_instance();
+        return $notifservice->get_user_collection_notifications($type);
+    }
 }
+

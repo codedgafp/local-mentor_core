@@ -1,0 +1,14 @@
+<div id="delete-subentity-form-template">
+    <form id="delete-subentity-form">
+        <div id="delete-subentity-form-entity-group">
+            <label for="delete-subentity-form-entity">{{# str }} space, local_mentor_core {{/ str }} *</label>
+            <select id="delete-subentity-form-entity" name="entityid"></select>
+        </div>
+        <div>
+            <label for="delete-subentity-form-subentity">{{# str }} subspacename, local_mentor_core {{/ str }} *</label>
+            <select id="delete-subentity-form-subentity" name="subentityid"></select>
+        </div>
+        {{{ extrahtml }}}
+    </form>
+    <p id="required" class="entities-form-warning entities-form-warning-none">{{# str }} requiredfields, local_mentor_core {{/ str }}</p>
+</div>

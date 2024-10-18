@@ -180,7 +180,7 @@ if (null !== $csvformdata) {
         // Preview report.
         $out .= html_writer::tag('h5', get_string('preview_report', 'local_mentor_core'), ['class' => 'report-title']);
 
-        $nberror = count($errors['list']) - $preview['validforcreation'];
+        $nberror = count($errors['list']);
 
         // Display the report.
         $out .= html_writer::alist([

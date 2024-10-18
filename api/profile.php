@@ -33,6 +33,7 @@ require_once($CFG->dirroot . '/local/mentor_core/classes/database_interface.php'
 require_once($CFG->dirroot . '/local/mentor_core/classes/model/entity.php');
 require_once($CFG->dirroot . '/local/mentor_core/classes/model/profile.php');
 require_once($CFG->dirroot . '/local/mentor_core/lib.php');
+require_once($CFG->dirroot . '/local/mentor_core/classes/helper/form_checker.php');
 
 /**
  * User profile API
@@ -274,7 +275,8 @@ class profile_api {
      */
     public static function create_and_add_user($lastname, $firstname, $email, $entity = null, $secondaryentities = [], $region
     = null, $auth = null, $isexternal = false, $courseid = null) {
-        $db = database_interface::get_instance();
+        global $DB;
+        $dbi = database_interface::get_instance();
        
         // Clear lastname and firstname.
         $lastname = str_replace(['<', '>'], '', $lastname);
@@ -296,7 +298,7 @@ class profile_api {
         }
 
         // Check if email is not used.
-        if ($db->get_user_by_email($email)) {
+        if (check_users_by_email($email)) {
             return self::EMAIL_USED;
         }
 
@@ -362,7 +364,7 @@ class profile_api {
         }
 
         if($isexternal && $courseid) {
-            $currententity =  $db->get_course_category_by_course_id($courseid);
+            $currententity =  $dbi->get_course_category_by_course_id($courseid);
             $objentity = $currententity ? entity_api::get_entity($currententity->id) : false;
             if($objentity && $objentity->can_be_main_entity()) {
                 $user->profile_field_mainentity = $objentity->name;
@@ -410,13 +412,14 @@ class profile_api {
             $user->auth = isset($CFG->defaultauth) ? $CFG->defaultauth : '';
         }
 
+        if (empty($user->auth)) $user->auth = 'ldap_syncplus';
+
         // Create a Moodle user.
         $user->id = user_create_user($user, false, false);
         
         // Use LDAP Sync Plus auth by default.
-        if (empty($user->auth)) {
+        if ($user->auth === 'ldap_syncplus') {
             // Create user into LDAP.
-            $user->auth = 'ldap_syncplus';
             $auth = get_auth_plugin($user->auth);
 
             // Check if the user has been created into the ldap.
