@@ -812,7 +812,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
      *
      * @covers ::local_mentor_core_validate_users_csv
      */
-    public function test_validate_users_csv_ok_add_to_any_entity() {
+    public function test_validate_users_csv_ok_add_to_any_entity(): void {
         global $CFG;
 
         require_once($CFG->dirroot . '/local/mentor_core/forms/importcsv_form.php');

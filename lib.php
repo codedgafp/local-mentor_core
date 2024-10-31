@@ -291,8 +291,7 @@ function local_mentor_core_extend_navigation_course(navigation_node $parentnode,
  * @throws coding_exception
  * @throws dml_exception
  */
-function local_mentor_core_validate_users_csv($content, $delimitername, $courseid = null, &$preview = [], &$errors = [],
-                                              &$warnings = [], $other = [])
+function local_mentor_core_validate_users_csv($content, $delimitername, $courseid = null, &$preview = [], &$errors = [], &$warnings = [], $other = [])
 {
     global $DB, $USER;
 
@@ -490,15 +489,20 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
 
         // Check if user exists.
         if (false === $ignoreline && isset($columns[$emailkey], $preview['validforcreation'])) {
+            if (isset($preview["useridentified"])) {
+                $preview["useridentified"]++;
+            }
+
             $email = $columns[$emailkey];
             $users = get_users_by_email($email, '', 'id, email, username, suspended');
 
             if (count($users) > 1) {
-                $errors['list'][] = [
+                $warnings['list'][] = [
                     $linenumber,
                     get_string(
                         is_null($courseid) ? 'user_already_exists' : 'email_already_used',
                         'local_mentor_core',
+                        $email
                     ),
                 ];
 
@@ -507,22 +511,23 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
 
             // If the user exists, check if an other user as an email equals to the username.
             if (count($users) == 1) {
-
                 $u = array_shift($users);
 
-                $users = $DB->get_records_sql("
-                    SELECT id, suspended, email FROM {user} WHERE username = :username OR email = :email
-                ", ['email' => strtolower($u->username), 'username' => strtolower($u->username)]);
+                $users = $DB->get_records_sql(
+                    "SELECT id, suspended, email FROM {user} WHERE username = :username OR email = :email", 
+                    ['email' => strtolower($u->username), 'username' => strtolower($u->username)]
+                );
 
                 // RG-60-10-42 : Mail used as a username for one user and as an email address for another user.
                 if (is_null($courseid)) {
+                    
 
                     $u = current($users);
 
                     // Check if data to add entity to main or secondary entity exist.
                     if (isset($other['entityid']) && isset($other['addtoentity'])) {
                         // Get main and secondary user data.
-                        $profile = \local_mentor_core\profile_api::get_profile($u->id);
+                        $profile = profile_api::get_profile($u->id);
                         $mainentity = $profile->get_main_entity();
                         $sedondaryentities = $profile->get_secondary_entities();
 
@@ -560,6 +565,17 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                                                 $linenumber,
                                                 get_string('error_user_already_main_entity', 'local_mentor_core'),
                                             ];
+                                            $ignoreline = true;
+                                        } else {
+                                            $warnings['list'][] = [
+                                                $linenumber,
+                                                get_string(
+                                                    is_null($courseid) ? 'user_already_exists' : 'email_already_used',
+                                                    'local_mentor_core',
+                                                    $email
+                                                ),
+                                            ];
+                            
                                             $ignoreline = true;
                                         }
                                     } else {
@@ -610,9 +626,8 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                             }
                         }
                     }
-
                 } else if (count($users) >= 2) {
-                    $errors['list'][] = [
+                    $warnings['list'][] = [
                         $linenumber,
                         get_string('email_already_used', 'local_mentor_core'),
                     ];
@@ -687,7 +702,6 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                         get_string('usercreatandenrol', 'local_mentor_core', $email),
                     ];
                 }
-
             }
         }
 
@@ -714,8 +728,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
         }
     }
 
-    if (count($preview['list']) === 0 && (!isset($preview['validforreactivation']) || count($preview['validforreactivation']) ===
-            0)) {
+    if (count($preview['list']) === 0 && (!isset($preview['validforreactivation']) || count($preview['validforreactivation']) === 0)) {
         $hasfatalerrors = true;
     }
 

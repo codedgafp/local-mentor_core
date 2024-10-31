@@ -116,8 +116,7 @@ $string['mergeusers'] = 'Fusionner des utilisateurs';
 $string['suspendusers'] = 'Suspendre des utilisateurs en lot';
 $string['suspendusersbutton'] = 'Suspendre les utilisateurs';
 $string['userssuspension'] = 'Suspension d\'utilisateurs';
-$string['mergeusers_help']
-    = 'N\'utilisez ceci que si vous en comprenez les implications, car les opérations réalisées ici ne sont pas réversibles !';
+$string['mergeusers_help'] = 'N\'utilisez ceci que si vous en comprenez les implications, car les opérations réalisées ici ne sont pas réversibles !';
 $string['addtoentity'] = 'Choix de rattachement des utilisateurs à l\'espace dédié';
 $string['addtoentity_help']
     = 'En fonction du choix sélectionné, tous les utilisateurs importés seront soit rattachés à l\'espace dédié où l\'import est effectué soit en tant qu\'entité principale (choix sélectionné par défaut) soit en tant qu\'entité secondaire soit rattaché à aucun espace. Ce choix de rattachement une fois l\'import effectué est visible au niveau du profil de chaque utilisateur.';
@@ -127,7 +126,7 @@ $string['addtoanyentity'] = 'Aucun rattachement';
 $string['usercreatandenrol'] = 'L\'utilisateur {$a} sera créé et inscrit.';
 $string['externalusercreatandenrol'] = 'L\'utilisateur {$a} sera créé et inscrit en tant qu\'utilisateur externe.';
 $string['importuserupdateexternal'] = 'L\'utilisateur {$a} sera mis à jour : externe.';
-$string['importuserupdateexternal_already_main_entity'] = 'L\'utilisateur {$a->email} possède déjà une entité principale différente de l\'espace dédié sélectionné : {$a->espace}, il ne sera pas mis à jour dans Mentor.';;
+$string['importuserupdateexternal_already_main_entity'] = 'L\'utilisateur {$a->email} possède déjà une entité principale différente de l\'espace dédié sélectionné : {$a->espace}, il ne sera pas mis à jour dans Mentor.';
 
 // Import errors.
 $string['required'] = 'Vous devez remplir ce champ.';
@@ -155,15 +154,13 @@ $string['warning_user_secondary_entity_already_set']
 $string['warning_user_secondary_entity_update']
     = 'Le choix de rattachement de l\'utilisateur sera mis à jour : ajout d\'une entité secondaire.';
 $string['warning_user_suspended'] = 'Le compte utilisateur est suspendu. Le compte sera réactivé.';
-$string['user_already_exists']
-    = 'L’utilisateur existe déjà dans Mentor. L’utilisateur ne sera pas créé dans Mentor.';
+$string['user_already_exists'] = 'L\'utilisateur {$a} ne sera pas créé car il existe déjà dans Mentor.';
 $string['email_already_used']
     = 'Deux comptes utilisant cette adresse mail ont été identifiés, merci d\'inscrire manuellement à la session le ou les participant(s) souhaité(s).';
 $string['missing_data'] = 'Au moins un champ parmi "lastname", "firstname", "email" n\'est pas renseigné.
                                         Cette ligne sera ignorée à l\'import.';
 $string['invalid_column_number'] = 'Le nombre de champs est invalide.';
-$string['invalid_email']
-    = 'La colonne "email" ne contient pas d\'adresse mél. Cette ligne sera ignorée à l\'import.';
+$string['invalid_email'] = 'La colonne "email" ne contient pas d\'adresse mél. Cette ligne sera ignorée à l\'import.';
 $string['email_not_valid'] = 'L\'adresse mél n\'est pas conforme. Cette ligne sera ignorée à l\'import.';
 $string['invalid_groupname'] = 'Attention, le groupe {$a} n\'a pas été trouvé. Le groupe sera créé.';
 $string['invalid_role']
