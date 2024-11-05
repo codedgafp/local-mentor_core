@@ -24,7 +24,7 @@
  */
 
 namespace local_mentor_core;
-
+use \local_mentor_specialization\custom_notifications_service;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/local/mentor_core/classes/database_interface.php');
@@ -241,7 +241,7 @@ class library_api {
      * @throws \moodle_exception
      */
     public static function get_params_renderer() {
-        global $CFG;
+        global $CFG, $USER, $DB;
 
         // Get all collections.
         $collectionsnames = local_mentor_specialization_get_collections();
@@ -346,6 +346,41 @@ class library_api {
 
         // Variable used for performance tests.
         $paramsrenderer->isdev = isset($CFG->sitetype) && $CFG->sitetype != 'prod' ? 1 : 0;
+       
+        //Show Notification button   
+        $paramsrenderer->showNotificationButton = false;      
+        //Disable toggles in modal for user role  admindedie & respformation
+        $paramsrenderer->disableModal = false;
+
+        //Check user role : if user has role admindedie or respformation he won't have access to choose catgories from modal 
+        //else if user has role visiteurbiblio then he have access to choose catgories from modal 
+        $admindedieRole = $DB->get_record('role', array('shortname' => 'admindedie'), '*', MUST_EXIST);
+        $respformationRole = $DB->get_record('role', array('shortname' => 'respformation'), '*', MUST_EXIST);
+        $visiteurbiblioRole = $DB->get_record('role', array('shortname' => 'visiteurbiblio'), '*', MUST_EXIST);
+
+        $isAdmirDedieUser = $DB->get_records('role_assignments', array('userid' => $USER->id, 'roleid' => $admindedieRole->id));
+        $isRfCUser = $DB->get_records('role_assignments', array('userid' => $USER->id, 'roleid' => $respformationRole->id));
+        $isVBsUser = $DB->get_records('role_assignments', array('userid' => $USER->id, 'roleid' => $visiteurbiblioRole->id));
+
+        if($isAdmirDedieUser  || $isRfCUser) {           
+            $paramsrenderer->disableModal = true;            
+        }
+        if(library_api::user_has_access($USER->id) || $isVBsUser)
+        {
+            $paramsrenderer->showNotificationButton = true;
+        }
+
+        //Params for notification modal
+        $paramsrenderer->notificationControllerGetData = "library";
+        $paramsrenderer->notificationFunctionGetData = "get_all_collections";
+        $paramsrenderer->notificationControllerGetUserPreferences = "library";
+        $paramsrenderer->notificationFunctionGetUserPreferences = "get_user_collection_notifications";
+        $paramsrenderer->notificationControllerSendData = "library";
+        $paramsrenderer->notificationFunctionSendData = "set_user_notifications";
+        $paramsrenderer->notificationTypeSendData = custom_notifications_service::$LIBRARY_PAGE_TYPE;
+        $paramsrenderer->notificationDataTitle = get_string('collection', 'local_library');
+        $paramsrenderer->notificationDataText = get_string('subscription_management_text', 'local_library');
+        $paramsrenderer->notificationAjaxFilePath =  '/local/library/ajax/ajax.php';       
 
         return $paramsrenderer;
     }
@@ -495,4 +530,37 @@ class library_api {
         $dbinterface = \local_mentor_core\database_interface::get_instance();
         return $dbinterface->get_library_task_by_training_id($trainingid);
     }
+
+        /**
+     * get all mentor collections 
+     * @return array
+     */
+    public static function get_mentor_collections() {
+        $notifservice = custom_notifications_service::get_instance();
+        return $notifservice->get_mentor_collections();
+    }
+
+        /**
+     * get user collections notifications
+     * @param string $type
+     * @return array
+     */
+    public static function get_user_collection_notifications($type) {
+        $notifservice = custom_notifications_service::get_instance();
+        return $notifservice->get_user_collection_notifications($type);
+    }
+    
+    /**
+     * Set user collection notifications 
+     *
+     * @return string
+     * @param string $type
+     * @throws coding_exception
+     * @throws moodle_exception
+     */
+    public static function set_user_notifications($notifications, $type):string {
+        $notifservice = custom_notifications_service::get_instance();
+        return $notifservice->set_user_notifications($notifications, $type);
+    }
+    
 }

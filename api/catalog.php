@@ -89,6 +89,9 @@ class catalog_api {
         {
             $paramsrenderer->showNotificationButton = true;
         }
+        //Disable toggles in modal for user role  admindedie & respformation
+        $paramsrenderer->disableModal = false;
+
          //Check if user has role admindedie or respformation
         $admindedierole = $DB->get_record('role', array('shortname' => 'admindedie'), '*', MUST_EXIST);
         $respformationrole = $DB->get_record('role', array('shortname' => 'respformation'), '*', MUST_EXIST);
@@ -96,9 +99,9 @@ class catalog_api {
         $isRfsUser = $DB->get_records('role_assignments', array('userid' => $USER->id, 'roleid' => $respformationrole->id));
         if($isAdmirDedieUser  || $isRfsUser)
         {
-            $paramsrenderer->showNotificationButton = false;
+            $paramsrenderer->disableModal = true;
         }
-                                   
+                      
         //Params for notification modal
         $paramsrenderer->notificationControllerGetData = "catalog";
         $paramsrenderer->notificationFunctionGetData = "get_all_collections";
