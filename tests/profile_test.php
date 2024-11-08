@@ -546,9 +546,17 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
      * @covers \local_mentor_core\profile_api::get_user_template_params
      */
     public function test_get_user_template_params() {
+        global $PAGE;
+
         $this->resetAfterTest(true);
         $this->reset_singletons();
         $this->init_role();
+
+        // Create course.
+        $course = self::getDataGenerator()->create_course();
+
+        // Set PAGE.
+        $PAGE->set_course($course);
 
         $templateparams = \local_mentor_core\profile_api::get_user_template_params();
         self::assertIsArray($templateparams);
