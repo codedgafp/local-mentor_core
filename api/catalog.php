@@ -84,7 +84,11 @@ class catalog_api {
             $paramsrenderer->available_trainings = json_encode($trainings);
         }
         //Show Notification button 
-        $paramsrenderer->showNotificationButton = true;
+        $paramsrenderer->showNotificationButton = false;
+        if(isloggedin())
+        {
+            $paramsrenderer->showNotificationButton = true;
+        }
          //Check if user has role admindedie or respformation
         $admindedierole = $DB->get_record('role', array('shortname' => 'admindedie'), '*', MUST_EXIST);
         $respformationrole = $DB->get_record('role', array('shortname' => 'respformation'), '*', MUST_EXIST);
