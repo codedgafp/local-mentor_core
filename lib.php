@@ -36,6 +36,7 @@ require_once($CFG->dirroot . '/local/mentor_core/api/profile.php');
 require_once($CFG->dirroot . '/lib/completionlib.php');
 require_once($CFG->dirroot . '/local/mentor_core/forms/importcsv_form.php');
 require_once($CFG->dirroot . '/local/mentor_core/classes/helper/form_checker.php');
+require_once($CFG->dirroot . '/local/mentor_core/classes/helper/entity_helper.php');
 
 /**
  * Set a moodle config
@@ -992,7 +993,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
             $olduserdata = new \stdClass();
             $olduserdata->id = $user->id;
             $olduserdata->profile_field_mainentity = $usermainentity;
-            $olduserdata->profile_field_secondaryentities = explode(', ', $usersecondaryentities);
+            $olduserdata->profile_field_secondaryentities = $dbinterface->get_secondaryentity_names_array($usersecondaryentities);
 
             // Create new user data object for the update event.
             $newuserdata = new \stdClass();
@@ -1053,7 +1054,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
                 if ($addtoentity === \importcsv_form::ADD_TO_SECONDARY_ENTITY) {
                     // Get main and secondary entity user.
                     $entityname = $entity->get_name();
-                    $secondaryentitieslist = empty($usersecondaryentities) ? [] : explode(', ', $usersecondaryentities);
+                    $secondaryentitieslist = empty($usersecondaryentities) ? [] : $dbinterface->get_secondaryentity_names_array($usersecondaryentities);
 
                     if (!in_array($entityname, $secondaryentitieslist) && $entityname !== $usermainentity) {
 

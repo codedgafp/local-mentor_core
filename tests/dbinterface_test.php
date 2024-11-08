@@ -35,6 +35,8 @@ require_once($CFG->dirroot . '/local/mentor_core/api/training.php');
 
 class local_mentor_core_dbinterface_testcase extends advanced_testcase {
 
+    const ENTITY_NAMES = ['New Entity 1', 'New Entity 2', 'New, Entity 3'];
+
     /**
      * Initialization of the user data
      *
@@ -5189,10 +5191,16 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
 
         $this->resetAfterTest(true);
 
+        self::setAdminUser();
         // Generates users.
         $user1 = self::getDataGenerator()->create_user();
         $user2 = self::getDataGenerator()->create_user();
         $user3 = self::getDataGenerator()->create_user();
+
+        //secondary entities
+        self::init_create_entity('falseentity');
+        self::init_create_entity('falseentity bis');
+        self::init_create_entity('falsebisentity');
 
         // Get secondary entity field.
         $field = $DB->get_record('user_info_field', ['shortname' => 'secondaryentities']);
@@ -5220,7 +5228,6 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         $db = \local_mentor_core\database_interface::get_instance();
 
         $users = $db->get_users_by_secondaryentity('falseentity');
-
         self::assertCount(1, $users);
         self::assertEquals(current($users)->id, $user1->id);
 
@@ -6435,4 +6442,35 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
 
         self::resetAllData();
     }
+
+/**
+     * Test get user by username
+     *
+     * @throws ReflectionException
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     * @covers \local_mentor_core\database_interface::get_user_by_username
+     */
+    public function test_get_secondaryentity_names_array() {
+        $this->resetAfterTest(true);
+        $dbinterface = \local_mentor_core\database_interface::get_instance();
+        
+        self::setAdminUser();
+
+        self::init_create_entity(self::ENTITY_NAMES[1]);
+        self::init_create_entity(self::ENTITY_NAMES[2]);
+
+        $result = $dbinterface->get_secondaryentity_names_array('');
+        self::assertCount(0, $result);
+
+        $result = $dbinterface->get_secondaryentity_names_array(self::ENTITY_NAMES[1] . ', '. self::ENTITY_NAMES[2]);
+
+        self::assertContains(self::ENTITY_NAMES[1], $result);
+        self::assertContains(self::ENTITY_NAMES[2], $result);
+        self::assertCount(2, $result);
+
+        self::resetAllData();
+    }
+
 }

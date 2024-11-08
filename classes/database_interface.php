@@ -335,19 +335,52 @@ class database_interface {
             'data2' => $secondaryentity,
         ]);
 
+        $existingnames = $this->get_similary_secondaryentity_names($secondaryentity);
+        
         foreach ($usersdata as $userdata) {
-            $secondaryentities = explode(', ', $userdata->data);
-            $key = array_search($secondaryentity, $secondaryentities);
-
-            if ($key === false) {
-                continue;
+            if(is_value_existing_in_string($userdata->data, $secondaryentity, $existingnames)) {
+                unset($userdata->data);
+                $users[$userdata->id] = $userdata;
             }
-
-            unset($userdata->data);
-            $users[$userdata->id] = $userdata;
         }
 
         return $users;
+    }
+
+    /**
+     * Get array of secondary entity names from list in string (filtering similary values unexpected)
+     *
+     * @param string $secondaryentitynames
+     * @return string[]
+     * @throws \dml_exception
+     */
+    public function get_secondaryentity_names_array(string $secondaryentitynames): array {
+        return array_filter_values_existing_in_string(
+            $this->get_similary_secondaryentity_names($secondaryentitynames),
+            $secondaryentitynames
+        );
+    }
+
+    /**
+     * Get array of secondary entity names from list in string without taking care on existing similary values
+     *
+     * @param string $secondaryentitynames
+     * @return string[]
+     * @throws \dml_exception
+     */
+    public function get_similary_secondaryentity_names(string $secondaryentitynames): array {
+        if(!isset($secondaryentitynames) || empty($secondaryentitynames)) return [];
+
+        $secondaryentitynamesresult = $this->db->get_records_sql('
+            SELECT name
+            FROM {course_categories}
+            WHERE :data ILIKE \'%\'  || name || \'%\'
+            AND parent = 0;
+        ', [
+            'data' => $this->db->sql_like_escape($secondaryentitynames)
+        ]);
+
+        return array_values(array_map(fn($secondaryentityname) => $secondaryentityname->name, $secondaryentitynamesresult));
     }
 
     /**
@@ -1567,11 +1600,8 @@ class database_interface {
         ]);
 
         foreach ($usersdatafield as $userdatafield) {
-            $secondaryentities = explode(', ', $userdatafield->data);
-            $key = array_search($oldname, $secondaryentities);
-            if ($key !== false) {
-                $secondaryentities[$key] = $newname;
-                $userdatafield->data = implode(', ', $secondaryentities);
+            if(str_contains($userdatafield->data, $oldname)) {
+                $userdatafield->data = str_replace($oldname, $newname, $userdatafield->data);
                 $this->db->update_record('user_info_data', $userdatafield);
             }
         }

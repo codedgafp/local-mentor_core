@@ -34,6 +34,7 @@ require_once($CFG->dirroot . '/local/mentor_core/classes/model/entity.php');
 require_once($CFG->dirroot . '/local/mentor_core/classes/model/profile.php');
 require_once($CFG->dirroot . '/local/mentor_core/lib.php');
 require_once($CFG->dirroot . '/local/mentor_core/classes/helper/form_checker.php');
+require_once($CFG->dirroot . '/local/mentor_core/classes/helper/entity_helper.php');
 
 /**
  * User profile API
