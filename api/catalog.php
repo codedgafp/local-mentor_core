@@ -101,7 +101,10 @@ class catalog_api {
         {
             $paramsrenderer->disableModal = true;
         }
-                      
+          
+        //Notification button label  
+        $paramsrenderer->labelNotificationButton = get_string('notification_catalog', 'theme_mentor');        
+    
         //Params for notification modal
         $paramsrenderer->notificationControllerGetData = "catalog";
         $paramsrenderer->notificationFunctionGetData = "get_all_collections";
@@ -111,7 +114,7 @@ class catalog_api {
         $paramsrenderer->notificationFunctionSendData = "set_user_notifications";
         $paramsrenderer->notificationTypeSendData = "CATALOG";
         $paramsrenderer->notificationDataTitle = get_string('collection', 'local_catalog');
-        $paramsrenderer->notificationDataText = get_string('subscription_management_text', 'local_catalog');
+        $paramsrenderer->notificationDataText = get_string('catalog_subscription_management_text', 'local_catalog');
         $paramsrenderer->notificationAjaxFilePath =  '/local/catalog/ajax/ajax.php';
 
         return $paramsrenderer;

@@ -370,6 +370,9 @@ class library_api {
             $paramsrenderer->showNotificationButton = true;
         }
 
+        //Notification button label  
+        $paramsrenderer->labelNotificationButton = get_string('notification_library', 'theme_mentor');   
+           
         //Params for notification modal
         $paramsrenderer->notificationControllerGetData = "library";
         $paramsrenderer->notificationFunctionGetData = "get_all_collections";
@@ -379,7 +382,7 @@ class library_api {
         $paramsrenderer->notificationFunctionSendData = "set_user_notifications";
         $paramsrenderer->notificationTypeSendData = custom_notifications_service::$LIBRARY_PAGE_TYPE;
         $paramsrenderer->notificationDataTitle = get_string('collection', 'local_library');
-        $paramsrenderer->notificationDataText = get_string('subscription_management_text', 'local_library');
+        $paramsrenderer->notificationDataText = get_string('library_subscription_management_text', 'local_library');
         $paramsrenderer->notificationAjaxFilePath =  '/local/library/ajax/ajax.php';       
 
         return $paramsrenderer;
