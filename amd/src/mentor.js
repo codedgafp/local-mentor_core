@@ -33,11 +33,13 @@ define([
                 dialogClass: 'confirm-dialog',
                 open: function () {
                     that.configTitleDialog();
+                    that.accessibilityAdjustments();
 
                     // Add a title on close button.
                     $(".ui-dialog-titlebar-close")
                         .html('')
-                        .attr('title', M.util.get_string('closebuttontitle', 'moodle'));
+                        .attr('title', M.util.get_string('closebuttontitle', 'moodle'))
+                        .focus();
 
                     // Call the open callback if defined in config param.
                     if (typeof openCallback !== 'undefined') {
@@ -55,6 +57,18 @@ define([
                 // Add id attribute to dialog.
                 $(selector).parent().attr('id', defaultConfig.id);
             }
+        },
+        /**
+         * Accessibility adjustments for dialogs
+         */
+        accessibilityAdjustments: function () {
+            var dialogElements = $('.ui-dialog[role="dialog"]');
+
+            dialogElements.each(function () {
+                // Add aria-modal attribute
+                $(this).attr('aria-modal', 'true');
+
+            });
         },
         /**
          * Replace span by h1 on every dialog title
