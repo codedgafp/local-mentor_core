@@ -28,6 +28,7 @@ namespace local_mentor_core;
 use core\event\course_category_updated;
 use core_course_category;
 use local\mentor_specialization\classes\models\mentor_profile;
+use stdClass;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/local/mentor_core/classes/model/session.php');
@@ -1151,43 +1152,144 @@ class database_interface {
     }
 
     /**
-     * Get all members cohort by cohort id
+     * Get all members cohort by cohort id and data filters
      *
      * @param int $cohortid
-     * @param string $suspendedusers default all. options : all, true, false
-     * @return \stdClass[]
+     * @param object $data
+     * @return array 
      * @throws \dml_exception
      */
-    public function get_cohort_members_by_cohort_id($cohortid, $suspendedusers) {
-
+    public function get_cohort_members_by_cohort_id($cohortid, $data = new stdClass()) {
+        
         $cohort = $this->get_cohort_by_id($cohortid);
+        // Filters and params
+        $filtersandparams = $this->get_cohort_members_filters_and_params($data);
+        $sqlfilters = $filtersandparams->filters;
+        $params = $filtersandparams->params;
+        $data->start = isset( $data->start ) ? $data->start : 0;
+        $data->length = isset( $data->length ) ? $data->length : 50;
+        $sqlrequest = 
+            'SELECT u.*, (SELECT uid.data
+                FROM {user_info_data} uid
+                JOIN {user_info_field} uif ON uif.id = uid.fieldid
+                WHERE uid.userid = u.id
+                    AND uif.shortname = :mainentity
+                    ) as mainentity
+                FROM {user} u
+                INNER JOIN {cohort_members} cohortm
+                    ON cohortm.userid = u.id
+                WHERE
+                    cohortm.cohortid = :cohortid
+                    AND u.deleted = 0
+                    ' . $sqlfilters. '
+                OFFSET :offset LIMIT :limit ';
+        
+        $queryParams = array_merge(['mainentity' => 'mainentity' , 'cohortid' => $cohortid, 'offset' => $data->start, 'limit' => $data->length], $params);
+        
+        $cohort->members = $this->db->get_records_sql($sqlrequest, $queryParams);
+        
+        return $cohort->members;
+    }
 
-        $sqlfilter = '';
-
-        if ($suspendedusers == 'true') {
-            $sqlfilter = ' AND u.suspended = 1';
-        } else if ($suspendedusers == 'false') {
-            $sqlfilter = ' AND u.suspended = 0';
+    /**
+     * build membrs filters and params via data object
+     * @param object $data
+     * @return stdClass
+     */
+    public function get_cohort_members_filters_and_params($data){
+        $filtersandparams = new stdClass();
+        
+        $params = [];
+        $sqlfilters = '';
+        $data->suspendedusers = isset($data->suspendedusers) ? $data->suspendedusers : null;
+        if ($data->suspendedusers == 'true') {
+            $sqlfilters = ' AND u.suspended = 1';
+        } else if ($data->suspendedusers == 'false') {
+            $sqlfilters = ' AND u.suspended = 0';
         }
 
-        $cohort->members = $this->db->get_records_sql('
-            SELECT u.*, (SELECT uid.data
-                         FROM {user_info_data} uid
-                         JOIN {user_info_field} uif ON uif.id = uid.fieldid
-                         WHERE uid.userid = u.id
-                                AND uif.shortname = ?
-                             ) as mainentity
-            FROM {user} u
-            INNER JOIN {cohort_members} cohortm
-                ON cohortm.userid = u.id
-            WHERE
-                cohortm.cohortid = ?
-                AND u.deleted = 0
-                ' . $sqlfilter
-            , ['mainentity', $cohortid]);
+        // Search filters
+        if (!empty($data->search) && mb_strlen(trim($data->search)) > 0) {
+            $searchvalue = $data->search;
+            $searchvalue = str_replace("&#39;", "\'", $searchvalue);
+            $listsearchvalue = explode(" ", $searchvalue);
+            $searchConditions = [];
 
-        return $cohort->members;
+            foreach ($listsearchvalue as $key => $partsearchvalue) {
+                // Limit search length
+                $searchvalue = trim($data->search);
+                if (mb_strlen($searchvalue) > 100) {
+                    $searchvalue = mb_substr($searchvalue, 0, 100);
+                }
+                // Add a cleaning param layer 
+                $searchvalue = clean_param($searchvalue, PARAM_TEXT);
 
+                if (!$partsearchvalue) {
+                    continue;
+                }
+                $userSearchConditions = [
+                    $this->db->sql_like('u.firstname', ':firstname' . $key, false, false),
+                    $this->db->sql_like('u.lastname', ':lastname' . $key, false, false),
+                    $this->db->sql_like('u.email', ':email' . $key, false, false),
+                    $this->db->sql_like('u.username', ':username' . $key, false, false)
+                ];
+
+                $searchConditions[] = '(' . implode(' OR ', $userSearchConditions) . ')';
+
+                // Add parameters for each search condition
+                $params['firstname' . $key] = '%' . $this->db->sql_like_escape($partsearchvalue) . '%';
+                $params['lastname' . $key] = '%' . $this->db->sql_like_escape($partsearchvalue) . '%';
+                $params['email' . $key] = '%' . $this->db->sql_like_escape($partsearchvalue) . '%';
+                $params['username' . $key] = '%' . $this->db->sql_like_escape($partsearchvalue) . '%';
+            }
+
+            if (!empty($searchConditions)) {
+                $sqlfilters = ' AND (' . implode(' AND ', $searchConditions) . ')';
+            }
+        }
+
+        $filtersandparams->params = $params;        
+        $filtersandparams->filters = $sqlfilters;
+
+        return $filtersandparams;
+    }
+
+
+    /**
+     * Return the count of a course members with or without filers
+     * @param string $sqlfilter
+     * @param string $searchfilter
+     * @param array $params
+     * @param bool $enablefilters
+     * @return int
+     * @throws \dml_exception
+     */
+    public function get_cohort_members_count_by_cohort_id($cohortid, $data, $enablefilters = true){
+        $count = 0;
+        $sqlfilters = '';
+        $params = ['cohortid' => $cohortid];
+        $sqlcountrequest = 
+            'SELECT count(Distinct u.id) FROM {user} u
+                INNER JOIN {cohort_members} cohortm
+                    ON cohortm.userid = u.id
+                WHERE
+                    cohortm.cohortid = :cohortid
+                    AND u.deleted = 0';
+        try{
+            if($enablefilters){
+                // Count with filters & search
+                $filtersandparams = $this->get_cohort_members_filters_and_params($data);
+                $sqlfilters = $filtersandparams->filters;
+                $sqlcountrequest .= $sqlfilters;
+                $params = array_merge($filtersandparams->params, $params);
+            }
+                // Count without filters & search
+                $count = $this->db->count_records_sql($sqlcountrequest, $params);
+            
+        }catch(\dml_exception $e){
+            mtrace('Error sql getting cohort members count: ' . $e->getMessage());
+        }
+        return $count;
     }
 
     /**

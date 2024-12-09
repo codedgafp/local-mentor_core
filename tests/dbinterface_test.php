@@ -1724,21 +1724,25 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         cohort_add_member($cohort->id, $newuserid);
 
         // Get user to cohort.
-        $resultrequest = $dbinterface->get_cohort_members_by_cohort_id($cohort->id, 'all');
+        $resultrequest = $dbinterface->get_cohort_members_by_cohort_id($cohort->id);
 
         // Check if are equals values.
         self::assertCount(1, $resultrequest);
         self::assertEquals($newuserid, current($resultrequest)->id);
 
         // Get user active to cohort.
-        $resultrequest = $dbinterface->get_cohort_members_by_cohort_id($cohort->id, 'false');
+        $data = new stdClass();
+        $data->suspendedusers = 'false';
+        $resultrequest = $dbinterface->get_cohort_members_by_cohort_id($cohort->id, $data);
 
         // Check if are equals values.
         self::assertCount(1, $resultrequest);
         self::assertEquals($newuserid, current($resultrequest)->id);
 
         // Get user suspended to cohort.
-        $resultrequest = $dbinterface->get_cohort_members_by_cohort_id($cohort->id, 'true');
+        $data = new stdClass();
+        $data->suspendedusers = 'true';
+        $resultrequest = $dbinterface->get_cohort_members_by_cohort_id($cohort->id, $data);
 
         // Check if are equals values.
         self::assertCount(0, $resultrequest);
@@ -1749,13 +1753,17 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         $DB->update_record('user', $user);
 
         // Get user active to cohort.
-        $resultrequest = $dbinterface->get_cohort_members_by_cohort_id($cohort->id, 'false');
+        $data = new stdClass();
+        $data->suspendedusers = 'false';
+        $resultrequest = $dbinterface->get_cohort_members_by_cohort_id($cohort->id, $data);
 
         // Check if are equals values.
         self::assertCount(0, $resultrequest);
 
         // Get user suspended to cohort.
-        $resultrequest = $dbinterface->get_cohort_members_by_cohort_id($cohort->id, 'true');
+        $data = new stdClass();
+        $data->suspendedusers = 'true';
+        $resultrequest = $dbinterface->get_cohort_members_by_cohort_id($cohort->id, $data);
         self::assertCount(1, $resultrequest);
         self::assertEquals($newuserid, current($resultrequest)->id);
 

@@ -1020,40 +1020,59 @@ class entity extends model {
     /**
      * Get entity members
      *
-     * @param string $suspendedusers users suspended default all. options : all, true, false
-     * @param string $externalusers users who get external user role default all. options : all, true, false
-     * @return profile[]
+     * @param $data object of paramets 
+     * @return array
      * @throws \coding_exception
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function get_members($suspendedusers = 'all', $externalusers = 'all') {
+    public function get_members($data = new \stdClass()) {
         global $CFG;
+        $data->suspendedusers = isset($data->suspendedusers) ? $data->suspendedusers : 'all';
+        $data->externalusers = isset($data->externalusers) ? $data->externalusers : 'all';
         require_once($CFG->dirroot . '/local/mentor_core/api/profile.php');
-
+        
         if (!$this->is_main_entity()) {
             return [];
         }
 
         $cohort = $this->get_cohort();
 
-        $cohortmembers = $this->dbinterface->get_cohort_members_by_cohort_id($cohort->id, $suspendedusers);
-        
+        $cohortmembers = $this->dbinterface->get_cohort_members_by_cohort_id($cohort->id, $data);
+
         $constextsystemid = context_system::instance()->id;
+        
+        // Cache for user roles.
+        $user_roles_cache = [];
 
-        foreach ($cohortmembers as $member) {
-            // check if user has 'externaluser' role
-            $is_external_user = ($this->dbinterface->user_has_role_in_context($member->id, 'utilisateurexterne', $constextsystemid));
-
-            // filter based on externaluser filter type
-            if (($externalusers == 'true' && $is_external_user) ||
-                ($externalusers == 'false' && !$is_external_user) ||
-                ($externalusers == 'all')) {
-                $this->members[$member->id] = profile_api::get_profile($member);
+        // Filter cohort members based on external user role.
+        $filteredmembers = array_filter($cohortmembers, function($member) use ($data, $constextsystemid, &$user_roles_cache) {
+            if (!isset($user_roles_cache[$member->id])) {
+                $user_roles_cache[$member->id] = $this->dbinterface->user_has_role_in_context($member->id, 'utilisateurexterne', $constextsystemid);
             }
+            $is_external_user = $user_roles_cache[$member->id];
+            return ($data->externalusers == 'true' && $is_external_user) ||
+                ($data->externalusers == 'false' && !$is_external_user) ||
+                ($data->externalusers == 'all');
+        });
+
+        // Populate members with filtered cohort members.
+        foreach ($filteredmembers as $member) {
+            $this->members[$member->id] = profile_api::get_profile($member);
         }
         return $this->members;
 
+    }
+
+    /**
+     * Get members count 
+     * @param object $data
+     * @param bool $enablefilters
+     * @return int
+     */
+    public function get_members_count($data, $enablefilters){
+        $cohort = $this->get_cohort();
+        return $this->dbinterface->get_cohort_members_count_by_cohort_id($cohort->id, $data, $enablefilters);
     }
 
     /**
