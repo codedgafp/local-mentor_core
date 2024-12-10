@@ -92,14 +92,13 @@ class session_api {
      * @throws moodle_exception
      */
     public static function get_sessions_by_entity($data) {
-
+        global $USER;
         $specialization = specialization::get_instance();
 
         // Get the specialization of the session list.
         $sessions = $specialization->get_specialization('get_sessions_by_entity', null, [
             'data' => $data,
         ]);
-
         // Return the specialization data.
         if (!is_null($sessions)) {
             return $sessions;
@@ -110,31 +109,25 @@ class session_api {
         $listsessionsrecord = $db->get_sessions_by_entity_id($data);
 
         $listsession = [];
-
         foreach ($listsessionsrecord as $sessionrecord) {
             $session = self::get_session($sessionrecord->id, false);
-
+        
+   
             // Skip the session if the user cannot manage it.
-            if (!$session->is_manager()) {
+            $sessioncontext = \context_course::instance($session->get_course()->id);
+            if (! has_capability('local/session:manage',  $sessioncontext, $USER->id)) {
                 continue;
             }
 
-            $listsession[] = [
-                'id' => $session->id,
-                'fullname' => $session->fullname,
-                'link' => $session->get_url()->out(),
-                'shortname' => $session->shortname,
-                'status' => get_string($session->status, 'local_mentor_core'),
-                'statusshortname' => $session->status,
-                'timecreated' => $session->get_course()->timecreated,
-                'shared' => $session->is_shared(),
-                'nbparticipant' => $session->numberparticipants,
-                'hasusers' => count($session->get_course_users()),
-                'actions' => $session->get_actions(),
-            ];
-        }
+            $sessionrecord->link = $session->get_url()->out();
+            $sessionrecord->actions = $session->get_actions();
+            $sessionrecord->status =  get_string($sessionrecord->status, 'local_mentor_core');
+            $sessionrecord->shared = ( $sessionrecord->opento == 'all' ) ? true : false;
+            $sessionrecord->hasusers = count($session->get_course_users());
 
-        return $listsession;
+            $listsession[] = (array)$sessionrecord;
+        }
+        return array_values($listsession);
     }
 
     /**
