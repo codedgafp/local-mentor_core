@@ -333,7 +333,9 @@ class training extends model {
 
         // Create a new backup file.
         $bc = new \backup_controller_edu(
-            \backup::TYPE_1COURSE, $this->courseid, \backup::FORMAT_MOODLE,
+            \backup::TYPE_1COURSE,
+            $this->courseid,
+            \backup::FORMAT_MOODLE,
             \backup::INTERACTIVE_NO,
             \backup::MODE_GENERAL,
             $USER->id,
@@ -353,7 +355,7 @@ class training extends model {
         );
 
         // Disable user info to all quiz activities.
-        $bc->disable_userinfo_to_activity('quiz');
+        $bc->disable_userinfo_to_all_activities();
 
         $bc->execute_plan();
 
