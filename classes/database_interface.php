@@ -4030,11 +4030,21 @@ class database_interface {
                                     
         }
 
+        // Check if the programcourse plugin is installed.
+        $programcourseInstalled = \core_plugin_manager::instance()->get_plugin_info('programcourse');
+        $programcourseConditionJoin = $programcourseInstalled ? 'LEFT JOIN {programcourse} pc ON e.courseid = pc.courseid' : '';
+        $programcourseConditionWhere = $programcourseInstalled ? 
+                                        ' AND( ( pc.course = s.id AND e.enrol != \'program\' )
+                                            OR (pc.id IS NULL and  e.enrol!= \'program\')
+                                        )' 
+                                        : '';
         // Get user enrolled sessions.
         $usersessions = $this->db->get_records_sql('
-            SELECT s.*,
-                   c.id as courseid,
-                   c.fullname as fullname,
+            SELECT 
+                   DISTINCT ON (s.sessionstartdate, s.id)
+                    s.*,
+                    c.id as courseid
+                   ,c.fullname as fullname,
                    c.format as courseformat,
                    c.enablecompletion as enablecompletion,
                    t.id as trainingid,
@@ -4045,6 +4055,7 @@ class database_interface {
            JOIN {enrol} e ON e.id = ue.enrolid
            JOIN {course} c ON e.courseid = c.id
            JOIN {session} s ON c.shortname = s.courseshortname
+            ' . $programcourseConditionJoin . '
            JOIN {training} t ON t.id = s.trainingid
            JOIN {course} c2 ON c2.shortname = t.courseshortname
            JOIN {context} ct ON ct.instanceid = c.id
@@ -4057,14 +4068,15 @@ class database_interface {
                 ct2.contextlevel = :levelbis
                ' . $hiddencondition . '
                 '. $searchConditions .'
+                '.$programcourseConditionWhere.'
             GROUP BY s.id, c.id, t.id, contextid, contexttrainingid
-            ORDER BY s.sessionstartdate DESC, c.fullname
+            ORDER BY s.sessionstartdate DESC, s.id, c.fullname
         ', [
             'level' => CONTEXT_COURSE,
             'levelbis' => CONTEXT_COURSE,
             'userid' => $userid,
         ]);
-        
+
         // Get user favourite sessions.
         $userfavouritesessions = $this->db->get_records('favourite', [
             'userid' => $userid,
