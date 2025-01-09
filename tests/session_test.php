@@ -2905,4 +2905,213 @@ class local_mentor_core_session_testcase extends advanced_testcase {
 
         self::resetAllData();
     }
+
+
+    /**
+     * Test retrieving user sessions that are part of a program course
+     *
+     * @covers \local_mentor_core\session_api::get_user_sessions
+     */
+    public function test_get_user_sessions_with_program_course() {
+         global $DB;
+
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+        $this->init_role();
+
+        $userid = $this->init_create_user();
+
+        self::setAdminUser();
+
+        // Create session.
+        $sessionid = $this->init_session_creation("Session Programcourse");
+
+        // Get session.
+        try {
+            $session = \local_mentor_core\session_api::get_session($sessionid);
+        } catch (\Exception $e) {
+            self::fail($e->getMessage());
+        }
+
+        // Updating the status session to have return sessions.
+        $session->opento = 'all';
+        $session->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
+        \local_mentor_core\session_api::update_session($session);
+
+
+
+        // Create 2 sessions.
+        $session1Id = \local_mentor_core\session_api::create_session($session->get_training()->id, 'Session 1', true);
+        $session2Id = \local_mentor_core\session_api::create_session($session->get_training()->id, 'Session 2', true);
+
+         // Get session.
+         try {
+            $session1 = \local_mentor_core\session_api::get_session($session1Id);
+            $session2 = \local_mentor_core\session_api::get_session($session2Id);
+        } catch (\Exception $e) {
+            self::fail($e->getMessage());
+        }
+
+        // Updating the status session to have return sessions.
+        $session1->opento = 'all';
+        $session1->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
+        \local_mentor_core\session_api::update_session($session1);
+         // Updating the status session to have return sessions.
+         $session2->opento = 'all';
+         $session2->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
+         \local_mentor_core\session_api::update_session($session2);
+
+        // Add sessions A and B as modules to the program session.
+        $DB->insert_record('programcourse', ['course' => $session->get_course()->id, 'courseid' => $session1->get_course()->id,'intro' => '','timemodified' => time()]);
+        $DB->insert_record('programcourse', ['course' => $session->get_course()->id, 'courseid' => $session2->get_course()->id,'intro' => '','timemodified' => time()]);
+
+
+        // Create self enrolment instance.
+        $session->create_self_enrolment_instance();
+        $dbi = \enrol_program\database_interface::get_instance();
+
+        //Add session 1 as a module to "session programcourse"
+        $instance = new \stdClass();
+        $instance->courseid = $session1->get_course()->id;
+        $instance->enrol = 'program';
+        $instance->status = ENROL_INSTANCE_ENABLED;
+        $instance->customint1 = $session->get_course()->id; // Id of the "parent" course (the program).
+        $instance->timecreated = time();
+        $instance->timemodified = $instance->timecreated;
+        $dbi->insert_enrol_instance($instance);
+        //Add session 2 as a module to "session programcourse"
+        $instance1 = new \stdClass();
+        $instance1->courseid = $session2->get_course()->id;
+        $instance1->enrol = 'program';
+        $instance1->status = ENROL_INSTANCE_ENABLED;
+        $instance1->customint1 = $session->get_course()->id; // Id of the "parent" course (the program).
+        $instance1->timecreated = time();
+        $instance1->timemodified = $instance1->timecreated;
+        $dbi->insert_enrol_instance($instance1);
+        
+        // Enrol user.
+        self::setUser($userid);
+        $session->enrol_current_user();
+       
+     
+        // User is enrolled.
+        self::assertCount(1, \local_mentor_core\session_api::get_user_sessions($userid)); 
+
+        //Get user sessions
+        $userSessions = \local_mentor_core\session_api::get_user_sessions($userid);
+
+        self::assertCount(1, $userSessions);       
+        self::assertEquals($session->id, $userSessions[0]->id);
+        self::resetAllData();
+    }
+
+    /**
+     * Test retrieving user archived sessions that are part of a program course
+     *
+     * @covers \local_mentor_core\session_api::get_user_sessions
+     */
+    public function test_get_user_archived_sessions_with_program_course() {
+       
+        global $DB; 
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+        $this->init_role();
+ 
+        self::setAdminUser();
+
+        $userid = $this->init_create_user();
+              
+        // Create session.
+        $sessionid = $this->init_session_creation("Session Programcourse");
+
+        // Get session.
+        try {
+            $session = \local_mentor_core\session_api::get_session($sessionid);
+        } catch (\Exception $e) {
+            self::fail($e->getMessage());
+        }
+
+        // Updating the status session to have return sessions.
+        $session->opento = 'all';
+        $session->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
+        \local_mentor_core\session_api::update_session($session);
+
+
+
+        // Create 2 sessions.
+        $session1Id = \local_mentor_core\session_api::create_session($session->get_training()->id, 'Session 1', true);
+        $session2Id = \local_mentor_core\session_api::create_session($session->get_training()->id, 'Session 2', true);
+
+         // Get session.
+         try {
+            $session1 = \local_mentor_core\session_api::get_session($session1Id);
+            $session2 = \local_mentor_core\session_api::get_session($session2Id);
+        } catch (\Exception $e) {
+            self::fail($e->getMessage());
+        }
+
+        // Updating the status session to have return sessions.
+        $session1->opento = 'all';
+        $session1->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
+        \local_mentor_core\session_api::update_session($session1);
+         // Updating the status session to have return sessions.
+         $session2->opento = 'all';
+         $session2->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
+         \local_mentor_core\session_api::update_session($session2);
+
+        // Add sessions A and B as modules to the program session.
+        $DB->insert_record('programcourse', ['course' => $session->get_course()->id, 'courseid' => $session1->get_course()->id,'intro' => '','timemodified' => time()]);
+        $DB->insert_record('programcourse', ['course' => $session->get_course()->id, 'courseid' => $session2->get_course()->id,'intro' => '','timemodified' => time()]);
+
+        self::setAdminUser();
+        // Create self enrolment instance.
+        $session->create_self_enrolment_instance();
+        $dbi = \enrol_program\database_interface::get_instance();
+
+        //Add session 1 as a module to "session programcourse"
+        $instance = new \stdClass();
+        $instance->courseid = $session1->get_course()->id;
+        $instance->enrol = 'program';
+        $instance->status = ENROL_INSTANCE_ENABLED;
+        $instance->customint1 = $session->get_course()->id; // Id of the "parent" course (the program).
+        $instance->timecreated = time();
+        $instance->timemodified = $instance->timecreated;
+        $dbi->insert_enrol_instance($instance);
+        //Add session 2 as a module to "session programcourse"
+        $instance1 = new \stdClass();
+        $instance1->courseid = $session2->get_course()->id;
+        $instance1->enrol = 'program';
+        $instance1->status = ENROL_INSTANCE_ENABLED;
+        $instance1->customint1 = $session->get_course()->id; // Id of the "parent" course (the program).
+        $instance1->timecreated = time();
+        $instance1->timemodified = $instance1->timecreated;
+        $dbi->insert_enrol_instance($instance1);
+        
+        // Enrol user.
+        self::setUser($userid);
+        $session->enrol_current_user();
+       
+     
+        // User is enrolled.
+        self::assertCount(1, \local_mentor_core\session_api::get_user_sessions($userid)); 
+
+        //Get user sessions
+        $userSessions = \local_mentor_core\session_api::get_user_sessions($userid);
+
+        self::assertCount(1, $userSessions);       
+        self::assertEquals($session->id, $userSessions[0]->id);
+        self::setAdminUser();
+        //Update session status to archived
+        $session->status = \local_mentor_core\session::STATUS_ARCHIVED;
+        \local_mentor_core\session_api::update_session($session);
+        self::setUser($userid);
+        //Get user sessions
+        $userSessions = \local_mentor_core\session_api::get_user_sessions($userid);
+
+        self::assertCount(1, $userSessions);       
+        self::assertEquals($session->id, $userSessions[0]->id);
+
+        self::resetAllData();
+    }
 }
+
