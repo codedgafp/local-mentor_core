@@ -109,6 +109,7 @@ $string['errors_nbusers']
     = 'Attention, le nombre maximal de participants pour cette session va être dépassé de {$a}.';
 $string['ignored_group_list'] = 'Liste des groupes ignorés : {$a}';
 $string['import_succeeded'] = 'Import effectué.';
+$string['import_inprogress'] = 'Import en cours.';
 $string['importusersglobal'] = 'Importer des utilisateurs en lot';
 $string['duplicatesessionintotraining'] = 'Duplication de la session en formation';
 $string['duplicatesessionintotrainingtitle'] = '{$a} : duplication du contenu de la session en formation';

@@ -1208,16 +1208,13 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
         $session->update($session);
         $session->create_manual_enrolment_instance();
 
-        local_mentor_core_enrol_users_csv($session->get_course(true)->id, $userlist);
+        $notification = local_mentor_core_enrol_users_csv($session->get_course(true)->id, $userlist);
 
         // One new user.
         self::assertCount(3, $DB->get_records('user'));
 
-        $notification = \core\notification::fetch();
-
         // Import success.
-        self::assertEquals($notification[0]->get_message_type(), 'success');
-        self::assertEquals($notification[0]->get_message(), get_string('import_succeeded', 'local_mentor_core'));
+        self::assertEquals($notification, true);
 
         self::resetAllData();
     }
@@ -1292,16 +1289,13 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
             ],
         ];
 
-        local_mentor_core_create_users_csv($userlist);
+        $notification = local_mentor_core_create_users_csv($userlist);
 
         // Two new user.
         self::assertCount(3, $DB->get_records('user'));
 
-        $notification = \core\notification::fetch();
-
         // Import success.
-        self::assertEquals($notification[0]->get_message_type(), 'success');
-        self::assertEquals($notification[0]->get_message(), get_string('import_succeeded', 'local_mentor_core'));
+        self::assertEquals($notification, true);
 
         // Create users and add to entity.
         $newentityname = 'Entity1';

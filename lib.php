@@ -877,7 +877,7 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
         }
     }
 
-    \core\notification::success(get_string('import_succeeded', 'local_mentor_core'));
+    return true;
 }
 
 /**
@@ -1005,7 +1005,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
             if ($areexternals) {
                 $updateexternaluser = false;
                 $entity = \local_mentor_core\entity_api::get_entity($entityid);
-                $profile = \local_mentor_core\profile_api::get_profile($user->id);
+                $profile = profile_api::get_profile($user->id);
                 if($usermainentity && $usermainentity === $entity->get_name()) {
                     // MEN-187-RG003
                     $updateexternaluser = true;
@@ -1030,7 +1030,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
                 // Update main entity user.
                 if ($addtoentity === \importcsv_form::ADD_TO_MAIN_ENTITY && !$usermainentity) {
                     // Get user profile.
-                    $profile = \local_mentor_core\profile_api::get_profile($user->id);
+                    $profile = profile_api::get_profile($user->id);
 
                     // Update main entity.
                     $profile->set_main_entity($entity);
@@ -1059,7 +1059,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
                     if (!in_array($entityname, $secondaryentitieslist) && $entityname !== $usermainentity) {
 
                         // Update secondary entity.
-                        $profile = \local_mentor_core\profile_api::get_profile($user->id);
+                        $profile = profile_api::get_profile($user->id);
                         $secondaryentitieslist[] = $entityname;
                         $profile->set_profile_field('secondaryentities', implode(', ', $secondaryentitieslist));
 
@@ -1096,7 +1096,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
         }
     }
 
-    \core\notification::success(get_string('import_succeeded', 'local_mentor_core'));
+    return true;
 }
 
 /**

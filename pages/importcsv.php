@@ -104,8 +104,25 @@ if (null !== $importusersformdata) {
     // List of users to reactivate.
     $userstoreactivate = json_decode($importusersformdata->userstoreactivate, true);
 
-    // Import users.
-    local_mentor_core_enrol_users_csv($courseid, $users, $userstoreactivate);
+    // Create enrol users task
+    $adhoctask = new \local_mentor_core\task\enrol_users_csv();
+
+    // Set data
+    $adhoctask->set_custom_data([
+        "courseid" => $courseid,
+        "users" => $users,
+        "userstoreactivate" => $userstoreactivate
+    ]);
+
+    // Prepare import users task.
+    \core\task\manager::queue_adhoc_task($adhoctask);
+
+    redirect(
+        $CFG->wwwroot . "/local/mentor_core/pages/importcsv.php?courseid=$courseid",
+        get_string('import_inprogress', 'local_mentor_core'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 // Validate given data from CSV.
