@@ -399,8 +399,10 @@ class session extends model {
             ];
         }
 
+        $countcourseusers = $this->numberparticipants ?? count($this->get_course_users());
+
         // Delete session button.
-        if (has_capability('local/session:delete', $this->get_context()) && count($this->get_course_users()) == 0) {
+        if (has_capability('local/session:delete', $this->get_context()) && $countcourseusers == 0) {
             $actions['deleteSession'] = [
                 'url' => '',
                 'tooltip' => get_string('deletesession', 'local_mentor_core'),
@@ -816,12 +818,34 @@ class session extends model {
         if ($refresh || !is_array($this->courseusers)) {
 
             // Get all session users.
-            $users = enrol_get_course_users($this->courseid);
+            $users = $this->get_course_enrolled_users($this->courseid);
 
             $this->courseusers = array_column($users, 'id');
         }
 
         return $this->courseusers;
+    }
+
+    /**
+     * Count enrolments users to a specific course
+     * 
+     * @param int $courseid
+     * @return array
+     */
+    private function get_course_enrolled_users(int $courseid): array
+    {
+        global $DB;
+
+        $sql = "SELECT DISTINCT(ue.id)
+            FROM {user_enrolments} ue
+            INNER JOIN {enrol} e ON e.id = ue.enrolid
+            INNER JOIN {user} u ON ue.userid = u.id
+            WHERE e.courseid = :courseid";
+        $params['courseid'] = $courseid;
+
+        $record = $DB->get_records_sql($sql, $params);
+
+        return $record;
     }
 
     /**
@@ -2391,5 +2415,10 @@ class session extends model {
 
         // Remove all enrol instance.
         enrol_course_delete($this->get_course(true));
+    }
+
+    public function set_numberparticipants(int $numberparticipants): void
+    {
+        $this->numberparticipants = $numberparticipants;
     }
 }
