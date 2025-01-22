@@ -235,7 +235,7 @@ $string['email_complete_session_object'] = 'Fin de la session {$a}';
 $string['email_complete_session_content'] = 'Bonjour,
 
 La session de formation {$a} est maintenant terminée. Si vous n\'avez pas suivi l\'ensemble des activités, il vous reste 30 jours pour le faire.
-Ensuite cette session sera archivée automatiquement. Néanmoins, vous pourrez la retrouver sur votre tableau de bord dans la section "Vos sessions archivées" et les ressources resteront consultables.
+Ensuite cette session sera archivée automatiquement. Néanmoins, vous pourrez la retrouver sur votre page d’accueil dans la section "Vos sessions archivées" et les ressources resteront consultables.
 
 A très bientôt sur Mentor
 Bien cordialement';
@@ -243,7 +243,7 @@ Bien cordialement';
 $string['email_archive_session_object'] = 'Archivage de la session {$a}';
 $string['email_archive_session_content'] = 'Bonjour,
 
-La session de formation {$a} est maintenant archivée. Vous pouvez la retrouver sur votre tableau de bord dans la section "Vos sessions archivées" et les ressources restent consultables.
+La session de formation {$a} est maintenant archivée. Vous pouvez la retrouver sur votre page d’accueil dans la section "Vos sessions archivées" et les ressources restent consultables.
 
 A très bientôt sur Mentor
 Bien cordialement';
