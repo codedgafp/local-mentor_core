@@ -47,17 +47,17 @@
         <ul class="nav more-nav nav-tabs" id="moremenu-{{ uniqid }}-nav-tabs" role="tablist">
             {{# items }}
                 <li data-key="{{ key }}" class="nav-item" role="none" data-forceintomoremenu="false">
-                    <a role="tab" class="nav-link {{# active }}active_tree_node active{{/active}}" href="#{{ id }}" data-toggle="tab" data-text="{{ label }}"
+                    <button role="tab" class="nav-link {{# active }}active_tree_node active{{/active}}" href="#{{ id }}" data-toggle="tab" data-text="{{ label }}"
                        aria-selected="true" tabindex="0">
                         {{ label }}
-                    </a>
+                    </button>
                 </li>
             {{/ items }}
             <li role="none" class="nav-item dropdown dropdownmoremenu d-none" data-region="morebutton">
-                <a class="dropdown-toggle nav-link " href="#" id="moremenu-dropdown-{{ uniqid }}" role="tab" data-toggle="dropdown" aria-haspopup="true"
+                <button class="dropdown-toggle nav-link " href="#" id="moremenu-dropdown-{{ uniqid }}" role="tab" data-toggle="dropdown" aria-haspopup="true"
                    aria-expanded="false" tabindex="-1">
                     {{# str }} more, local_mentor_core {{/str}}
-                </a>
+                </button>
                 <ul class="dropdown-menu dropdown-menu-left" data-region="moredropdown" role="menu" aria-labelledby="moremenu-dropdown-{{ uniqid }}" role="menu"
                     style="will-change: transform;">
                 </ul>
