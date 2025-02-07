@@ -321,8 +321,8 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
     $pattern = '/[\/~`\!@#\$%\^&\*\(\)_\+=\{\}\[\]\|;:"\<\>,\.\?\\\]/';
     $emailpattern = '/[\(\)<>";:\\,\[\]]/';
 
-    // No more than 500 entries.
-    if (count($content) > 500) {
+    // No more than 200 entries.
+    if (count($content) > 201) {
         \core\notification::error(get_string('error_too_many_lines', 'local_mentor_core'));
         return true;
     }
@@ -2040,8 +2040,8 @@ function local_mentor_core_validate_suspend_users_csv($content, $entity, &$previ
 {
     global $DB;
 
-    // No more than 500 entries.
-    if (count($content) > 500) {
+    // No more than 200 entries.
+    if (count($content) > 201) {
         \core\notification::error(get_string('error_too_many_lines', 'local_mentor_core'));
         return true;
     }

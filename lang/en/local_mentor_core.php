@@ -143,7 +143,7 @@ $string['errors_detected'] = 'Des erreurs ont été détectées dans le fichier.
 $string['warnings_detected'] = 'Des avertissements ont été détectés dans le fichier.';
 $string['error_specials_chars']
     = 'Des caractères spéciaux sont présents dans le fichier CSV. Cette ligne sera ignorée à l\'import.';
-$string['error_too_many_lines'] = 'Le fichier fait plus de 500 lignes.';
+$string['error_too_many_lines'] = 'Le fichier fait plus de 200 lignes.';
 $string['error_user_already_main_entity']
     = 'L\'utilisateur possède déjà une entité principale différente de l\'espace dédié sélectionné il ne sera pas mis à jour dans Mentor.';
 $string['error_user_already_secondary_entity']

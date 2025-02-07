@@ -642,8 +642,8 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
 
         $userlist = ['lastname, firstname, email'];
 
-        // Create 550 entries.
-        for ($i = 0; $i < 550; $i++) {
+        // Create 250 entries.
+        for ($i = 0; $i < 250; $i++) {
             $userlist[] = 'lastname1, firstname1, lastname1.firstname1@gmail.com';
         }
 
@@ -2572,7 +2572,7 @@ test2", $finalcontent);
         $errors = [];
 
         $content = [];
-        for ($i = 0; $i < 501; $i++) {
+        for ($i = 0; $i < 202; $i++) {
             $content[] = $i;
         }
 
