@@ -29,9 +29,11 @@ use core\event\course_category_updated;
 use core_course_category;
 use local\mentor_specialization\classes\models\mentor_profile;
 use stdClass;
+use utils\databases;
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/local/mentor_core/classes/model/session.php');
+require_once "$CFG->dirroot/local/mentor_core/classes/model/session.php";
+require_once "$CFG->dirroot/local/mentor_core/classes/utils/datatables.php";
 
 class database_interface {
 
@@ -1166,10 +1168,14 @@ class database_interface {
         $filtersandparams = $this->get_cohort_members_filters_and_params($data);
         $sqlfilters = $filtersandparams->filters;
         $params = $filtersandparams->params;
-        $data->start = isset( $data->start ) ? $data->start : 0;
-        $data->length = isset( $data->length ) ? $data->length : 50;
+        $data->start ??= 0;
+        $data->length ??= 50;
+        $data->order ??= null;
+        
+        $sqlorderby = order_cohort_members($data->order);
+
         $sqlrequest = 
-            'SELECT u.*, (SELECT uid.data
+            "SELECT u.*, (SELECT uid.data
                 FROM {user_info_data} uid
                 JOIN {user_info_field} uif ON uif.id = uid.fieldid
                 WHERE uid.userid = u.id
@@ -1181,8 +1187,9 @@ class database_interface {
                 WHERE
                     cohortm.cohortid = :cohortid
                     AND u.deleted = 0
-                    ' . $sqlfilters. '
-                OFFSET :offset LIMIT :limit ';
+                    $sqlfilters
+                    $sqlorderby
+                OFFSET :offset LIMIT :limit ";
         
         $queryParams = array_merge(['mainentity' => 'mainentity' , 'cohortid' => $cohortid, 'offset' => $data->start, 'limit' => $data->length], $params);
         
