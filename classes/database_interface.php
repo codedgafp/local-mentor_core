@@ -29,7 +29,7 @@ use core\event\course_category_updated;
 use core_course_category;
 use local\mentor_specialization\classes\models\mentor_profile;
 use stdClass;
-use utils\databases;
+use context_system;
 defined('MOODLE_INTERNAL') || die();
 
 require_once "$CFG->dirroot/local/mentor_core/classes/model/session.php";
@@ -1207,11 +1207,27 @@ class database_interface {
         
         $params = [];
         $sqlfilters = '';
+        // Suspended users
         $data->suspendedusers = isset($data->suspendedusers) ? $data->suspendedusers : null;
         if ($data->suspendedusers == 'true') {
-            $sqlfilters = ' AND u.suspended = 1';
+            $sqlfilters .= ' AND u.suspended = 1';
         } else if ($data->suspendedusers == 'false') {
-            $sqlfilters = ' AND u.suspended = 0';
+            $sqlfilters .= ' AND u.suspended = 0';
+        }
+        
+        // Extern users
+        $data->externalusers = isset($data->externalusers) ? $data->externalusers : null;
+        $externexistencesql = "(SELECT 1
+                FROM {role_assignments} ra
+                JOIN {role} r ON ra.roleid = r.id
+                WHERE 
+                    ra.userid = u.id
+                    AND ra.contextid = ".context_system::instance()->id."
+                    AND r.shortname = 'utilisateurexterne')";
+        if ($data->externalusers == 'true') {
+            $sqlfilters .= " AND EXISTS ".$externexistencesql;
+        } else if ($data->externalusers == 'false') {
+            $sqlfilters .= " AND NOT EXISTS ".$externexistencesql;
         }
 
         // Search filters
@@ -1289,9 +1305,8 @@ class database_interface {
                 $sqlcountrequest .= $sqlfilters;
                 $params = array_merge($filtersandparams->params, $params);
             }
-                // Count without filters & search
-                $count = $this->db->count_records_sql($sqlcountrequest, $params);
             
+            $count = $this->db->count_records_sql($sqlcountrequest, $params);
         }catch(\dml_exception $e){
             mtrace('Error sql getting cohort members count: ' . $e->getMessage());
         }
