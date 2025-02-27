@@ -1175,15 +1175,15 @@ class database_interface {
         $sqlorderby = order_cohort_members($data->order);
 
         $sqlrequest = 
-            "SELECT u.*, (SELECT uid.data
-                FROM {user_info_data} uid
-                JOIN {user_info_field} uif ON uif.id = uid.fieldid
-                WHERE uid.userid = u.id
-                    AND uif.shortname = :mainentity
-                    ) as mainentity
+            "SELECT u.*, mainentity
                 FROM {user} u
-                INNER JOIN {cohort_members} cohortm
-                    ON cohortm.userid = u.id
+                INNER JOIN
+                    (SELECT userid, uid.data as mainentity
+                        FROM {user_info_data} uid
+                        JOIN {user_info_field} uif ON uif.id = uid.fieldid AND uif.shortname = :mainentity
+                    ) AS user_info ON user_info.userid = u.id
+                INNER JOIN {cohort_members} cohortm ON cohortm.userid = u.id
+                INNER JOIN {course_categories} e ON e.name = mainentity
                 WHERE
                     cohortm.cohortid = :cohortid
                     AND u.deleted = 0
@@ -1194,7 +1194,6 @@ class database_interface {
         $queryParams = array_merge(['mainentity' => 'mainentity' , 'cohortid' => $cohortid, 'offset' => $data->start, 'limit' => $data->length], $params);
         
         $cohort->members = $this->db->get_records_sql($sqlrequest, $queryParams);
-        
         return $cohort->members;
     }
 
