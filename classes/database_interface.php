@@ -4038,9 +4038,8 @@ class database_interface {
 
         // Check if the programcourse plugin is installed.
         $programcourseInstalled = \core_plugin_manager::instance()->get_plugin_info('programcourse');
-        $programcourseConditionJoin = $programcourseInstalled ? 'LEFT JOIN {programcourse} pc ON e.courseid = pc.courseid' : '';
-        $programcourseConditionWhere = $programcourseInstalled ? 
-                                        ' AND( ( pc.course = s.id AND e.enrol != \'program\' )
+        $programcourseConditionJoin = $programcourseInstalled ? 'LEFT JOIN {programcourse} pc ON e.courseid = pc.courseid 
+                                         AND( ( pc.course = s.id AND e.enrol != \'program\' )
                                             OR (pc.id IS NULL and  e.enrol!= \'program\')
                                         )' 
                                         : '';
@@ -4074,7 +4073,6 @@ class database_interface {
                 ct2.contextlevel = :levelbis
                ' . $hiddencondition . '
                 '. $searchConditions .'
-                '.$programcourseConditionWhere.'
             GROUP BY s.id, c.id, t.id, contextid, contexttrainingid
             ORDER BY s.sessionstartdate DESC, s.id, c.fullname
         ', [
