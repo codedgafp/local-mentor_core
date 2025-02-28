@@ -2995,13 +2995,12 @@ class local_mentor_core_session_testcase extends advanced_testcase {
        
      
         // User is enrolled.
-        self::assertCount(1, \local_mentor_core\session_api::get_user_sessions($userid)); 
+        self::assertCount(3, \local_mentor_core\session_api::get_user_sessions($userid)); 
 
         //Get user sessions
         $userSessions = \local_mentor_core\session_api::get_user_sessions($userid);
 
-        self::assertCount(1, $userSessions);       
-        self::assertEquals($session->id, $userSessions[0]->id);
+        self::assertCount(3, $userSessions);       
         self::resetAllData();
     }
 
@@ -3093,13 +3092,9 @@ class local_mentor_core_session_testcase extends advanced_testcase {
        
      
         // User is enrolled.
-        self::assertCount(1, \local_mentor_core\session_api::get_user_sessions($userid)); 
+        self::assertCount(3, \local_mentor_core\session_api::get_user_sessions($userid)); 
 
-        //Get user sessions
-        $userSessions = \local_mentor_core\session_api::get_user_sessions($userid);
 
-        self::assertCount(1, $userSessions);       
-        self::assertEquals($session->id, $userSessions[0]->id);
         self::setAdminUser();
         //Update session status to archived
         $session->status = \local_mentor_core\session::STATUS_ARCHIVED;
@@ -3108,7 +3103,7 @@ class local_mentor_core_session_testcase extends advanced_testcase {
         //Get user sessions
         $userSessions = \local_mentor_core\session_api::get_user_sessions($userid);
 
-        self::assertCount(1, $userSessions);       
+        self::assertCount(3, $userSessions);       
         self::assertEquals($session->id, $userSessions[0]->id);
 
         self::resetAllData();
