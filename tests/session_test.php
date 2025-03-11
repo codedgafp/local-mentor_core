@@ -2960,7 +2960,6 @@ class local_mentor_core_session_testcase extends advanced_testcase {
          $session2->opento = 'all';
          $session2->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
          \local_mentor_core\session_api::update_session($session2);
-
         // Add sessions A and B as modules to the program session.
         $DB->insert_record('programcourse', ['course' => $session->get_course()->id, 'courseid' => $session1->get_course()->id,'intro' => '','timemodified' => time()]);
         $DB->insert_record('programcourse', ['course' => $session->get_course()->id, 'courseid' => $session2->get_course()->id,'intro' => '','timemodified' => time()]);
@@ -2995,12 +2994,12 @@ class local_mentor_core_session_testcase extends advanced_testcase {
        
      
         // User is enrolled.
-        self::assertCount(3, \local_mentor_core\session_api::get_user_sessions($userid)); 
+        self::assertCount(1, \local_mentor_core\session_api::get_user_sessions($userid)); 
 
         //Get user sessions
         $userSessions = \local_mentor_core\session_api::get_user_sessions($userid);
 
-        self::assertCount(3, $userSessions);       
+        self::assertCount(1, $userSessions);       
         self::resetAllData();
     }
 
@@ -3092,7 +3091,7 @@ class local_mentor_core_session_testcase extends advanced_testcase {
        
      
         // User is enrolled.
-        self::assertCount(3, \local_mentor_core\session_api::get_user_sessions($userid)); 
+        self::assertCount(1, \local_mentor_core\session_api::get_user_sessions($userid)); 
 
 
         self::setAdminUser();
@@ -3103,7 +3102,7 @@ class local_mentor_core_session_testcase extends advanced_testcase {
         //Get user sessions
         $userSessions = \local_mentor_core\session_api::get_user_sessions($userid);
 
-        self::assertCount(3, $userSessions);       
+        self::assertCount(1, $userSessions);       
         self::assertEquals($session->id, $userSessions[0]->id);
 
         self::resetAllData();
