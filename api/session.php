@@ -119,15 +119,23 @@ class session_api {
                 continue;
             }
 
-            $sessionrecord->link = $session->get_url()->out();
-            $sessionrecord->actions = $session->get_actions();
-            $sessionrecord->status =  get_string($sessionrecord->status, 'local_mentor_core');
-            $sessionrecord->shared = ( $sessionrecord->opento == 'all' ) ? true : false;
-            $sessionrecord->hasusers = count($session->get_course_users());
+            $listsession[] = [
+                'id' => $sessionrecord->id,
+                'fullname' => $session->fullname,
+                'link' => $session->get_url()->out(),
+                'shortname' => $sessionrecord->courseshortname,
+                'status' => get_string($session->status, 'local_mentor_core'),
+                'statusshortname' => $session->status,
+                'timecreated' => $sessionrecord->timecreated,
+                'shared' => $session->is_shared(),
+                'nbparticipant' => $session->numberparticipants,
+                'hasusers' => count($session->get_course_users()),
+                'actions' => $session->get_actions(),
+            ];
 
-            $listsession[] = (array)$sessionrecord;
+
         }
-        return array_values($listsession);
+        return $listsession;
     }
 
     /**
