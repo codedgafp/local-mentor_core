@@ -2353,4 +2353,42 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         self::resetAllData();
     }
+
+ /**
+     * Test get_main_entity_by_shortname function
+     */
+    public function test_get_main_entity_by_shortname() {
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+        $this->init_role();
+
+        self::setAdminUser();
+
+        // Create a main entity.
+        $entitydata = [
+            'name' => 'Main Entity',
+            'shortname' => 'mainentity'
+        ];
+
+        try {
+            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+        } catch (\Exception $e) {
+            self::fail($e->getMessage());
+        }
+
+        // Test if the entity can be retrieved by shortname.
+
+        $entity = \local_mentor_core\entity_api::get_main_entity_by_shortname('mainentity');
+
+
+        self::assertEquals($entityid, $entity->id);
+        self::assertEquals('Main Entity', $entity->name);
+        self::assertEquals('mainentity', $entity->shortname);
+
+        // Test with a non-existing shortname.
+
+        $entity = \local_mentor_core\entity_api::get_main_entity_by_shortname('nonexistentshortname');
+        self::assertFalse($entity);
+        self::resetAllData();
+    }
 }

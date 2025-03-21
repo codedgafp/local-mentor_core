@@ -4507,4 +4507,41 @@ class database_interface {
     public function delete_recall_user($userid) {
         $this->db->delete_records('user_recall', ['userid' => $userid]);
     }
+
+
+     /**
+     * Get a main entity by shortname
+     *
+     * @param string $shortname
+     * @param bool $refresh refresh or not the entities list before the check
+     * @return \stdClass|false
+     * @throws \dml_exception
+     */
+    public function get_main_entity_by_shortname($shortname, $refresh = false) {
+
+        // Refresh entities cache.
+        if ($refresh) {
+            $this->get_all_main_categories(true);
+        }
+
+        // Check in class cache.
+        foreach ($this->mainentities as $entity) {
+            if (strtolower($entity->shortname) == strtolower($shortname ?? '')) {
+                return $entity;
+            }
+        }
+
+        // Refresh entities cache again.
+        $this->get_all_main_categories(true);
+
+        foreach ($this->mainentities as $entity) {
+            if (strtolower($entity->shortname) == strtolower($shortname ?? '')) {
+                return $entity;
+            }
+        }
+
+        // Main entity not found.
+        return false;
+    }
+
 }

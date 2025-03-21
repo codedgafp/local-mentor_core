@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2025021300;       // The current module version (Date: YYYYMMDDXX).
+$plugin->version = 2025032100;       // The current module version (Date: YYYYMMDDXX).
 $plugin->requires = 2014051219;       // Requires this Moodle version.
 /** @var String $plugin */
 $plugin->component = 'local_mentor_core';       // Full name of the plugin (used for diagnostics).

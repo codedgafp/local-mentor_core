@@ -1069,4 +1069,20 @@ class entity_api {
         }
     }
 
+
+
+    /**
+     * Get the main entity by shortname
+     *
+     * @param string $shortname
+     * @return bool|entity
+     * @throws \dml_exception
+     * @throws \moodle_exception
+     */
+    public static function get_main_entity_by_shortname($shortname) {
+        $db = database_interface::get_instance();
+        return $db->get_main_entity_by_shortname($shortname);
+    }
+
+
 }
