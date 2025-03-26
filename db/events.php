@@ -32,7 +32,11 @@ $observers = [
     ],
     [
         'eventname' => '\core\event\user_updated',
-        'callback' => 'local_mentor_core_observer::sync_user_cohorts',
+        'callback' => 'local_mentor_core_observer::sync_user_cohorts'
+    ],
+    [
+        'eventname' => '\core\event\user_updated',
+        'callback' => 'local_mentor_core_observer::sync_user_main_entity'
     ],
     [
         'eventname' => '\core\event\course_category_deleted',

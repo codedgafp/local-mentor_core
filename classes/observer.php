@@ -1,4 +1,6 @@
 <?php
+
+use local_categories_domains\utils\categories_domains_service;
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -65,6 +67,21 @@ class local_mentor_core_observer {
         $profile = \local_mentor_core\profile_api::get_profile($userid);
 
         $profile->sync_entities();
+    }
+
+    /**
+     *
+     * Sync user main entity to the corresponding email
+     *
+     * @param \core\event\user_updated $event
+     * @throws Exception
+     */
+    public static function sync_user_main_entity(\core\event\user_updated $event) {
+        global $DB;
+        $cds = new categories_domains_service();
+        $user = $DB->get_record('user', ['id' => $event->objectid]);
+        $cds->link_categories_to_users([$user]);
+        return;
     }
 
     /**
