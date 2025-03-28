@@ -27,6 +27,7 @@ namespace local_mentor_core;
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/local/mentor_core/classes/model/model.php');
+use local_mentor_core\entity;
 
 class library extends entity {
 
