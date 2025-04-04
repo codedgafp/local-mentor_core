@@ -98,4 +98,19 @@ class local_mentor_core_observer {
         local_mentor_core_update_entities_list();
     }
 
+    /**
+     *
+     * Sync user main entity to the corresponding email
+     *
+     * @param \core\event\user_created $event
+     * @throws Exception
+     */
+    public static function sync_user_main_entity_on_create(\core\event\user_created $event) {
+        global $DB;
+        $cds = new categories_domains_service();
+        $user = $DB->get_record('user', ['id' => $event->objectid]);
+        $cds->link_categories_to_users([$user]);
+        return;
+    }
+
 }

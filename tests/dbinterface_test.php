@@ -2840,6 +2840,15 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
 
         // Create user.
         $userid = self::init_create_user();
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //So the user will have automatically main entity "Bibliothèque de formations"
+        //Due to test prepuces, we will override the main entity of the user and set it as we need         
+        $profile = \local_mentor_core\profile_api::get_profile($userid,true);
+        $profile->set_main_entity($session->get_entity()->get_main_entity());
+        $dbinterface = \local_mentor_core\database_interface::get_instance();       
+        $userbyid = $dbinterface->get_user_by_id($userid);
+        $session->get_entity()->get_main_entity()->add_member($userbyid);
 
         // Set current user.
         self::setUser($userid);
@@ -3342,7 +3351,16 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
 
         // Create user.
         $userid = self::init_create_user();
-
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //So the user will have automatically main entity "Bibliothèque de formations"
+        //Due to test prepuces, we will override the main entity of the user and set it as we need         
+        $profile = \local_mentor_core\profile_api::get_profile($userid,true);
+        $profile->set_main_entity($session->get_entity()->get_main_entity());
+        $dbinterface = \local_mentor_core\database_interface::get_instance();       
+        $userbyid = $dbinterface->get_user_by_id($userid);
+        $session->get_entity()->get_main_entity()->add_member($userbyid);
+        
         // Set current user.
         self::setUser($userid);
 

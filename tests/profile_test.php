@@ -875,7 +875,9 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
         $user->auth = 'manual';
         $user->profile_field_mainentity = $entity1->name;
         $userid = local_mentor_core\profile_api::create_user($user);
-
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //So the user will have automatically main entity "Bibliothèque de formations" => id = 2;
         $entity1->assign_manager($userid);
 
         $userroles = \local_mentor_core\profile_api::get_all_users_roles($data);
@@ -898,7 +900,7 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
         $dateformat = $startdate->format('d/m/Y');
         self::assertEquals($userroles[0]->timemodified, $dateformat);
         self::assertEquals($userroles[0]->profilelink, "https://www.example.com/moodle/user/profile.php?id=" . $userid);
-        self::assertEquals($userroles[0]->mainentity, "New Entity 1");
+        self::assertEquals($userroles[0]->mainentity, "Bibliothèque de formations");
 
         $this->resetAllData();
     }
@@ -970,7 +972,12 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
 
         // Create user.
         $user1 = self::getDataGenerator()->create_user();
-
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //So the user will have automatically main entity "Bibliothèque de formations"
+        //Due to test prepuces, we will override the main entity of the user and set it as we need 
+        $profile = \local_mentor_core\profile_api::get_profile($user1->id);
+        $profile->set_main_entity($entity1);
         $entity1->assign_manager($user1->id);
 
         // Create user.
@@ -986,6 +993,11 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
         $user2->profile_field_mainentity = 'New Entity 1';
 
         $userid2 = local_mentor_core\profile_api::create_user($user2);
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //Due to test prepuces, we will override the main entity of the user and set it as we need 
+        $profile = \local_mentor_core\profile_api::get_profile($userid2);
+        $profile->set_main_entity($entity1);
         set_user_preference('auth_forcepasswordchange', 0, $user2);
 
         // Create user.
@@ -1001,6 +1013,11 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
         $user3->profile_field_mainentity = 'New entity 2';
 
         $userid3 = local_mentor_core\profile_api::create_user($user3);
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //Due to test prepuces, we will override the main entity of the user and set it as we need 
+        $profile = \local_mentor_core\profile_api::get_profile($userid3);
+        $profile->set_main_entity(\local_mentor_core\entity_api::get_entity($entityid2));
         set_user_preference('auth_forcepasswordchange', 0, $user3);
 
         // Create user.

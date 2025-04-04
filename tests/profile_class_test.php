@@ -275,7 +275,10 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
 
         // Has main entity.
         $mainentity = $profile2->get_main_entity();
-        self::assertEquals($mainentity->id, 1);
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //So the user will have automatically main entity "Bibliothèque de formations" => id = 2;
+        self::assertEquals($mainentity->id, 2);
 
         self::resetAllData();
     }

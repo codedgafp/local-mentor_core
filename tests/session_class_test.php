@@ -2158,7 +2158,7 @@ class local_mentor_core_session_class_testcase extends advanced_testcase {
             'name' => 'New other entity',
             'shortname' => 'New other entity',
         ]);
-
+        $otherentity = \local_mentor_core\entity_api::get_entity($otherentityid);
         // Create user with main entity in other entity.
         $user = new stdClass();
         $user->lastname = 'lastname';
@@ -2172,6 +2172,13 @@ class local_mentor_core_session_class_testcase extends advanced_testcase {
         $user->profile_field_mainentity = 'New other entity';
 
         $userid = local_mentor_core\profile_api::create_user($user);
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //Due to test prepuces, we will override the main entity of the user and set it as we need 
+        $profile = \local_mentor_core\profile_api::get_profile($userid);
+        $profile->set_main_entity($otherentity);
+        $otherentity->add_member($user);
+
         set_user_preference('auth_forcepasswordchange', 0, $user);
 
         // Open to all entities.
@@ -2212,6 +2219,12 @@ class local_mentor_core_session_class_testcase extends advanced_testcase {
         $user2->profile_field_mainentity = $session->get_entity()->name;
 
         $userid2 = local_mentor_core\profile_api::create_user($user2);
+                //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //Due to test prepuces, we will override the main entity of the user and set it as we need 
+        $profile = \local_mentor_core\profile_api::get_profile($userid2);
+        $profile->set_main_entity($session->get_entity());
+        $session->get_entity()->add_member($user2);
         set_user_preference('auth_forcepasswordchange', 0, $user2);
 
         // Access session.

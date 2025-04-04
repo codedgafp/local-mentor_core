@@ -27,6 +27,7 @@ use local_mentor_core\catalog_api;
 use local_mentor_core\session;
 use local_mentor_core\session_api;
 use local_mentor_core\training_api;
+use local_mentor_core\profile_api;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -182,6 +183,44 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
         $trainingdata->creativestructure = $entity->id;
 
         return $trainingdata;
+    }
+
+        /**
+     * Create a training
+     *
+     * @param $name
+     * @param $shortname
+     * @param $entityid
+     * @return mixed
+     * @throws dml_exception
+     * @throws moodle_exception
+     */
+    public function init_create_training($entityid) {
+        // Init test data.
+        $trainingdata = new stdClass();
+
+        $trainingdata->name = 'fullname1';
+        $trainingdata->shortname = 'shortname1';
+        $trainingdata->content = 'summary1';
+
+        // Create training object.
+        $trainingdata->traininggoal = 'TEST TRAINING1';
+        $trainingdata->thumbnail = '';
+        $trainingdata->status = \local_mentor_core\training::STATUS_DRAFT;
+
+        try {
+            $entity = \local_mentor_core\entity_api::get_entity($entityid);
+        } catch (\Exception $e) {
+            self::fail($e->getMessage());
+        }
+
+        // Fill with entity data.
+        $formationid = $entity->get_entity_formation_category();
+        $trainingdata->categorychildid = $formationid;
+        $trainingdata->categoryid = $entity->id;
+        $trainingdata->creativestructure = $entity->id;
+
+        return \local_mentor_core\training_api::create_training($trainingdata);
     }
 
     /**
@@ -560,8 +599,11 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
 
         // Test with admin user.
         self::setAdminUser();
-
-        $training = training_api::create_training($this->get_training_data());
+         //After auto-attach of main entity , the user will be affected the main entity that corresponds to its email domain
+         //So this user will have "Bibliothèque de formations" as main entity after he'll be created (sprint60)
+         // We need to create the training and session in this entity 
+        $entityId = \local_mentor_core\entity_api::get_entity_by_name("Bibliothèque de formations")->id ;
+        $training = $this->init_create_training($entityId);
         $data = new \stdClass();
         $data->status = \local_mentor_core\training::STATUS_ELABORATION_COMPLETED;
         $training->update($data);
@@ -575,7 +617,7 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
 
         self::assertCount(1, \local_mentor_core\catalog_api::get_sessions_template_by_training($training->id));
 
-        // Test with user with main entity same training entity.
+        // Test with user with main entity same training entity "Bibliothèque de formations"
         $user = new stdClass();
         $user->lastname = 'lastname';
         $user->firstname = 'firstname';
@@ -584,35 +626,33 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
         $user->password = 'to be generated';
         $user->mnethostid = 1;
         $user->confirmed = 1;
-        $user->auth = 'manual';
-        $user->profile_field_mainentity = $training->get_entity()->name;
-
+        $user->auth = 'manual'; 
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain
+        $user->profile_field_mainentity = "Bibliothèque de formations";       
+        
         $user1id = \local_mentor_core\profile_api::create_user($user);
         self::setUser($user1id);
-
         self::assertCount(1, \local_mentor_core\catalog_api::get_sessions_template_by_training($training->id));
 
         self::setAdminUser();
 
-        // Test with user without main entity same training entity.
-        $otherentityid = \local_mentor_core\entity_api::create_entity(['name' => 'Other Entity', 'shortname' => 'Other Entity']);
-        $otherentity = \local_mentor_core\entity_api::get_entity($otherentityid);
+        // Test with the same user but main entity not the same as the training entity.
+        $training2 = training_api::create_training($this->get_training_data());
+        $data = new \stdClass();
+        $data->status = \local_mentor_core\training::STATUS_ELABORATION_COMPLETED;
+        $training2->update($data);
 
-        $user = new stdClass();
-        $user->lastname = 'lastname2';
-        $user->firstname = 'firstname2';
-        $user->email = 'test2@test.com';
-        $user->username = 'testusername2';
-        $user->password = 'to be generated';
-        $user->mnethostid = 1;
-        $user->confirmed = 1;
-        $user->auth = 'manual';
-        $user->profile_field_mainentity = $otherentity->name;
+        $sessionid2 = session_api::create_session($training2->id, 'session 2', true);
+        $session2 = \local_mentor_core\session_api::get_session($sessionid2);
+        $data = new \stdClass();
+        $data->status = \local_mentor_core\session::STATUS_CANCELLED;
+        $data->opento = \local_mentor_core\session::OPEN_TO_ALL;
+        $session2->update($data);
+        
+        self::setUser($user1id);
 
-        $user2id = \local_mentor_core\profile_api::create_user($user);
-        self::setUser($user2id);
-
-        self::assertFalse(\local_mentor_core\catalog_api::get_sessions_template_by_training($training->id));
+        self::assertFalse(\local_mentor_core\catalog_api::get_sessions_template_by_training($training2->id));
 
         // Test with no logging user.
         self::setUser(0);
@@ -637,8 +677,12 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
         // Test with admin user.
         self::setAdminUser();
 
-        $training = training_api::create_training($this->get_training_data());
-        $data = new \stdClass();
+        //After auto-attach of main entity , the user will be affected the main entity that corresponds to its email domain
+        //So this user will have "Bibliothèque de formations" as main entity after he'll be created (sprint60)
+        // We need to create the training and session in this entity 
+        $entityId = \local_mentor_core\entity_api::get_entity_by_name("Bibliothèque de formations")->id ;
+        $training = $this->init_create_training($entityId);       
+         $data = new \stdClass();
         $data->status = \local_mentor_core\training::STATUS_ELABORATION_COMPLETED;
         $training->update($data);
 
@@ -680,43 +724,36 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
         self::setAdminUser();
 
         // Test with user without main entity same training entity but session is share to this entity.
-        $user = new stdClass();
-        $user->lastname = 'lastname2';
-        $user->firstname = 'firstname2';
-        $user->email = 'test2@test.com';
-        $user->username = 'testusername2';
-        $user->password = 'to be generated';
-        $user->mnethostid = 1;
-        $user->confirmed = 1;
-        $user->auth = 'manual';
-        $user->profile_field_mainentity = $otherentity->name;
+        $training2 = training_api::create_training($this->get_training_data()); 
+        $data = new \stdClass();
+        $data->status = \local_mentor_core\training::STATUS_ELABORATION_COMPLETED;
+        $training2->update($data);
 
-        $user2id = \local_mentor_core\profile_api::create_user($user);
-        self::setUser($user2id);
+        $sessionid2 = session_api::create_session($training2->id, 'session 2', true);
+        $session2 = \local_mentor_core\session_api::get_session($sessionid2);
+        $data = new \stdClass();
+        $data->status = \local_mentor_core\session::STATUS_OPENED_REGISTRATION;
+        $data->opento = \local_mentor_core\session::OPEN_TO_OTHER_ENTITY;
+        $data->opentolist = [$entityId];
+        $session2->update($data);
+        self::setUser($user1id);
 
-        self::assertCount(1, \local_mentor_core\catalog_api::get_sessions_template_by_training($training->id));
+        self::assertCount(1, \local_mentor_core\catalog_api::get_sessions_template_by_training($training2->id));
 
         // Test with user without main entity same training entity and session is not share to this entity.
-        $user = new stdClass();
-        $user->lastname = 'lastname3';
-        $user->firstname = 'firstname3';
-        $user->email = 'test3@test.com';
-        $user->username = 'testusername3';
-        $user->password = 'to be generated';
-        $user->mnethostid = 1;
-        $user->confirmed = 1;
-        $user->auth = 'manual';
-        $user->profile_field_mainentity = $otherentity2->name;
+        self::setAdminUser();
+        $data = new \stdClass();
 
-        $user3id = \local_mentor_core\profile_api::create_user($user);
-        self::setUser($user3id);
+        $data->opentolist = [$otherentityid2];
+        $session2->update($data);
+        self::setUser($user1id);
 
-        self::assertFalse(\local_mentor_core\catalog_api::get_sessions_template_by_training($training->id));
+        self::assertFalse(\local_mentor_core\catalog_api::get_sessions_template_by_training($training2->id));
 
         // Test with no logging user.
         self::setUser(0);
 
-        self::assertFalse(\local_mentor_core\catalog_api::get_sessions_template_by_training($training->id));
+        self::assertFalse(\local_mentor_core\catalog_api::get_sessions_template_by_training($training2->id));
 
         self::resetAllData();
     }
@@ -797,8 +834,15 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
         $user->profile_field_mainentity = $training->get_entity()->name;
 
         $user1id = \local_mentor_core\profile_api::create_user($user);
-        self::setUser($user1id);
+       //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //So the user will have automatically main entity "Bibliothèque de formations"
+        //Due to test prepuces, we will override the main entity of the user and set it as we need 
+        $profile = profile_api::get_profile($user1id);
+        $profile->set_main_entity($training->get_entity());
+        $training->get_entity()->add_member($user);
 
+        self::setUser($user1id);
         self::assertCount(3, \local_mentor_core\catalog_api::get_sessions_template_by_training($training->id));
 
         self::setAdminUser();
@@ -816,6 +860,14 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
         $user->profile_field_mainentity = $otherentity->name;
 
         $user2id = \local_mentor_core\profile_api::create_user($user);
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //So the user will have automatically main entity "Bibliothèque de formations"
+        //Due to test prepuces, we will override the main entity of the user and set it as we need 
+        $profile = profile_api::get_profile($user2id);
+        $profile->set_main_entity($otherentity);
+        $otherentity->add_member($user);
+
         self::setUser($user2id);
 
         self::assertCount(2, \local_mentor_core\catalog_api::get_sessions_template_by_training($training->id));
@@ -833,6 +885,14 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
         $user->profile_field_mainentity = $otherentity2->name;
 
         $user3id = \local_mentor_core\profile_api::create_user($user);
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //So the user will have automatically main entity "Bibliothèque de formations"
+        //Due to test prepuces, we will override the main entity of the user and set it as we need 
+        $profile = profile_api::get_profile($user3id);
+        $profile->set_main_entity($otherentity2);
+        $otherentity2->add_member($user);
+
         self::setUser($user3id);
 
         self::assertCount(1, \local_mentor_core\catalog_api::get_sessions_template_by_training($training->id));
