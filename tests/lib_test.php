@@ -2492,7 +2492,9 @@ test2", $finalcontent);
      * @covers ::local_mentor_core_validate_suspend_users_csv
      */
     public function test_local_mentor_core_validate_suspend_users_csv_ok() {
-        global $DB;
+        global $DB, $CFG;
+
+        $CFG->allowemailaddresses = 'test.fr';
 
         $this->resetAfterTest(true);
         $this->reset_singletons();
