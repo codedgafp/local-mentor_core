@@ -41,7 +41,14 @@ class local_mentor_core_observer {
         global $DB;
         $cds = new categories_domains_service();
         $user = $DB->get_record('user', ['id' => $event->objectid]);
-        $cds->link_categories_to_users([$user]);
+        $entity = null;
+        if (isset($event->other)) {
+            $otherData = json_decode($event->other, true);
+            if (isset($otherData['entity'])) {
+            $entity = (object) $otherData['entity'];
+            }
+        }
+        $cds->link_categories_to_users([$user], $entity);
         return;
     }
 

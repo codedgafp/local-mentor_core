@@ -1254,7 +1254,6 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
     }
 
     /**
-     ******************* TO DO : update this test on sprint61 **********************
      *  Test local_mentor_core create users csv function
      *
      * @covers ::local_mentor_core_create_users_csv
@@ -1275,7 +1274,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
 
         // Guest and admin users.
         self::assertCount(2, $DB->get_records('user'));
-
+        $CFG->allowemailaddresses = 'gmail.com';
         $userlist = [
             [
                 'lastname' => 'lastname1',
@@ -1284,7 +1283,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'auth' => 'manual',
             ],
         ];
-
+       
         $notification = local_mentor_core_create_users_csv($userlist);
 
         // Two new user.
@@ -1306,7 +1305,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
             ],
         ];
 
-        // Add to maine entity.
+        
         local_mentor_core_create_users_csv($userlist, [], $entityid);
 
         // One new user.
@@ -1331,7 +1330,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
         ];
 
         // Add to secondary entity.
-        local_mentor_core_create_users_csv($userlist, [], $entityid, \importcsv_form::ADD_TO_SECONDARY_ENTITY);
+        local_mentor_core_create_users_csv($userlist, [], $entityid);
 
         // One new user.
         self::assertCount(5, $DB->get_records('user'));
@@ -1369,7 +1368,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
             ],
         ];
 
-        local_mentor_core_create_users_csv($userlist, [], null, \importcsv_form::ADD_TO_MAIN_ENTITY, true);
+        local_mentor_core_create_users_csv($userlist, [], null);
 
         $roleid = $DB->get_record('role', ['shortname' => 'utilisateurexterne'])->id;
         $userid = $DB->get_record('user', ['email' => 'lastname1.firstname1@gmail.com'])->id;
@@ -1476,7 +1475,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
 
         $newuser = $DB->get_record('user', ['email' => 'lastname1.firstname1@gmail.com']);
 
-        local_mentor_core_create_users_csv($userlist, [], $entityid, \importcsv_form::ADD_TO_MAIN_ENTITY);
+        local_mentor_core_create_users_csv($userlist, [], $entityid);
 
         $mainentity = $dbi->get_profile_field_value($newuser->id, 'mainentity');
         //From sprint60, 
@@ -1487,7 +1486,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
         $entity2id = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity 2', 'shortname' => 'New Entity 2']);
 
         // Add to secondary entity.
-        local_mentor_core_create_users_csv($userlist, [], $entity2id, \importcsv_form::ADD_TO_SECONDARY_ENTITY);
+        local_mentor_core_create_users_csv($userlist, [], $entity2id);
 
         $secondaryentities = $dbi->get_profile_field_value($newuser->id, 'secondaryentities');
 
@@ -1496,7 +1495,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
         $entity3id = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity 3', 'shortname' => 'New Entity 3']);
 
         // Add to an other secondary entity.
-        local_mentor_core_create_users_csv($userlist, [], $entity3id, \importcsv_form::ADD_TO_SECONDARY_ENTITY);
+        local_mentor_core_create_users_csv($userlist, [], $entity3id);
 
         $secondaryentities = $dbi->get_profile_field_value($newuser->id, 'secondaryentities');
 
@@ -1506,7 +1505,8 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
     }
 
 
-    /**
+   
+     /**
      ******************* TO DO : update this test on sprint61 **********************
      * Test local_mentor_core local_mentor_core_create_users_csv
      * MEN-187-RG001 assign current entity
@@ -1538,7 +1538,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
         $entityid = \local_mentor_core\entity_api::create_entity(['name' => $newentityname, 'shortname' => $newentityname]);
         $entity = \local_mentor_core\entity_api::get_entity($entityid);
 
-        local_mentor_core_create_users_csv($users, [], $entityid, \importcsv_form::ADD_TO_MAIN_ENTITY, true);
+        local_mentor_core_create_users_csv($users, [], $entityid);
 
         /*
         TU KO => to be fixed when we will be able to set the default entity on import CSV : TASK MEN-470
@@ -1584,12 +1584,12 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
         $dbinterface->update_can_be_main_entity($entityid, "0");
 
         local_mentor_core_create_users_csv($users, [], $entityid);
-       /*
-       TU KO => to be fixed when we will be able to set the default entity on import CSV : TASK MEN-470
+ 
         $mainentityfieldid = $DB->get_record('user_info_field', ['shortname' => 'mainentity'])->id;
         $usermainentity = $DB->get_record('user_info_data', ['fieldid' => $mainentityfieldid])->data;
-
-        self::assertEquals($defaultentityname, $usermainentity);*/
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        self::assertEquals("DefaultEntity", $usermainentity);
         self::resetAllData();
     }
 
