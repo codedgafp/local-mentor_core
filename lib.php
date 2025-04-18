@@ -292,7 +292,7 @@ function local_mentor_core_extend_navigation_course(navigation_node $parentnode,
  * @throws coding_exception
  * @throws dml_exception
  */
-function local_mentor_core_validate_users_csv($content, $delimitername, $courseid = null, &$preview = [], &$errors = [], &$warnings = [], $other = [])
+function local_mentor_core_validate_users_csv($content, $delimitername, $courseid = null, &$preview = [], &$errors = [], &$warnings = [])
 {
     global $DB, $USER;
 
@@ -520,7 +520,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                 );
 
                 // RG-60-10-42 : Mail used as a username for one user and as an email address for another user.
-                if (is_null($courseid)) {
+                /*if (is_null($courseid)) {
                     
 
                     $u = current($users);
@@ -627,7 +627,8 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                             }
                         }
                     }
-                } else if (count($users) >= 2) {
+                } else*/  
+                 if(count($users) >= 2) {
                     $warnings['list'][] = [
                         $linenumber,
                         get_string('email_already_used', 'local_mentor_core'),
@@ -692,17 +693,17 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
             if (false === $ignoreline && count($users) === 0 && !isset($preview['validforreactivation'][$email])) {
                 $preview['validforcreation']++;
 
-                if (isset($other) && isset($other['areexternals']) && $other['areexternals'] == 1) {
+                /*if (isset($other) && isset($other['areexternals']) && $other['areexternals'] == 1) {
                     $warnings['list'][] = [
                         $linenumber,
                         get_string('externalusercreatandenrol', 'local_mentor_core', $email),
                     ];
-                } else {
+                } else {*/
                     $warnings['list'][] = [
                         $linenumber,
                         get_string('usercreatandenrol', 'local_mentor_core', $email),
                     ];
-                }
+                /*}*/
             }
         }
 
@@ -885,12 +886,11 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
  *
  * @param array $userslist users that must be created
  * @param array $userstoreactivate users that must be reactivated
- * @param null $addtoentity
+ * @param null $entityid
  * @throws coding_exception
  * @throws moodle_exception
  */
-function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate = [], $entityid = null,
-                                            $addtoentity = \importcsv_form::ADD_TO_MAIN_ENTITY, $areexternals = false)
+function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate = [], $entityid = null)
 {
     global $DB, $CFG, $PAGE;
     $entity = null;
@@ -911,10 +911,10 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
     }
 
     // Checks if we will add an entity to main or secondary entity user.
-    if (!is_null($entityid) && $addtoentity !== \importcsv_form::ADD_TO_ANY_ENTITY) {
+    /*if (!is_null($entityid) && $addtoentity !== \importcsv_form::ADD_TO_ANY_ENTITY) {
         $entity = \local_mentor_core\entity_api::get_entity($entityid);
         $entityname = $entity->get_name();
-    }
+    }*/
 
     foreach ($userslist as $index => $line) {
         $email = $line['email'];
@@ -937,7 +937,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
             }
 
             // utilisateurs externes
-            if ($areexternals) {
+            /*if ($areexternals) {
                 $defaultmentorentity = \local_mentor_specialization\mentor_entity::get_default_entity();
                 $defaultmainentity = $defaultmentorentity ? \local_mentor_core\entity_api::get_entity($defaultmentorentity->id) : null;
                 // MEN-187-RG001
@@ -963,15 +963,15 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
                 if ($addtoentity === \importcsv_form::ADD_TO_SECONDARY_ENTITY) {
                     $user->profile_field_secondaryentities = [$entityname];
                 }
-            }
+            }*/
 
 
             try {
                 $user->id = local_mentor_core\profile_api::create_user($user);
                 // Add user to entity.
-                if (!is_null($entityid) && ($areexternals || $addtoentity !== \importcsv_form::ADD_TO_ANY_ENTITY)) {
+                /*if (!is_null($entityid) && ($areexternals || $addtoentity !== \importcsv_form::ADD_TO_ANY_ENTITY)) {
                     $entity->add_member($user);
-                }
+                }*/
             } catch (moodle_exception $e) {
                 \core\notification::error(
                     get_string('error_line', 'local_mentor_core', $index + 1)
@@ -981,7 +981,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
 
                 continue;
             }
-            toggle_external_user_role($user->id, $areexternals);
+
         } else if (!is_null($entityid)) {
             // User update.
             $dbinterface = \local_mentor_core\database_interface::get_instance();
@@ -998,36 +998,12 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
             // Create new user data object for the update event.
             $newuserdata = new \stdClass();
             $newuserdata->id = $user->id;
+            //***************** TO DO : main & secondary entity attach ************
+            $triggerupdateentityevent = false; //TODO : to change to true 
 
-            $triggerupdateentityevent = false;
-
-            // utilisateurs externes
-            if ($areexternals) {
-                $updateexternaluser = false;
-                $entity = \local_mentor_core\entity_api::get_entity($entityid);
-                $profile = profile_api::get_profile($user->id);
-                if($usermainentity && $usermainentity === $entity->get_name()) {
-                    // MEN-187-RG003
-                    $updateexternaluser = true;
-                } else if(!$usermainentity) {
-                    // MEN-187-RG005
-                    if ($entity->can_be_main_entity()) {
-                        $profile->set_main_entity($entity);
-                    // MEN-187-RG006
-                    } else {
-                        $defaultmentorentity = \local_mentor_specialization\mentor_entity::get_default_entity();
-                        // We have to transform entity via api to have an extedend object to fit user profile
-                        $defaultmainentity = $defaultmentorentity ? \local_mentor_core\entity_api::get_entity($defaultmentorentity->id) : null;
-                        $profile->set_main_entity($defaultmainentity);
-                    }
-                    $updateexternaluser = true;
-                }
-                if($updateexternaluser){
-                    $dbinterface->set_profile_field_value($user->id, 'roleMentor', "utilisateurexterne");
-                    toggle_external_user_role($user->id, $areexternals);
-                }
-            } else {
-                // Update main entity user.
+           
+            /*   //*************** TO DO in TASK 4 : secondary entity auto-attach ******************* 
+             // Update main entity user.
                 if ($addtoentity === \importcsv_form::ADD_TO_MAIN_ENTITY && !$usermainentity) {
                     // Get user profile.
                     $profile = profile_api::get_profile($user->id);
@@ -1051,6 +1027,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
                 }
 
                 // Update secondary entities user.
+               
                 if ($addtoentity === \importcsv_form::ADD_TO_SECONDARY_ENTITY) {
                     // Get main and secondary entity user.
                     $entityname = $entity->get_name();
@@ -1068,12 +1045,8 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
                         $newuserdata->profile_field_secondaryentities = implode(', ', $secondaryentitieslist);
                         $triggerupdateentityevent = true;
                     }
-                }
-
-                if (!is_null($entityid) && $addtoentity !== \importcsv_form::ADD_TO_ANY_ENTITY) {
-                    $entity->add_member($user);
-                }
-            }
+                }                
+            }*/
             if ($triggerupdateentityevent) {
                 // Create data for user_updated event.
                 // WARNING : other event data must be compatible with json encoding.
@@ -2035,8 +2008,7 @@ function local_mentor_core_minutes_to_hours($finaltimesaving)
  * @throws dml_exception
  * @throws moodle_exception
  */
-function local_mentor_core_validate_suspend_users_csv($content, $entity, &$preview = [], &$errors
-= [])
+function local_mentor_core_validate_suspend_users_csv($content, $entity, &$preview = [], &$errors = [])
 {
     global $DB;
 
