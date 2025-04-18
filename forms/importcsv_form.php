@@ -40,17 +40,17 @@ class importcsv_form extends moodleform
     /**
      * Entity add to main entity.
      */
-    public const ADD_TO_MAIN_ENTITY = 0;
+    public const ADD_TO_MAIN_ENTITY = 0; //TO : TO DELETE in TASK2
 
     /*
      * Entity add to secondary entity list.
      */
-    public const ADD_TO_SECONDARY_ENTITY = 1;
+    public const ADD_TO_SECONDARY_ENTITY = 1;//TO : TO DELETE in TASK2
 
     /*
      * Entity does not add.
      */
-    public const ADD_TO_ANY_ENTITY = 2;
+    public const ADD_TO_ANY_ENTITY = 2;//TO : TO DELETE in TASK2
 
     public $entityid;
 
@@ -108,34 +108,6 @@ class importcsv_form extends moodleform
             $mform->setDefault('delimiter_name', 'semicolon');
         } else {
             $mform->setDefault('delimiter_name', 'comma');
-        }
-
-        // Add a checkbox to automatically add new users on the entity.
-        if (!empty($this->entityid)) {
-
-            $entity = \local_mentor_core\entity_api::get_entity($this->entityid);
-
-            $dataoptions = [
-                // Add to secondary entity list.
-                self::ADD_TO_SECONDARY_ENTITY => get_string('addtosecondaryentity', 'local_mentor_core'),
-                // Does not add.
-                self::ADD_TO_ANY_ENTITY => get_string('addtoanyentity', 'local_mentor_core'),
-            ];
-            $defaultoption = self::ADD_TO_SECONDARY_ENTITY;
-
-            // The entity must be able to accept being in main.
-            if ($entity->can_be_main_entity()) {
-                // Add to main entity.
-                $dataoptions = [self::ADD_TO_MAIN_ENTITY => get_string('addtomainentity', 'local_mentor_core')] + $dataoptions;
-                $defaultoption = self::ADD_TO_MAIN_ENTITY;
-            }
-
-            $mform->addElement('select', 'addtoentity', get_string('addtoentity', 'local_mentor_core'), $dataoptions);
-            $mform->addHelpButton('addtoentity', 'addtoentity', 'local_mentor_core');
-            $mform->setDefault('addtoentity', $defaultoption);
-
-            $mform->addElement('advcheckbox', 'areexternals', get_string('externalusers', 'local_user'), ' ', '', array(false, true));
-            $mform->setDefault('areexternals', false);
         }
 
         $this->add_action_buttons(false, get_string('continue_import', 'local_mentor_core'));
