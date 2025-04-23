@@ -26,6 +26,8 @@
 use local_mentor_core\entity;
 use local_mentor_core\profile_api;
 use local_categories_domains\utils\categories_domains_service;
+use local_categories_domains\model\domain_name;
+use local_categories_domains\repository\categories_domains_repository;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -520,115 +522,6 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                     ['email' => strtolower($u->username), 'username' => strtolower($u->username)]
                 );
 
-                // RG-60-10-42 : Mail used as a username for one user and as an email address for another user.
-                /*if (is_null($courseid)) {
-                    
-
-                    $u = current($users);
-
-                    // Check if data to add entity to main or secondary entity exist.
-                    if (isset($other['entityid']) && isset($other['addtoentity'])) {
-                        // Get main and secondary user data.
-                        $profile = profile_api::get_profile($u->id);
-                        $mainentity = $profile->get_main_entity();
-                        $sedondaryentities = $profile->get_secondary_entities();
-
-                        // Get data to add entity to main or secondary entity user.
-                        $entityid = $other['entityid'];
-                        $addtoentity = $other['addtoentity'];
-
-                        if (isset($other) && isset($other['areexternals']) && $other['areexternals'] == 1) {
-                            if ($mainentity && $mainentity->id !== $entityid) {
-                                // MEN-187-RG004
-                                $arguments = new stdClass();
-                                $arguments->email = $email;
-                                $arguments->espace = $mainentity->get_name();
-                                    $errors['list'][] = [
-                                        $linenumber,
-                                        get_string('importuserupdateexternal_already_main_entity', 'local_mentor_core', $arguments),
-                                    ];
-                                $ignoreline = true;
-                            } else {
-                                // MEN-187-RG003 / MEN-187-RG005 / MEN-187-RG006
-                                $warnings['list'][] = [
-                                    $linenumber,
-                                    get_string('importuserupdateexternal', 'local_mentor_core', $email),
-                                ];
-                            }
-                        } else {
-                            switch ($addtoentity) {
-                                // Add to main entity.
-                                case importcsv_form::ADD_TO_MAIN_ENTITY:
-                                    // User has main entity.
-                                    if ($mainentity) {
-                                        // Main entity is different : ERROR.
-                                        if ($mainentity->id !== $entityid) {
-                                            $warnings['list'][] = [
-                                                $linenumber,
-                                                get_string('error_user_already_main_entity', 'local_mentor_core'),
-                                            ];
-                                            $ignoreline = true;
-                                        } else {
-                                            $warnings['list'][] = [
-                                                $linenumber,
-                                                get_string(
-                                                    is_null($courseid) ? 'user_already_exists' : 'email_already_used',
-                                                    'local_mentor_core',
-                                                    $email
-                                                ),
-                                            ];
-                            
-                                            $ignoreline = true;
-                                        }
-                                    } else {
-                                        $haswarning = false;
-
-                                        foreach ($sedondaryentities as $sedondaryentity) {
-                                            if ($sedondaryentity->id == $entityid) {
-                                                // The entity is already a secondary entity.
-                                                $warnings['list'][] = [
-                                                    $linenumber,
-                                                    get_string('warning_user_secondary_entity_already_set', 'local_mentor_core'),
-                                                ];
-
-                                                $haswarning = true;
-                                            }
-                                        }
-
-                                        if (!$haswarning) {
-                                            // Main entity user is empty : WARNING.
-                                            $warnings['list'][] = [
-                                                $linenumber,
-                                                get_string('warning_user_main_entity_update', 'local_mentor_core'),
-                                            ];
-                                        }
-
-                                    }
-                                    break;
-                                // Add secondary entity.
-                                case importcsv_form::ADD_TO_SECONDARY_ENTITY:
-                                    // Same entity as the user's main entity : ERROR.
-                                    if ($mainentity && $mainentity->id == $entityid) {
-                                        $errors['list'][] = [
-                                            $linenumber,
-                                            get_string('error_user_already_secondary_entity', 'local_mentor_core'),
-                                        ];
-                                        $ignoreline = true;
-                                    } else {
-                                        // Secondary entities user are empty : WARNING.
-                                        // Or Entity is not part to secondary entity list : WARNING.
-                                        if (empty($sedondaryentities) || !$profile->has_secondary_entity($entityid)) {
-                                            $warnings['list'][] = [
-                                                $linenumber,
-                                                get_string('warning_user_secondary_entity_update', 'local_mentor_core'),
-                                            ];
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                } else*/  
                  if(count($users) >= 2) {
                     $warnings['list'][] = [
                         $linenumber,
@@ -887,7 +780,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
 {
     global $DB, $CFG, $PAGE;
     $entity = null;
-
+    $cds = new categories_domains_service();       
     // Reactivate user accounts.
     foreach ($userstoreactivate as $usertoreactivate) {
 
@@ -916,7 +809,8 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
     foreach ($userslist as $index => $line) {
         $email = $line['email'];
         $user = get_user_by_email($email, 'id');
-
+        
+       
         // User not found : account creation.
         if (false === $user) {
 
@@ -932,37 +826,10 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
             if (isset($line['auth'])) {
                 $user->auth = $line['auth'];
             }
+            //set user second entity
+            $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($entity, $email);          
 
-            // utilisateurs externes
-            /*if ($areexternals) {
-                $defaultmentorentity = \local_mentor_specialization\mentor_entity::get_default_entity();
-                $defaultmainentity = $defaultmentorentity ? \local_mentor_core\entity_api::get_entity($defaultmentorentity->id) : null;
-                // MEN-187-RG001
-                $entity = $entityid ? \local_mentor_core\entity_api::get_entity($entityid) : null;
-                $mentorentity = $entity ? new \local_mentor_specialization\mentor_entity($entityid) : false;
-                if ($mentorentity && $mentorentity->can_be_main_entity()) {
-                    $user->profile_field_mainentity = $entity->get_name();
-                } else {
-                    // MEN-187-RG002
-                    $user->profile_field_mainentity = $defaultmainentity->name;
-                    $entity = $defaultmainentity;
-                }
-            } else {
-                // Set user main or secondary entity.
-                if (!is_null($entityid)) {
-                    // Add to main entity.
-                    if ($addtoentity === \importcsv_form::ADD_TO_MAIN_ENTITY) {
-                        $user->profile_field_mainentity = $entityname;
-                    }
-                }
-
-                // Add to secondary entity.
-                if ($addtoentity === \importcsv_form::ADD_TO_SECONDARY_ENTITY) {
-                    $user->profile_field_secondaryentities = [$entityname];
-                }
-            }*/
-
-
+            
             try {  
                 $users[] = $user;
                 $user->id = local_mentor_core\profile_api::create_user($user);              
@@ -982,74 +849,69 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
             $dbinterface = \local_mentor_core\database_interface::get_instance();
 
             // Get main and secondary entity user.
-            $usermainentity = $dbinterface->get_profile_field_value($user->id, 'mainentity');
             $usersecondaryentities = $dbinterface->get_profile_field_value($user->id, 'secondaryentities');
             // Create old user data object for the update event.
             $olduserdata = new \stdClass();
             $olduserdata->id = $user->id;
-            //$olduserdata->profile_field_mainentity = $usermainentity;
-            //$olduserdata->profile_field_secondaryentities = $dbinterface->get_secondaryentity_names_array($usersecondaryentities);
+            $olduserdata->profile_field_secondaryentities = $dbinterface->get_secondaryentity_names_array($usersecondaryentities);
 
             // Create new user data object for the update event.
             $newuserdata = new \stdClass();
             $newuserdata->id = $user->id;
-            //***************** TO DO : main & secondary entity attach ************
-            $triggerupdateentityevent = true; 
+            $newuserdata->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($entity, $email);
+            $profile = profile_api::get_profile($user->id);
+            $profile->set_profile_field('secondaryentities', implode(',', $newuserdata->profile_field_secondaryentities));
 
-           
-            /*   
-                // Update secondary entities user.
-               
-                if ($addtoentity === \importcsv_form::ADD_TO_SECONDARY_ENTITY) {
-                    // Get main and secondary entity user.
-                    $entityname = $entity->get_name();*/
-                    $secondaryentitieslist = empty($usersecondaryentities) ? [] : $dbinterface->get_secondaryentity_names_array($usersecondaryentities);//*************** TO DO in TASK 4 : secondary entity auto-attach ******************* 
+            // Create data for user_updated event.
+            // WARNING : other event data must be compatible with json encoding.
+            $otherdata = json_encode(
+                [
+                    'old' => $olduserdata,
+                    'new' => $newuserdata,
+                    'entity' => $entityObject
+                ]
+            );
+            $data = [
+                'objectid' => $newuserdata->id,
+                'relateduserid' => $newuserdata->id,
+                'context' => \context_user::instance($newuserdata->id),
+                'other' => $otherdata,
+            ];
 
-                   /* if (!in_array($entityname, $secondaryentitieslist) && $entityname !== $usermainentity) {
-
-                        // Update secondary entity.
-                        $profile = profile_api::get_profile($user->id);
-                        $secondaryentitieslist[] = $entityname;
-                        $profile->set_profile_field('secondaryentities', implode(', ', $secondaryentitieslist));
-
-                        // Update new data user with new secondary entity.
-                        $newuserdata->profile_field_mainentity = $usermainentity;*/
-                        $newuserdata->profile_field_secondaryentities = implode(', ', $secondaryentitieslist);//*************** TO DO in TASK 4 : secondary entity auto-attach ******************* 
-                        /*$triggerupdateentityevent = true;
-                    }
-                }                
-            }*/
-            if ($triggerupdateentityevent) {
-                // Create data for user_updated event.
-                // WARNING : other event data must be compatible with json encoding.
-                $otherdata = json_encode(
-                    [
-                        'old' => $olduserdata,
-                        'new' => $newuserdata,
-                        'entity' => $entityObject
-                    ]
-                );
-                $data = [
-                    'objectid' => $newuserdata->id,
-                    'relateduserid' => $newuserdata->id,
-                    'context' => \context_user::instance($newuserdata->id),
-                    'other' => $otherdata,
-                ];
-
-                // Create and trigger event.
-                \core\event\user_updated::create($data)->trigger();
-            }
+            // Create and trigger event.
+            \core\event\user_updated::create($data)->trigger();
+        
         }
     }
     // Link categories to users if there are any users to process.
     if($users)
     {
-        $entityObject = (!is_null($entityid)) ? $entityObject : null;
-
-        $cds = new categories_domains_service();       
+        $entityObject = (!is_null($entityid)) ? $entityObject : null;      
         $cds->link_categories_to_users($users, $entityObject);  
     }
     return true;
+}
+/**
+ * Set secondary entities for a user based on the entity and email.
+ *
+ * @param \local_mentor_core\entity $entity
+ * @param string $email
+ * @param int $entityid
+ * @return array
+ */
+function local_mentor_core_set_secondary_entities($entity, $email) : array
+{
+    if ($entity) {
+        $domain = new domain_name();
+        $domain->set_user_domain($email);
+        $domain->course_categories_id = $entity->id;
+
+        return (($entity->can_be_main_entity() && !$domain->is_exist() ) || 
+                                                (!$entity->can_be_main_entity())) 
+                                                ? [$entity->name] 
+                                                : [];
+    }
+    return [];
 }
 
 /**

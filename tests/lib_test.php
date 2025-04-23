@@ -26,6 +26,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
+use \local_categories_domains\repository\categories_domains_repository;
+use \local_categories_domains\model\domain_name;
+use local_mentor_specialization\mentor_entity;
 
 require_once($CFG->dirroot . '/local/mentor_core/lib.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/entity.php');
@@ -805,304 +808,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
 
         self::resetAllData();
     }
-
-    /**
-     *  Test local_mentor_core validate users csv function ok
-     *  Add to any entity
-     *
-     * @covers ::local_mentor_core_validate_users_csv
-     */
-    public function test_validate_users_csv_ok_add_to_any_entity(): void {
-        global $CFG;
-
-        require_once($CFG->dirroot . '/local/mentor_core/forms/importcsv_form.php');
-
-        $this->resetAfterTest(true);
-        $this->reset_singletons();
-        $this->init_config();
-
-        self::setAdminUser();
-
-        $user = self::getDataGenerator()->create_user();
-
-        // Create entity.
-        $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'Entity', 'shortname' => 'Entity']);
-
-        $userlist = [
-            'lastname, firstname, email',
-            $user->lastname . ',' . $user->firstname . ',' . $user->email,
-        ];
-
-        // Preview array.
-        $preview = [
-            'list' => [], // Cleaned list of accounts.
-            'validlines' => 0, // Number of lines without error.
-            'validforcreation' => 0, // Number of lines that will create an account.
-        ];
-
-        $other = [
-            'entityid' => $entityid,
-            'addtoentity' => \importcsv_form::ADD_TO_ANY_ENTITY,
-        ];
-
-        local_mentor_core_validate_users_csv($userlist, 'comma', null, $preview, $errors, $warnings, $other);
-
-        self::assertCount(1, $preview['list']);
-        self::assertEquals(2, $preview['list'][0]['linenumber']);
-        self::assertEquals($user->lastname, $preview['list'][0]['lastname']);
-        self::assertEquals($user->firstname, $preview['list'][0]['firstname']);
-        self::assertEquals($user->email, $preview['list'][0]['email']);
-        self::assertEquals(1, $preview['validlines']);
-        self::assertEquals(0, $preview['validforcreation']);
-
-        self::assertNull($errors);
-        self::assertNull($warnings);
-
-        self::resetAllData();
-    }
-
-    /**
-     *  Test local_mentor_core validate users csv function ok
-     *  Add to main entity
-     *
-     * @covers ::local_mentor_core_validate_users_csv
-     */
-    public function test_validate_users_csv_ok_add_to_main_entity() {
-        global $CFG;
-
-        require_once($CFG->dirroot . '/local/mentor_core/forms/importcsv_form.php');
-
-        $this->resetAfterTest(true);
-        $this->reset_singletons();
-        $this->init_config();
-
-        self::setAdminUser();
-
-        //$user = self::getDataGenerator()->create_user();
-
-        $defaultcategory = \local_mentor_specialization\mentor_entity::get_default_entity();
-        $entityid = $defaultcategory->id;
-
-        $userlist = [
-            'lastname, firstname, email',
-            "lastname" . ',' . "firstname" . ',' . "user@test.com",
-        ];
-
-        // Preview array.
-        $preview = [
-            'list' => [], // Cleaned list of accounts.
-            'validlines' => 0, // Number of lines without error.
-            'validforcreation' => 0, // Number of lines that will create an account.
-        ];
-
-        $other = [
-            'entityid' => $entityid,
-            'addtoentity' => \importcsv_form::ADD_TO_MAIN_ENTITY,
-        ];
-        //the user will be auto-attached to an entity based on his email
-        local_mentor_core_validate_users_csv($userlist, 'comma', null, $preview, $errors, $warnings, $other);
-
-        self::assertCount(1, $preview['list']);
-        self::assertEquals(2, $preview['list'][0]['linenumber']);
-        self::assertEquals( "lastname" , $preview['list'][0]['lastname']);
-        self::assertEquals( "firstname" , $preview['list'][0]['firstname']);
-        self::assertEquals( "user@test.com", $preview['list'][0]['email']);
-        self::assertEquals(1, $preview['validlines']);
-        self::assertEquals(1, $preview['validforcreation']);
-
-        self::assertNull($errors);
-        self::resetAllData();
-    }
-
-    /**
-     *  Test local_mentor_core validate users csv function nok
-     *  Add to main entity
-     *
-     * @covers ::local_mentor_core_validate_users_csv
-     */
-    public function test_validate_users_csv_nok_add_to_main_entity() {
-        global $CFG;
-
-        require_once($CFG->dirroot . '/local/mentor_core/forms/importcsv_form.php');
-
-        $this->resetAfterTest(true);
-        $this->reset_singletons();
-        $this->init_config();
-
-        self::setAdminUser();
-
-        $db = \local_mentor_core\database_interface::get_instance();
-
-        $user = self::getDataGenerator()->create_user();
-
-        // Create entity.
-        \local_mentor_core\entity_api::create_entity(['name' => 'Entity', 'shortname' => 'Entity']);
-
-        $db->set_profile_field_value($user->id, 'mainentity', 'Entity');
-
-        // Create entity.
-        $entity2id = \local_mentor_core\entity_api::create_entity(['name' => 'Entity2', 'shortname' => 'Entity2']);
-
-        $userlist = [
-            'lastname, firstname, email',
-            $user->lastname . ',' . $user->firstname . ',' . $user->email,
-        ];
-
-        $errors = [];
-        $warnings = [];
-        $preview = [
-            'list' => [], // Cleaned list of accounts.
-            'validlines' => 0, // Number of lines without error.
-            'validforcreation' => 0, // Number of lines that will create an account.
-        ];
-
-        $other = [
-            'entityid' => $entity2id,
-            'addtoentity' => \importcsv_form::ADD_TO_MAIN_ENTITY,
-        ];
-
-        $emailargs = new stdClass();
-        $emailargs->email = $user->email;
-        $emailargs->espace = 'Entity';
-
-        local_mentor_core_validate_users_csv($userlist, 'comma', null, $preview, $errors, $warnings, $other);
-
-        self::assertCount(0, $preview['list']);
-        self::assertEquals(0, $preview['validlines']);
-        self::assertEquals(0, $preview['validforcreation']);
-
-        self::assertCount(1, $warnings['list']);
-        self::assertEquals(2, $warnings['list'][0][0]);
-        self::assertEquals(
-            get_string('error_user_already_main_entity', 'local_mentor_core', $emailargs),
-            $warnings['list'][0][1]
-        );
-
-        self::resetAllData();
-    }
-
-    /**
-     *  Test local_mentor_core validate users csv function ok
-     *  Add to secondary entity
-     *
-     * @covers ::local_mentor_core_validate_users_csv
-     */
-    public function test_validate_users_csv_ok_add_to_secondary_entity() {
-        global $CFG;
-
-        require_once($CFG->dirroot . '/local/mentor_core/forms/importcsv_form.php');
-
-        $this->resetAfterTest(true);
-        $this->reset_singletons();
-        $this->init_config();
-
-        self::setAdminUser();
-
-        $user = self::getDataGenerator()->create_user();
-
-        // Create entity.
-        $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'Entity', 'shortname' => 'Entity']);
-
-        $userlist = [
-            'lastname, firstname, email',
-            $user->lastname . ',' . $user->firstname . ',' . $user->email,
-        ];
-
-        // Preview array.
-        $preview = [
-            'list' => [], // Cleaned list of accounts.
-            'validlines' => 0, // Number of lines without error.
-            'validforcreation' => 0, // Number of lines that will create an account.
-        ];
-
-        $other = [
-            'entityid' => $entityid,
-            'addtoentity' => \importcsv_form::ADD_TO_SECONDARY_ENTITY,
-        ];
-
-        local_mentor_core_validate_users_csv($userlist, 'comma', null, $preview, $errors, $warnings, $other);
-
-        self::assertCount(1, $preview['list']);
-        self::assertEquals(2, $preview['list'][0]['linenumber']);
-        self::assertEquals($user->lastname, $preview['list'][0]['lastname']);
-        self::assertEquals($user->firstname, $preview['list'][0]['firstname']);
-        self::assertEquals($user->email, $preview['list'][0]['email']);
-        self::assertEquals(1, $preview['validlines']);
-        self::assertEquals(0, $preview['validforcreation']);
-
-        self::assertNull($errors);
-
-        self::assertCount(1, $warnings['list']);
-        self::assertEquals(2, $warnings['list'][0][0]);
-        self::assertEquals(
-            get_string('warning_user_secondary_entity_update', 'local_mentor_core'),
-            $warnings['list'][0][1]
-        );
-
-        self::resetAllData();
-    }
-
-    /**
-     *  Test local_mentor_core validate users csv function nok
-     *  Add to secondary entity
-     *
-     * @covers ::local_mentor_core_validate_users_csv
-     */
-    public function test_validate_users_csv_nok_add_to_secondary_entity() {
-        global $CFG;
-
-        require_once($CFG->dirroot . '/local/mentor_core/forms/importcsv_form.php');
-
-        $this->resetAfterTest(true);
-        $this->reset_singletons();
-        $this->init_config();
-
-        self::setAdminUser();
-
-        $db = \local_mentor_core\database_interface::get_instance();
-
-        $user = self::getDataGenerator()->create_user();
-
-        // Create entity.
-        $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'Entity', 'shortname' => 'Entity']);
-
-        $db->set_profile_field_value($user->id, 'mainentity', 'Entity');
-
-        $userlist = [
-            'lastname, firstname, email',
-            $user->lastname . ',' . $user->firstname . ',' . $user->email,
-        ];
-
-        // Preview array.
-        $preview = [
-            'list' => [], // Cleaned list of accounts.
-            'validlines' => 0, // Number of lines without error.
-            'validforcreation' => 0, // Number of lines that will create an account.
-        ];
-
-        $other = [
-            'entityid' => $entityid,
-            'addtoentity' => \importcsv_form::ADD_TO_SECONDARY_ENTITY,
-        ];
-
-        local_mentor_core_validate_users_csv($userlist, 'comma', null, $preview, $errors, $warnings, $other);
-
-        self::assertCount(0, $preview['list']);
-        self::assertEquals(0, $preview['validlines']);
-        self::assertEquals(0, $preview['validforcreation']);
-
-        self::assertCount(1, $errors['list']);
-        self::assertEquals(2, $errors['list'][0][0]);
-        self::assertEquals(
-            get_string('error_user_already_secondary_entity', 'local_mentor_core'),
-            $errors['list'][0][1]
-        );
-
-        self::assertNull($warnings);
-
-        self::resetAllData();
-    }
-
+    
     /**
      *  Test local_mentor_core validate users csv function ok
      *  Reactivation
@@ -1428,13 +1134,11 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
     }
 
     /**
-     ******************* TO DO : update this test on sprint61 **********************
-
-     *  Test local_mentor_core reactivate users csv function
+     *  Test local_mentor_core_create_users_csv : seconday entity
      *
      * @covers ::local_mentor_core_create_users_csv
      */
-    public function test_local_mentor_core_create_users_csv_ok_add_entity() {
+    public function test_local_mentor_core_create_users_csv_subentity_ok() {
         global $DB, $CFG;
 
         $domain = 'gmail.com';
@@ -1499,7 +1203,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
 
         $secondaryentities = $dbi->get_profile_field_value($newuser->id, 'secondaryentities');
 
-        self::assertEquals('New Entity 2, New Entity 3', $secondaryentities);
+        self::assertEquals('New Entity 3', $secondaryentities);
 
         self::resetAllData();
     }
@@ -1546,50 +1250,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
         $usermainentity = $DB->get_record('user_info_data', ['fieldid' => $mainentityfieldid])->data;
         //From sprint60, 
         //the main entity of the user on create/update, will be affected automatically basing on his email domain 
-        self::assertEquals($newentityname, $usermainentity);
-        self::resetAllData();
-    }
-
-    /**
-     * Test local_mentor_core local_mentor_core_create_users_csv
-     * MEN-187-RG002 assign default entity
-     * @covers ::local_mentor_core_validate_users_csv
-     */
-    public function test_local_mentor_core_create_users_csv_assigned_default_entity(){
-        global $DB;
-        $dbinterface = \local_mentor_specialization\database_interface::get_instance();
-        $this->resetAfterTest(true);
-        $this->reset_singletons();
-        self::setAdminUser();
-        // Clean notification.
-        \core\notification::fetch();
-        self::assertCount(2, $DB->get_records('user'));
-
-        $users = [
-            [
-                'lastname' => 'lastname1',
-                'firstname' => 'firstname1',
-                'email' => 'lastname1.firstname1@gmail.com',
-                'auth' => 'manual',
-            ],
-        ];
-        $newentityname = 'Entity1';
-
-        $defaultentityname = 'DefaultEntity';
-        $defaultentityid = \local_mentor_core\entity_api::create_entity(['name' => $defaultentityname, 'shortname' => $defaultentityname]);
-        \local_mentor_specialization\mentor_entity::create_default_entity_option($defaultentityid);
-        $defaultmainentity = \local_mentor_specialization\mentor_entity::get_default_entity();
-
-        $entityid = \local_mentor_core\entity_api::create_entity(['name' => $newentityname, 'shortname' => $newentityname]);
-        $dbinterface->update_can_be_main_entity($entityid, "0");
-
-        local_mentor_core_create_users_csv($users, [], $entityid);
- 
-        $mainentityfieldid = $DB->get_record('user_info_field', ['shortname' => 'mainentity'])->id;
-        $usermainentity = $DB->get_record('user_info_data', ['fieldid' => $mainentityfieldid])->data;
-        //From sprint60, 
-        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
-        self::assertEquals("DefaultEntity", $usermainentity);
+        self::assertEquals("DefaultEntity", $usermainentity);*/
         self::resetAllData();
     }
 
@@ -3635,6 +3296,121 @@ test2", $finalcontent);
             $url->out(false),
             $CFG->wwwroot . '/course/view.php?id=' . $course->id . '&section=1'
         );
+
+        self::resetAllData();
+    }
+
+     /**
+     *  Test local_mentor_core create users csv function
+     *
+     * @covers ::local_mentor_core_create_users_csv
+     */
+    public function test_create_users_csv_secondary_entity() {
+        global $DB, $CFG;
+
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+
+        self::setAdminUser();
+
+        // Clean notification.
+        \core\notification::fetch();
+
+        // Guest and admin users.
+        self::assertCount(2, $DB->get_records('user'));
+        $CFG->allowemailaddresses = 'gmail.com';
+        // ********************** Case import performed on a main space *******************
+        // Create users and add to entity.
+        $newentityname = 'Entity1';
+        $entityid = \local_mentor_core\entity_api::create_entity(['name' => $newentityname, 'shortname' => $newentityname]);
+       
+        $userlist = [
+            [
+                'lastname' => 'lastname3',
+                'firstname' => 'firstname3',
+                'email' => 'lastname3.firstname1@gmail.com',
+                'auth' => 'manual',
+            ],
+        ];
+        
+        local_mentor_core_create_users_csv($userlist, [], $entityid);
+
+        // One new user.
+        self::assertCount(3, $DB->get_records('user'));
+        //From sprint60, 
+        //the main entity of the user on create/update, will be affected automatically basing on his email domain 
+        //So the user will have automatically main entity "Bibliothèque de formations"
+        $user = $DB->get_record('user', ['email' => 'lastname3.firstname1@gmail.com']);
+        $profile = \local_mentor_core\profile_api::get_profile($user->id);
+
+        $userentity = $profile->get_main_entity();
+
+        self::assertEquals("Bibliothèque de formations", $userentity->get_name());
+        $dbi = \local_mentor_core\database_interface::get_instance();
+        // If the email is not linked to the main entity where the import is taking place,
+        // assign the entity as a secondary attachment.
+        $secondaryentities = $dbi->get_profile_field_value($user->id, 'secondaryentities');
+        self::assertEquals($secondaryentities, $newentityname);
+
+        // If the email is linked to the main entity where the import is taking place,
+        // the user has no secondary attachment or it is assigned manually.
+        $categoriesdomainsrepository = new categories_domains_repository();     
+
+        $domain = new domain_name();
+        $domain->domain_name = 'test.com';
+        $domain->course_categories_id = $entityid;
+
+        $result = $categoriesdomainsrepository->add_domain($domain);
+        $userlist = [
+            [
+                'lastname' => 'lastname4',
+                'firstname' => 'firstname4',
+                'email' => 'lastname4.firstname4@test.com',
+                'auth' => 'manual',
+            ],
+        ];
+        
+        local_mentor_core_create_users_csv($userlist, [], $entityid);
+        $user = $DB->get_record('user', ['email' => 'lastname4.firstname4@test.com']);
+        $secondaryentities = $dbi->get_profile_field_value($user->id, 'secondaryentities');
+        self::assertEquals($secondaryentities, "");
+
+        // ********************** Case import performed on a non main space *******************
+        // Create users and add to entity.
+        $notMainEnttityName = 'Entity2';
+        $entityid = \local_mentor_core\entity_api::create_entity(['name' => $notMainEnttityName, 'shortname' => $notMainEnttityName]);
+        $entity = new \local_mentor_specialization\mentor_entity($entityid);
+        $entity->update_can_be_main_entity(false);
+
+        $userlist = [
+            [
+                'lastname' => 'lastname5',
+                'firstname' => 'firstname5',
+                'email' => 'lastname5.firstname5@test.com',
+                'auth' => 'manual',
+            ],
+        ];
+        
+        local_mentor_core_create_users_csv($userlist, [], $entityid);
+        $user = $DB->get_record('user', ['email' => 'lastname5.firstname5@test.com']);
+        // Assign the entity as a secondary attachment if the import is performed on a non-main space.
+        $secondaryentities = $dbi->get_profile_field_value($user->id, 'secondaryentities');
+        self::assertEquals($secondaryentities, $notMainEnttityName);
+
+        $userlist = [
+            [
+                'lastname' => 'lastname6',
+                'firstname' => 'firstname6',
+                'email' => 'lastname6.firstname6@testx.com',
+                'auth' => 'manual',
+            ],
+        ];
+        
+        local_mentor_core_create_users_csv($userlist, [], $entityid);
+        $user = $DB->get_record('user', ['email' => 'lastname6.firstname6@testx.com']);  
+        // An external user has as a secondary attachment: the space on which the import is performed.
+        $secondaryentities = $dbi->get_profile_field_value($user->id, 'secondaryentities');
+        self::assertEquals($secondaryentities, $notMainEnttityName);
 
         self::resetAllData();
     }
