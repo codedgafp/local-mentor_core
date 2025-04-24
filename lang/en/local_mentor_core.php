@@ -85,9 +85,14 @@ $string['import_and_enrol_heading'] = 'Import et inscription d\'utilisateurs';
 $string['import_modal_title'] = 'Notification des nouveaux utilisateurs';
 $string['import_reactivate_modal_title'] = 'Notification aux utilisateurs créés ou modifiés';
 $string['import_modal_content']
-    = 'Attention, une notification mél sera envoyée à tous les utilisateurs inscrits à la session. Les utilisateurs ayant un compte créé ou réactivé recevront également une notification spécifique. Voulez-vous continuer ?';
+    = 'Attention, une notification mél sera envoyée à tous les utilisateurs inscrits à la session. Les utilisateurs ayant un compte créé ou réactivé recevront également une notification spécifique.
+
+Cette opération peut prendre un certain temps selon le volume d\'inscription à traiter, vous recevrez une confirmation par mél dès que l\'opération sera terminée.
+Voulez-vous continuer ?';
 $string['import_reactivate_modal_content']
-    = 'Attention, une notification mél sera envoyée à tous les utilisateurs ayant un compte créé ou réactivé ou dont le choix de l’entité de rattachement a été modifié. Voulez-vous continuer ?';
+    = 'Attention, une notification mél sera envoyée à tous les utilisateurs ayant un compte créé ou réactivé ou dont le choix de l’entité de rattachement a été modifié.
+Cette opération peut prendre un certain temps selon le volume à traiter, vous recevrez une confirmation par mél dès que l\'opération sera terminée.
+Voulez-vous continuer ?';
 
 $string['recommandedratio'] = '(ratio recommandé : {$a})';
 $string['square'] = 'carré';
