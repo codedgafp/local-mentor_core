@@ -175,13 +175,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         $profiledata = $db->get_user_by_email('user@gouv.fr');
         $profile = new \local_mentor_core\profile($profiledata->id);
 
-        // Is not cohort member.
-        self::assertFalse($profile->is_cohort_member());
-
-        $entity = \local_mentor_core\entity_api::get_entity(1);
-        $entity->add_member($profile);
-
-        // Is cohort member.
+        // After the auto-attach of main entity, on create we attribute a main entity to the user based on his email 
         self::assertTrue($profile->is_cohort_member());
 
         self::resetAllData();
@@ -259,8 +253,8 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         $profiledata = $db->get_user_by_email($email);
         $profile = new \local_mentor_core\profile($profiledata->id);
 
-        // Not has main entity.
-        self::assertFalse($profile->get_main_entity());
+        // auto-attech of main entity
+        self::assertNotFalse($profile->get_main_entity());
 
         $lastname2 = 'lastname2';
         $firstname2 = 'firstname2';
@@ -303,27 +297,15 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         $auth = 'manual';
 
         // Create user.
+        //event with no entity in params, the user will be attached automatically to a main entity
         self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, [], null, $auth));
 
         // Get user.
         $profiledata = $db->get_user_by_email($email);
         $profile = new \local_mentor_core\profile($profiledata->id);
 
-        self::assertNull($profile->sync_entities());
-
-        $lastname2 = 'lastname2';
-        $firstname2 = 'firstname2';
-        $email2 = 'user2@gouv.fr';
-
-        // Create user.
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname2, $firstname2, $email2, 1, [], null, $auth));
-
-        // Get user.
-        $profiledata2 = $db->get_user_by_email($email2);
-        $profile2 = new \local_mentor_core\profile($profiledata2->id);
-
-        self::assertTrue($profile2->sync_entities());
-
+        self::assertTrue($profile->sync_entities());
+        
         self::resetAllData();
     }
 
@@ -354,9 +336,10 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         $profiledata = $db->get_user_by_email($email);
         $profile = new \local_mentor_core\profile($profiledata->id);
 
-        self::assertFalse($profile->can_edit_profile());
+        self::assertTrue($profile->can_edit_profile());
 
-        $mainentity = \local_mentor_core\entity_api::get_entity(1);
+        $mainentity = \local_mentor_specialization\mentor_entity::get_default_entity();
+        $mainentity = \local_mentor_core\entity_api::get_entity($mainentity->id);
         $profile->set_main_entity($mainentity);
 
         self::assertEquals($profile->mainentity, $mainentity->get_name());

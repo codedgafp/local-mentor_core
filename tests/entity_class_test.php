@@ -276,13 +276,6 @@ class local_mentor_core_entity_class_testcase extends advanced_testcase {
 
         self::assertSame($result, $user->id);
 
-        // Set mainentity to user.
-        $field = $DB->get_record('user_info_field', ['shortname' => 'mainentity']);
-        $userdata = new stdClass();
-        $userdata->fieldid = $field->id;
-        $userdata->data = $entityname;
-        $userdata->userid = $user->id;
-        $DB->insert_record('user_info_data', $userdata);
 
         // Check entity members.
         $members = $entity->get_members();

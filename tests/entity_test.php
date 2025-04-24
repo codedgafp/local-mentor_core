@@ -1838,9 +1838,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         $newuser = self::getDataGenerator()->create_user();
 
-        // The user must not be a member of any entity.
+        // The user is a member of the default entity => auto-attach of main entity
         $userentities = \local_mentor_core\entity_api::get_user_entities($newuser->id);
-        self::assertEquals(0, count($userentities));
+        self::assertEquals(1, count($userentities));
 
         $entitydata = $this->get_entities_data()[0];
         $entitydata['userid'] = 0; // Remove the manager.
@@ -1873,7 +1873,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Check if the user is a member of each main entity.
         $userentities = \local_mentor_core\entity_api::get_user_entities($newuser->id);
-        self::assertEquals(count($this->get_entities_data()) - 1, count($userentities));
+
+        self::assertEquals(count($this->get_entities_data()), count($userentities));
 
         self::resetAllData();
     }

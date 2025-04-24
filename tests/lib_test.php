@@ -878,14 +878,14 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
 
         self::setAdminUser();
 
-        $user = self::getDataGenerator()->create_user();
+        //$user = self::getDataGenerator()->create_user();
 
-        // Create entity.
-        $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'Entity', 'shortname' => 'Entity']);
+        $defaultcategory = \local_mentor_specialization\mentor_entity::get_default_entity();
+        $entityid = $defaultcategory->id;
 
         $userlist = [
             'lastname, firstname, email',
-            $user->lastname . ',' . $user->firstname . ',' . $user->email,
+            "lastname" . ',' . "firstname" . ',' . "user@test.com",
         ];
 
         // Preview array.
@@ -899,26 +899,18 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
             'entityid' => $entityid,
             'addtoentity' => \importcsv_form::ADD_TO_MAIN_ENTITY,
         ];
-
+        //the user will be auto-attached to an entity based on his email
         local_mentor_core_validate_users_csv($userlist, 'comma', null, $preview, $errors, $warnings, $other);
 
         self::assertCount(1, $preview['list']);
         self::assertEquals(2, $preview['list'][0]['linenumber']);
-        self::assertEquals($user->lastname, $preview['list'][0]['lastname']);
-        self::assertEquals($user->firstname, $preview['list'][0]['firstname']);
-        self::assertEquals($user->email, $preview['list'][0]['email']);
+        self::assertEquals( "lastname" , $preview['list'][0]['lastname']);
+        self::assertEquals( "firstname" , $preview['list'][0]['firstname']);
+        self::assertEquals( "user@test.com", $preview['list'][0]['email']);
         self::assertEquals(1, $preview['validlines']);
-        self::assertEquals(0, $preview['validforcreation']);
+        self::assertEquals(1, $preview['validforcreation']);
 
         self::assertNull($errors);
-
-        self::assertCount(1, $warnings['list']);
-        self::assertEquals(2, $warnings['list'][0][0]);
-        self::assertEquals(
-            get_string('warning_user_main_entity_update', 'local_mentor_core'),
-            $warnings['list'][0][1]
-        );
-
         self::resetAllData();
     }
 
@@ -2501,12 +2493,8 @@ test2", $finalcontent);
 
         self::setAdminUser();
 
-        // Main entity.
-        $entityid = \local_mentor_core\entity_api::create_entity([
-            'name' => 'New Entity 1',
-            'shortname' => 'New Entity 1',
-        ]);
-        $entity = \local_mentor_core\entity_api::get_entity($entityid);
+        // Main entity=> default entity => auto attachement of main entity
+        $entity =  \local_mentor_specialization\mentor_entity::get_default_entity();
 
         // Create profile.
         $user = new stdClass();
@@ -2521,15 +2509,6 @@ test2", $finalcontent);
 
         $userid = local_mentor_core\profile_api::create_user($user);
         set_user_preference('auth_forcepasswordchange', 0, $user);
-
-        $field = $DB->get_record('user_info_field', ['shortname' => 'mainentity']);
-
-        $userdata = new stdClass();
-        $userdata->fieldid = $field->id;
-        $userdata->data = 'New Entity 1';
-        $userdata->userid = $userid;
-
-        $DB->insert_record('user_info_data', $userdata);
 
         $preview = [];
         $errors = [];
@@ -2966,15 +2945,7 @@ test2", $finalcontent);
         $userid = local_mentor_core\profile_api::create_user($user);
         set_user_preference('auth_forcepasswordchange', 0, $user);
 
-        $field = $DB->get_record('user_info_field', ['shortname' => 'mainentity']);
-
-        $userdata = new stdClass();
-        $userdata->fieldid = $field->id;
-        $userdata->data = 'New Entity 2';
-        $userdata->userid = $userid;
-
-        $DB->insert_record('user_info_data', $userdata);
-
+ 
         self::assertTrue(local_mentor_core_validate_suspend_users_csv($content, $entity, $preview, $errors));
 
         self::assertNotEmpty($errors);
@@ -3008,11 +2979,8 @@ test2", $finalcontent);
         \core\notification::fetch();
 
         // Main entity.
-        $entityid = \local_mentor_core\entity_api::create_entity([
-            'name' => 'New Entity 1',
-            'shortname' => 'New Entity 1',
-        ]);
-        $entity = \local_mentor_core\entity_api::get_entity($entityid);
+        $defaultcategory = \local_mentor_specialization\mentor_entity::get_default_entity();
+        $entity = \local_mentor_core\entity_api::get_entity($defaultcategory->id);
 
         $preview = [];
         $errors = [];
@@ -3035,16 +3003,7 @@ test2", $finalcontent);
 
         $userid2 = local_mentor_core\profile_api::create_user($user);
         set_user_preference('auth_forcepasswordchange', 0, $user);
-
-        $field = $DB->get_record('user_info_field', ['shortname' => 'mainentity']);
-
-        $userdata = new stdClass();
-        $userdata->fieldid = $field->id;
-        $userdata->data = 'New Entity 1';
-        $userdata->userid = $userid2;
-
-        $DB->insert_record('user_info_data', $userdata);
-
+      
         $entity->assign_manager($userid2);
 
         self::assertTrue(local_mentor_core_validate_suspend_users_csv($content, $entity, $preview, $errors));

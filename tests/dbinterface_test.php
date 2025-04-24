@@ -24,7 +24,6 @@
  */
 
 use local_mentor_core\session;
-
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -32,7 +31,7 @@ global $CFG;
 require_once($CFG->dirroot . '/local/mentor_core/lib.php');
 require_once($CFG->dirroot . '/local/mentor_core/classes/database_interface.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/training.php');
-
+require_once($CFG->dirroot . '/local/mentor_specialization/classes/models/mentor_entity.php');
 class local_mentor_core_dbinterface_testcase extends advanced_testcase {
 
     const ENTITY_NAMES = ['New Entity 1', 'New Entity 2', 'New, Entity 3'];
@@ -1158,13 +1157,11 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         $newuser = self::getDataGenerator()->create_user();
 
         $dbinterface = \local_mentor_core\database_interface::get_instance();
-
-        // Create an entity.
-        $entityid = $this->init_create_entity();
+        $defaultcategory = \local_mentor_specialization\mentor_entity::get_default_entity();
+        $entityid = $defaultcategory->id;
 
         try {
             $entity = \local_mentor_core\entity_api::get_entity($entityid);
-
             // Add user to entity cohort.
             $entity->add_member($newuser);
         } catch (\Exception $e) {
@@ -1198,8 +1195,8 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         // Create an user.
         $newuser = self::getDataGenerator()->create_user();
 
-        // Create an Entity.
-        $entityid = $this->init_create_entity();
+        $defaultcategory = \local_mentor_specialization\mentor_entity::get_default_entity();
+        $entityid = $defaultcategory->id;
         $entity = \local_mentor_core\entity_api::get_entity($entityid);
 
         // Add user to entity cohort.
@@ -2229,10 +2226,11 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
 
         $dbinterface = \local_mentor_core\database_interface::get_instance();
 
-        $oldentityname = 'New Entity 1';
+        $defaultcategory = \local_mentor_specialization\mentor_entity::get_default_entity();
+        $oldentityname = $defaultcategory->name;
         $newentityname = 'New Entity 2';
 
-        $field = $DB->get_record('user_info_field', ['shortname' => 'mainentity']);
+      
 
         // Create user.
         $user1 = new stdClass();
@@ -2246,15 +2244,10 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         $user1->auth = 'manual';
 
         $user1id = local_mentor_core\profile_api::create_user($user1);
-        set_user_preference('auth_forcepasswordchange', 0, $user1);
+        set_user_preference('auth_forcepasswordchange', 0, $user1);       
+        $field = $DB->get_record('user_info_field', ['shortname' => 'mainentity']);
 
-        $user1data = new stdClass();
-        $user1data->fieldid = $field->id;
-        $user1data->data = $oldentityname;
-        $user1data->userid = $user1id;
-
-        $user1infodata = $DB->insert_record('user_info_data', $user1data);
-
+        $user1infodata = $DB->get_record('user_info_data', ['userid' => $user1id, 'fieldid' => $field->id]);
         // Create user.
         $user2 = new stdClass();
         $user2->lastname = 'lastname2';
@@ -2264,28 +2257,16 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         $user2->password = 'user2';
         $user2->mnethostid = 1;
         $user2->confirmed = 1;
-        $user2->auth = 'manual';
-
-        $user2id = local_mentor_core\profile_api::create_user($user2);
-        set_user_preference('auth_forcepasswordchange', 0, $user2);
-
-        $user2data = new stdClass();
-        $user2data->fieldid = $field->id;
-        $user2data->data = $oldentityname;
-        $user2data->userid = $user2id;
-
-        $user2infodata = $DB->insert_record('user_info_data', $user2data);
+        $user2->auth = 'manual';        
 
         $resultrequest = $DB->get_records_sql('
             SELECT *
             FROM {user_info_data}
             WHERE ' . $DB->sql_compare_text('data') . ' = ' . $DB->sql_compare_text(':data') .
-                                              'AND fieldid = :fieldid', ['data' => $oldentityname, 'fieldid' => $field->id]);
+                                              'AND fieldid = :fieldid', ['data' => $defaultcategory->name, 'fieldid' => $field->id]);
 
-        self::assertEquals($resultrequest[$user1infodata]->userid, $user1id);
-        self::assertEquals($resultrequest[$user1infodata]->data, $oldentityname);
-        self::assertEquals($resultrequest[$user2infodata]->userid, $user2id);
-        self::assertEquals($resultrequest[$user2infodata]->data, $oldentityname);
+        self::assertEquals($resultrequest[$user1infodata->id]->userid, $user1id);
+        self::assertEquals($resultrequest[$user1infodata->id]->data, $oldentityname);
 
         $dbinterface->update_main_entities_name($oldentityname, $newentityname);
 
@@ -2295,10 +2276,8 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
             WHERE ' . $DB->sql_compare_text('data') . ' = ' . $DB->sql_compare_text(':data') .
                                               'AND fieldid = :fieldid', ['data' => $newentityname, 'fieldid' => $field->id]);
 
-        self::assertEquals($resultrequest[$user1infodata]->userid, $user1id);
-        self::assertEquals($resultrequest[$user1infodata]->data, $newentityname);
-        self::assertEquals($resultrequest[$user2infodata]->userid, $user2id);
-        self::assertEquals($resultrequest[$user2infodata]->data, $newentityname);
+        self::assertEquals($resultrequest[$user1infodata->id]->userid, $user1id);
+        self::assertEquals($resultrequest[$user1infodata->id]->data, $newentityname);
 
         self::resetAllData();
     }
@@ -3035,21 +3014,14 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
 
         self::setAdminUser();
 
-        $entityname = 'entitytest';
-
         // Create user.
         $userid = self::init_create_user();
+        
+        $defaultcategory = \local_mentor_specialization\mentor_entity::get_default_entity();
 
-        // Set mainentity to user.
-        $field = $DB->get_record('user_info_field', ['shortname' => 'mainentity']);
-        $userdata = new stdClass();
-        $userdata->fieldid = $field->id;
-        $userdata->data = $entityname;
-        $userdata->userid = $userid;
-        $DB->insert_record('user_info_data', $userdata);
 
         // Check entity is mainentity for user.
-        $resultrequest = $dbinterface->get_users_by_mainentity($entityname);
+        $resultrequest = $dbinterface->get_users_by_mainentity($defaultcategory->name);
         self::assertCount(1, $resultrequest);
         self::assertEquals($userid, current($resultrequest)->id);
 
@@ -3970,13 +3942,11 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         // Field does not exist.
         self::assertFalse($dbi->get_profile_field_value($user->id, 'falsefield'));
 
-        // Field exist but is empty.
-        self::assertEmpty($dbi->get_profile_field_value($user->id, 'mainentity'));
-
-        $dbi->set_profile_field_value($user->id, 'mainentity', 'entitytest');
+        //auto attach of main entity
+        self::assertNotEmpty($dbi->get_profile_field_value($user->id, 'mainentity'));
 
         // Field exist.
-        self::assertEquals('entitytest', $dbi->get_profile_field_value($user->id, 'mainentity'));
+        self::assertEquals('Bibliothèque de formations', $dbi->get_profile_field_value($user->id, 'mainentity'));
 
         self::resetAllData();
     }

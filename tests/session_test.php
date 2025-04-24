@@ -168,15 +168,6 @@ class local_mentor_core_session_testcase extends advanced_testcase {
         $userid = local_mentor_core\profile_api::create_user($user);
         set_user_preference('auth_forcepasswordchange', 0, $user);
 
-        $field = $DB->get_record('user_info_field', ['shortname' => 'mainentity']);
-
-        $userdata = new stdClass();
-        $userdata->fieldid = $field->id;
-        $userdata->data = 'New Entity 1';
-        $userdata->userid = $userid;
-
-        $DB->insert_record('user_info_data', $userdata);
-
         return $userid;
     }
 
