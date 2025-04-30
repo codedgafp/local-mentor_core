@@ -325,11 +325,16 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
     $emailpattern = '/[\(\)<>";:\\,\[\]]/';
 
     // No more than 200 entries.
-    if (count($content) > 201) {
+    if (count($content) > 5001) {
         \core\notification::error(get_string('error_too_many_lines', 'local_mentor_core'));
         return true;
     }
 
+    $usersExistData = fetch_users_by_emails_from_content($content, $delimitername);
+    if (count($usersExistData)>0) {
+        $usernames = array_map(fn($userData) => $userData->username, $usersExistData);
+        $usersExistUsernameEmail = get_users_by_usernames($usernames, 'id, suspended, email');
+    }
     // Check entries.
     foreach ($content as $index => $line) {
 
@@ -498,9 +503,11 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
             }
 
             $email = $columns[$emailkey];
-            $users = get_users_by_email($email, '', 'id, email, username, suspended');
 
-            if (count($users) > 1) {
+            $countMatchingEmails = 0;
+            $countMatchingEmails = count(array_filter($usersExistData, fn($userData) => $userData->email === $email));
+
+            if ($countMatchingEmails > 1) {
                 $warnings['list'][] = [
                     $linenumber,
                     get_string(
@@ -514,15 +521,12 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
             }
 
             // If the user exists, check if an other user as an email equals to the username.
-            if (count($users) == 1) {
-                $u = array_shift($users);
+            if ($countMatchingEmails == 1) {
+                $u = (array_values(array_filter($usersExistData, fn($userData) => $userData->email === $email))[0] ?? null);
 
-                $users = $DB->get_records_sql(
-                    "SELECT id, suspended, email FROM {user} WHERE username = :username OR email = :email", 
-                    ['email' => strtolower($u->username), 'username' => strtolower($u->username)]
-                );
-
-                 if(count($users) >= 2) {
+                $users = $usersExistUsernameEmail;
+               
+                if(count($users) >= 2) {
                     $warnings['list'][] = [
                         $linenumber,
                         get_string('email_already_used', 'local_mentor_core'),
@@ -584,7 +588,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
             }
 
             // User doesn't exists or is suspended.
-            if (false === $ignoreline && count($users) === 0 && !isset($preview['validforreactivation'][$email])) {
+            if (false === $ignoreline && $countMatchingEmails === 0 && !isset($preview['validforreactivation'][$email])) {
                 $preview['validforcreation']++;
                     $warnings['list'][] = [
                         $linenumber,
@@ -614,6 +618,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
 
             $preview['list'][] = $newline;
         }
+  
     }
 
     if (count($preview['list']) === 0 && (!isset($preview['validforreactivation']) || count($preview['validforreactivation']) === 0)) {
@@ -622,6 +627,64 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
 
     return $hasfatalerrors;
 }
+
+ /**
+     * Fetch user count for each email in the content.
+     *
+     * @param array $content CSV content as array
+     * @param array $columns CSV header columns
+     * @return array Returns an array with email as key and user object as value
+     */
+ function fetch_users_by_emails_from_content($content, $delimitername) {
+        $emails = [];
+        
+
+        foreach ($content as $index => $line) {
+
+            $line = trim($line ?? '');
+    
+            // Skip empty lines.
+            if (empty($line)) {
+                continue;
+            }
+    
+ 
+            $columnscsv = str_getcsv(trim($line), csv_import_reader::get_delimiter($delimitername));
+    
+            $columns = [];
+            foreach ($columnscsv as $column) {
+    
+                // Remove whitespaces.
+                $column = trim($column);
+    
+                // Remove hidden caracters.
+                $column = preg_replace('/\p{C}+/u', "", $column);
+    
+                $columns[] = $column;
+            }
+    
+            // Check if CSV header is valid.
+            if ($index === 0) {
+                // Check for missing headers.
+                if (in_array('email', $columns, true) && count($content) > 1) {                   
+                // Init csv columns indexes.
+                $emailkey = array_search('email', $columns, true);
+                }
+                continue;
+            }
+
+            if(isset($emailkey) && isset($columns[$emailkey])) {
+                $email = $columns[$emailkey];
+                $emails[] = $email;          
+            }           
+           
+        }       
+
+        if (count($emails) > 0) {
+            return get_users_by_emails($emails, '', 'id, email, username, suspended');
+        }
+        return [];
+    }
 
 /**
  * Enrol users to the session. Create and enrol if a user doesn't exist.
@@ -1854,8 +1917,8 @@ function local_mentor_core_validate_suspend_users_csv($content, $entity, &$previ
 {
     global $DB;
 
-    // No more than 200 entries.
-    if (count($content) > 201) {
+    // No more than 5000 entries.
+    if (count($content) > 5001) {
         \core\notification::error(get_string('error_too_many_lines', 'local_mentor_core'));
         return true;
     }

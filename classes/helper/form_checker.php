@@ -90,3 +90,113 @@ function construct_user_by_email_request(string $email, string $addSelectParamet
         "params" => $params,
     ];
 }
+
+/**
+ * Prepare and construct the record parameters for multiple emails.
+ *
+ * @param array $emails email list.
+ * @param string $addSelectParameters (Optionnal) To add some conditions (ex: AND ...).
+ *
+ * @return array
+ */
+function construct_user_by_emails_request(array $emails, string $addSelectParameters = ''): array {
+    global $DB;
+
+    if (empty($emails)) {
+        throw new InvalidArgumentException("Le tableau des emails ne peut pas être vide.");
+    }
+
+   
+    $params = [];
+    $placeholders = [];
+
+    foreach ($emails as $index => $email) {
+        $paramName = "email$index";
+        $placeholders[] = ":$paramName";
+        $params[$paramName] = $email; 
+    }
+
+    $select = 'email IN (' . implode(', ', $placeholders) . ')';
+
+    if ($addSelectParameters) {
+        $select .= ' ' . $addSelectParameters;
+    }
+
+    return [
+        "select" => $select,
+        "params" => $params,
+    ];
+}
+
+/**
+ * Get a list of users depending on emails sent. Not case sensitive.
+ * 
+ * @param []string $emails
+ * @param string $sort
+ * @param string $fields A comma separated list of fields to be returned from the chosen table
+ * 
+ * @return array
+ */
+function get_users_by_emails(array $emails, string $sort = '', string $fields = '*'): array {
+    global $DB;
+
+    // prepare the parameters for the record
+    $requestData = construct_user_by_emails_request($emails);
+
+    return $DB->get_records_select('user', $requestData["select"], $requestData["params"], $sort, $fields);
+}
+
+
+/**
+ * Get a list of users depending on usernames
+ * 
+ * @param array $usernames
+ * @param string $sort
+ * @param string $fields A comma separated list of fields to be returned from the chosen table
+ * 
+ * @return array
+ */
+function construct_user_by_usernames_request(array $usernames): array {
+
+    if (empty($usernames)) {
+        throw new InvalidArgumentException("The array of usernames cannot be empty.");
+    }
+
+    $params = [];
+
+    $usernamePlaceholders = [];
+    $emailPlaceholders = [];
+
+    foreach ($usernames as $index => $value) {
+        $usernameParamName = "username$index";
+        $emailParamName = "email$index";
+
+        $usernamePlaceholders[] = ":$usernameParamName";
+        $emailPlaceholders[] = ":$emailParamName";
+
+        $params[$usernameParamName] = $value;
+        $params[$emailParamName] = $value;
+    }
+
+    $select = '(username IN (' . implode(', ', $usernamePlaceholders) . ') OR email IN (' . implode(', ', $emailPlaceholders) . '))';
+
+    return [
+        "select" => $select,
+        "params" => $params,
+    ];}
+
+/**
+ * Get a list of users depending on emails sent . Not case sensitive.
+ * 
+ * @param []string $emails
+ * @param string $sort
+ * @param string $fields A comma separated list of fields to be returned from the chosen table
+ * 
+ * @return array
+ */
+function get_users_by_usernames(array $usernames, string $fields = '*'): array {
+    global $DB;
+
+    $requestData = construct_user_by_usernames_request($usernames);
+    return $DB->get_records_select('user', $requestData["select"], $requestData["params"], '', $fields);
+}
