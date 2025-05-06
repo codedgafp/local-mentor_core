@@ -27,6 +27,7 @@ use local_mentor_core\session;
 use local_mentor_core\training;
 use local_mentor_core\session_api;
 use local_mentor_core\session_form;
+use local_mentor_core\helper\testhelper;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -2773,8 +2774,11 @@ class local_mentor_core_session_testcase extends advanced_testcase {
         $sessionid = $this->init_session_creation();
         $session = \local_mentor_core\session_api::get_session($sessionid);
 
-        $DB->delete_records('user_info_field');
+        testhelper::create_default_entity($this);
         $user = self::getDataGenerator()->create_user();
+
+        $DB->delete_records('user_info_field');
+        
         self::setUser($user);
 
         $DB->delete_records('favourite');
@@ -2818,8 +2822,11 @@ class local_mentor_core_session_testcase extends advanced_testcase {
         $sessionid = $this->init_session_creation();
         $session = \local_mentor_core\session_api::get_session($sessionid);
 
-        $DB->delete_records('user_info_field');
+        testhelper::create_default_entity($this);
         $user = self::getDataGenerator()->create_user();
+        
+        $DB->delete_records('user_info_field');
+
         self::setUser($user);
 
         $DB->delete_records('favourite');

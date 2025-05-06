@@ -27,6 +27,8 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
+use local_mentor_core\helper\testhelper;
+
 require_once($CFG->dirroot . '/local/mentor_core/api/entity.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/training.php');
 require_once($CFG->dirroot . '/local/mentor_core/classes/model/entity.php');
@@ -1082,6 +1084,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         self::setAdminUser();
 
         $DB->delete_records('course_categories');
+        testhelper::create_default_entity($this);
 
         $newuser = self::getDataGenerator()->create_user();
 
@@ -1152,8 +1155,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         $managedentities = \local_mentor_core\entity_api::get_managed_entities($USER, false);
 
-        // Check if the user can manage the entity.
-        self::assertCount(2, $managedentities);
+        // Check if the user can manage the entity. 
+        // Two created just before, +1 created at the begining to insert a default entity (create_default_entity).
+        self::assertCount(3, $managedentities);
 
         self::resetAllData();
     }
@@ -1242,12 +1246,22 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $this->init_role();
 
         self::setAdminUser();
+        local_library_init_config();
 
         $DB->delete_records('course_categories');
 
+        $firstentityid = testhelper::create_default_entity($this, 'entity0');
+        \local_mentor_core\entity_api::create_entity(
+            [
+                    'name' => 'subentity0',
+                    'shortname' => 'subentity0',
+                    'parentid' => $firstentityid,
+            ]
+        );
+
         $newuser = self::getDataGenerator()->create_user();
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 1; $i < 10; $i++) {
             $entityname = 'entity' . $i;
 
             $entityid = \local_mentor_core\entity_api::create_entity(

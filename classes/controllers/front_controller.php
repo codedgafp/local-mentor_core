@@ -127,6 +127,13 @@ class front_controller {
     }
 
     /**
+     * return controller
+     */
+    public function get_controller() {
+        return $this->controller;
+    }
+
+    /**
      * Set action to call
      *
      * @param string $action

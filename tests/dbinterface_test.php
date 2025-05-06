@@ -24,6 +24,7 @@
  */
 
 use local_mentor_core\session;
+use local_mentor_core\helper\testhelper;
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -5790,6 +5791,8 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
 
         // Get database interface.
         $db = \local_mentor_core\database_interface::get_instance();
+
+        testhelper::create_default_entity($this);
 
         // Create user.
         $user = self::getDataGenerator()->create_user();

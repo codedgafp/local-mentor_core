@@ -4526,7 +4526,7 @@ class database_interface {
 
         // Check in class cache.
         foreach ($this->mainentities as $entity) {
-            if (strtolower($entity->shortname) == strtolower($shortname ?? '')) {
+            if (isset($entity->shortname) && strtolower($entity->shortname) == strtolower($shortname ?? '')) {
                 return $entity;
             }
         }
@@ -4535,7 +4535,7 @@ class database_interface {
         $this->get_all_main_categories(true);
 
         foreach ($this->mainentities as $entity) {
-            if (strtolower($entity->shortname) == strtolower($shortname ?? '')) {
+            if (isset($entity->shortname) && strtolower($entity->shortname) == strtolower($shortname ?? '')) {
                 return $entity;
             }
         }
