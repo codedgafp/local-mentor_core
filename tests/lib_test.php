@@ -1260,7 +1260,10 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
      * @covers ::local_mentor_core_create_users_csv
      */
     public function test_create_users_csv_ok() {
-        global $DB;
+        global $DB, $CFG;
+
+        $domain = 'gmail.com';
+        $CFG->allowemailaddresses = $domain;;
 
         $this->resetAfterTest(true);
         $this->reset_singletons();
@@ -1433,7 +1436,10 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
      * @covers ::local_mentor_core_create_users_csv
      */
     public function test_local_mentor_core_create_users_csv_ok_add_entity() {
-        global $DB;
+        global $DB, $CFG;
+
+        $domain = 'gmail.com';
+        $CFG->allowemailaddresses = $domain;
 
         $this->resetAfterTest(true);
         $this->reset_singletons();
@@ -1457,20 +1463,26 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
             ],
         ];
 
+        $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity 1', 'shortname' => 'New Entity 1']);
+        $domain = (object) [
+            'course_categories_id' => $entityid,
+            'domain_name' => $domain,
+            'created_at' => time(),
+            'disabled_at' => null
+        ];
+        $DB->insert_record('course_categories_domains', $domain, false);
+
         local_mentor_core_create_users_csv($userlist);
 
         $newuser = $DB->get_record('user', ['email' => 'lastname1.firstname1@gmail.com']);
 
-        $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity 1', 'shortname' => 'New Entity 1']);
-
-        // Add to main entity.
         local_mentor_core_create_users_csv($userlist, [], $entityid, \importcsv_form::ADD_TO_MAIN_ENTITY);
 
         $mainentity = $dbi->get_profile_field_value($newuser->id, 'mainentity');
         //From sprint60, 
         //the main entity of the user on create/update, will be affected automatically basing on his email domain 
         //So the user will have automatically main entity "Bibliothèque de formations"
-        self::assertEquals("Bibliothèque de formations", $mainentity);
+        self::assertEquals('New Entity 1', $mainentity);
 
         $entity2id = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity 2', 'shortname' => 'New Entity 2']);
 
@@ -1532,7 +1544,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
         $usermainentity = $DB->get_record('user_info_data', ['fieldid' => $mainentityfieldid])->data;
         //From sprint60, 
         //the main entity of the user on create/update, will be affected automatically basing on his email domain 
-        self::assertEquals("DefaultEntity", $usermainentity);
+        self::assertEquals($newentityname, $usermainentity);
         self::resetAllData();
     }
 

@@ -473,7 +473,7 @@ class profile_api {
     /**
      * Get all users categories roles
      *
-     * @param stdClass $data containing search, order, length
+     * @param \stdClass $data containing search, order, length
      * @return array
      * @throws \dml_exception
      * @throws \moodle_exception

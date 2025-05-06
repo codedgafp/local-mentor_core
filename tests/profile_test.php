@@ -892,7 +892,7 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
         $dateformat = $startdate->format('d/m/Y');
         self::assertEquals($userroles[0]->timemodified, $dateformat);
         self::assertEquals($userroles[0]->profilelink, "https://www.example.com/moodle/user/profile.php?id=" . $userid);
-        self::assertEquals($userroles[0]->mainentity, "Bibliothèque de formations");
+        self::assertEquals($userroles[0]->mainentity, $entity1->name);
 
         $this->resetAllData();
     }
