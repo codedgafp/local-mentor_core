@@ -524,8 +524,8 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
             if ($countMatchingEmails == 1) {
                 $u = (array_values(array_filter($usersExistData, fn($userData) => $userData->email === $email))[0] ?? null);
 
-                $users = $usersExistUsernameEmail;
-               
+                $users = array_filter($usersExistUsernameEmail, fn($userData) => $userData->email === $email);
+
                 if(count($users) >= 2) {
                     $warnings['list'][] = [
                         $linenumber,
