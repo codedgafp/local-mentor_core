@@ -4544,4 +4544,67 @@ class database_interface {
         return false;
     }
 
+    /**
+     * Get the parent category id and name by a course id
+     * 
+     * @param int $courseid
+     */
+    public function get_main_course_category_data_by_course_id(int $courseid)
+    {
+        $params['courseid'] = $courseid;
+
+        $maincategory = $this->get_course_category_by_course($params);
+
+        if ($maincategory->parent != 0)
+            $maincategory = $this->get_course_category_by_sub_entity_course($params);
+
+        return $maincategory;
+    }
+
+    /**
+     * Get course_category data from a course id
+     * 
+     * @param array $params
+     */
+    public function get_course_category_by_course(array $params)
+    {
+        $sqlmaincategory = "SELECT
+                ccparent.id,
+                ccparent.name,
+                ccparent.parent
+            FROM {course} co
+            INNER JOIN {course_categories} ccsession
+                ON ccsession.id = co.category
+                AND co.id = :courseid
+            INNER JOIN {course_categories} ccparent
+                ON ccparent.id = ccsession.parent
+            ";
+
+        return $this->db->get_record_sql($sqlmaincategory, $params);
+    }
+
+    /**
+     * Get course_category data from sub category course id
+     * 
+     * @param array $params
+     */
+    public function get_course_category_by_sub_entity_course(array $params)
+    {
+        $sqlsubcategory = "SELECT
+                ccmaincat.id,
+                ccmaincat.name
+            FROM {course} co
+            INNER JOIN {course_categories} ccsession
+                ON ccsession.id = co.category
+                AND co.id = :courseid
+            INNER JOIN {course_categories} ccsubcat 
+                ON ccsubcat.id = ccsession.parent
+            INNER JOIN {course_categories} ccespace
+                ON ccespace.id = ccsubcat.parent
+            INNER JOIN {course_categories} ccmaincat
+                ON ccmaincat.id = ccespace.parent
+            ";
+
+        return $this->db->get_record_sql($sqlsubcategory, $params);
+    }
 }

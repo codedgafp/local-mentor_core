@@ -722,6 +722,13 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
         $profile->reactivate();
     }
 
+    $db = \local_mentor_core\database_interface::get_instance();
+    $entity = $db->get_main_course_category_data_by_course_id($courseid);
+
+    $entityobject = new \stdClass();
+    $entityobject->id = $entity->id;
+    $entityobject->name = $entity->name;
+
     foreach ($userslist as $index => $line) {
         $user = get_user_by_email($line['email'], 'id');
 
@@ -739,8 +746,10 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
                 $user->auth = $line['auth'];
             }
 
+            $otherdata = json_encode(['entity' => $entityobject]);
+
             try {
-                $user->id = local_mentor_core\profile_api::create_user($user);
+                $user->id = local_mentor_core\profile_api::create_user($user, $otherdata);
             } catch (moodle_exception $e) {
 
                 \core\notification::error(
@@ -859,24 +868,22 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
         $profile->reactivate();
     }
 
-    if (!is_null($entityid)) {
+    $entityObject = null;
+    if ($entityid !== null) {
         $entity = \local_mentor_core\entity_api::get_entity($entityid);
-        $entityObject = null;
         if ($entityid !== null) {
             $entityObject = new \stdClass();
             $entityObject->id = $entityid;
             $entityObject->name = $entity->name;
         }
     }
-    $users = [];
+
     foreach ($userslist as $index => $line) {
         $email = $line['email'];
         $user = get_user_by_email($email, 'id');
-        
-       
+
         // User not found : account creation.
         if (false === $user) {
-
             $user = new stdClass();
             $user->lastname = $line['lastname'];
             $user->firstname = $line['firstname'];
@@ -889,14 +896,14 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
             if (isset($line['auth'])) {
                 $user->auth = $line['auth'];
             }
+
             //set user second entity
             $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($entity, $email);          
 
-            
+            $otherdata = $entityObject !== null ? json_encode(['entity' => $entityObject]) : null;
+
             try {  
-                $users[] = $user;
-                $user->id = local_mentor_core\profile_api::create_user($user);              
-               
+                $user->id = local_mentor_core\profile_api::create_user($user, $otherdata);
             } catch (moodle_exception $e) {
                 \core\notification::error(
                     get_string('error_line', 'local_mentor_core', $index + 1)
@@ -906,8 +913,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
 
                 continue;
             }
-
-        } else if (!is_null($entityid)) {
+        } else if ($entityid !== null) {
             // User update.
             $dbinterface = \local_mentor_core\database_interface::get_instance();
 
@@ -943,15 +949,9 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
 
             // Create and trigger event.
             \core\event\user_updated::create($data)->trigger();
-        
         }
     }
-    // Link categories to users if there are any users to process.
-    if($users)
-    {
-        $entityObject = (!is_null($entityid)) ? $entityObject : null;      
-        $cds->link_categories_to_users($users, $entityObject);  
-    }
+
     return true;
 }
 /**

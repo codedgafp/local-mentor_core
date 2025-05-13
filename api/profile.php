@@ -392,11 +392,13 @@ class profile_api {
      * NOTE : user fields must be validated before using this function.
      *
      * @param \stdClass $user
+     * @param string|null $otherdata
      * @return int
      * @throws \coding_exception
      * @throws \moodle_exception
      */
-    public static function create_user($user) {
+    public static function create_user($user, string|null $otherdata = null): int
+    {
         global $CFG;
         require_once($CFG->dirroot . '/user/lib.php');
 
@@ -443,8 +445,19 @@ class profile_api {
         unset_user_preference('create_password', $user);
         set_user_preference('auth_forcepasswordchange', 1, $user);
 
-        // Trigger event.
-        \core\event\user_created::create_from_userid($user->id)->trigger();
+        // Prepare event data
+        $data = [
+            'objectid' => $user->id,
+            'relateduserid' => $user->id,
+            'context' => \context_user::instance($user->id)
+        ];
+
+        if ($otherdata !== null) {
+            $data['other'] = $otherdata;
+        }
+
+        // Create user_created event.
+        \core\event\user_created::create($data)->trigger();
 
         // Make sure user context exists.
         \context_user::instance($user->id);

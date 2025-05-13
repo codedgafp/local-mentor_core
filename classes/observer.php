@@ -66,19 +66,28 @@ class local_mentor_core_observer {
     }
 
     /**
-     *
      * Sync user main entity to the corresponding email
      *
      * @param \core\event\user_created $event
      * @throws Exception
      */
-    public static function sync_user_main_entity_on_create(\core\event\user_created $event) {
+    public static function sync_user_main_entity_on_create(\core\event\user_created $event): void
+    {
         global $DB;
         $cds = new categories_domains_service();
         $user = $DB->get_record('user', ['id' => $event->objectid]);
         
         if(empty($user->email)) $user->email = $user->username;
-        $cds->link_categories_to_users([$user]);
+
+        $entity = null;
+        if (isset($event->other)) {
+            $otherdata = json_decode($event->other, true);
+            if (isset($otherdata['entity'])) {
+                $entity = (object) $otherdata['entity'];
+            }
+        }
+
+        $cds->link_categories_to_users([$user], $entity);
         return;
     }
 
