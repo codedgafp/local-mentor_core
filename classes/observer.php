@@ -109,6 +109,8 @@ class local_mentor_core_observer {
         global $DB;
         $cds = new categories_domains_service();
         $user = $DB->get_record('user', ['id' => $event->objectid]);
+        
+        if(empty($user->email)) $user->email = $user->username;
         $cds->link_categories_to_users([$user]);
         return;
     }
