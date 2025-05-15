@@ -25,9 +25,7 @@
 
 use local_mentor_core\entity;
 use local_mentor_core\profile_api;
-use local_categories_domains\utils\categories_domains_service;
 use local_categories_domains\model\domain_name;
-use local_categories_domains\repository\categories_domains_repository;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -844,37 +842,41 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
  *
  * @param array $userslist users that must be created
  * @param array $userstoreactivate users that must be reactivated
- * @param null $entityid
+ * @param null|int $entityid
  * @throws coding_exception
  * @throws moodle_exception
  */
-function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate = [], $entityid = null)
+function local_mentor_core_create_users_csv(array $userslist = [], array $userstoreactivate = [], int $entityid = null): bool
 {
-    global $DB, $CFG, $PAGE;
+    global $DB;
+
     $entity = null;
-    $cds = new categories_domains_service();       
+    $entityObject = null;
+
     // Reactivate user accounts.
     foreach ($userstoreactivate as $usertoreactivate) {
-
         $email = $usertoreactivate['email'];
         $user = get_suspended_user_by_email($email);
 
         // Check if user exists.
-        if ($user === false) {
-            continue;
-        }
+        if ($user === false) continue;
 
         $profile = profile_api::get_profile($user, true);
         $profile->reactivate();
     }
 
-    $entityObject = null;
     if ($entityid !== null) {
-        $entity = \local_mentor_core\entity_api::get_entity($entityid);
-        if ($entityid !== null) {
+        $entity = new local_mentor_specialization\mentor_entity($entityid);
+        if ($entity !== null) {
             $entityObject = new \stdClass();
             $entityObject->id = $entityid;
             $entityObject->name = $entity->name;
+        } else {
+            \core\notification::error(
+                get_string('errors_report', 'local_mentor_core')
+                . " : L'entité id donné ne correspond à aucune entité existante"
+            );
+            return false;
         }
     }
 
@@ -898,7 +900,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
             }
 
             //set user second entity
-            $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($entity, $email);          
+            $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($email, $entity);
 
             $otherdata = $entityObject !== null ? json_encode(['entity' => $entityObject]) : null;
 
@@ -919,6 +921,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
 
             // Get main and secondary entity user.
             $usersecondaryentities = $dbinterface->get_profile_field_value($user->id, 'secondaryentities');
+
             // Create old user data object for the update event.
             $olduserdata = new \stdClass();
             $olduserdata->id = $user->id;
@@ -927,7 +930,7 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
             // Create new user data object for the update event.
             $newuserdata = new \stdClass();
             $newuserdata->id = $user->id;
-            $newuserdata->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($entity, $email);
+            $newuserdata->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($email, $entity);
             $profile = profile_api::get_profile($user->id);
             $profile->set_profile_field('secondaryentities', implode(',', $newuserdata->profile_field_secondaryentities));
 
@@ -954,27 +957,40 @@ function local_mentor_core_create_users_csv($userslist = [], $userstoreactivate 
 
     return true;
 }
+
 /**
  * Set secondary entities for a user based on the entity and email.
  *
  * @param \local_mentor_core\entity $entity
+ * @param null|entity $entity
  * @param string $email
- * @param int $entityid
  * @return array
  */
-function local_mentor_core_set_secondary_entities($entity, $email) : array
+function local_mentor_core_set_secondary_entities(string $email, entity $entity = null) : array
 {
+    global $DB;
+
+    $secondaryentity = [];
+
     if ($entity) {
         $domain = new domain_name();
         $domain->set_user_domain($email);
-        $domain->course_categories_id = $entity->id;
 
-        return (($entity->can_be_main_entity() && !$domain->is_exist() ) || 
-                                                (!$entity->can_be_main_entity())) 
-                                                ? [$entity->name] 
-                                                : [];
+        $categoriesdomainsbydomain = $DB->get_records(
+            "course_categories_domains", 
+            [
+                "domain_name" => $domain->domain_name,
+                "course_categories_id" => $entity->id,
+                "disabled_at" => null
+            ]
+        );
+
+        if (!$entity->can_be_main_entity() || (empty($categoriesdomainsbydomain) && $domain->is_whitelisted())) {
+            $secondaryentity = [$entity->name];
+        }
     }
-    return [];
+
+    return $secondaryentity;
 }
 
 /**

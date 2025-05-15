@@ -3350,7 +3350,7 @@ test2", $finalcontent);
         // If the email is not linked to the main entity where the import is taking place,
         // assign the entity as a secondary attachment.
         $secondaryentities = $dbi->get_profile_field_value($user->id, 'secondaryentities');
-        self::assertEquals($secondaryentities, $newentityname);
+        self::assertEquals($newentityname, $secondaryentities);
 
         // If the email is linked to the main entity where the import is taking place,
         // the user has no secondary attachment or it is assigned manually.
@@ -3373,29 +3373,29 @@ test2", $finalcontent);
         local_mentor_core_create_users_csv($userlist, [], $entityid);
         $user = $DB->get_record('user', ['email' => 'lastname4.firstname4@test.com']);
         $secondaryentities = $dbi->get_profile_field_value($user->id, 'secondaryentities');
-        self::assertEquals($secondaryentities, "");
+        self::assertEquals("", $secondaryentities);
 
         // ********************** Case import performed on a non main space *******************
         // Create users and add to entity.
-        $notMainEnttityName = 'Entity2';
-        $entityid = \local_mentor_core\entity_api::create_entity(['name' => $notMainEnttityName, 'shortname' => $notMainEnttityName]);
-        $entity = new \local_mentor_specialization\mentor_entity($entityid);
-        $entity->update_can_be_main_entity(false);
+        $notmainenttityname = 'Entity2';
+        $notmainentityid = \local_mentor_core\entity_api::create_entity(['name' => $notmainenttityname, 'shortname' => $notmainenttityname]);
+        $notmainentity = new local_mentor_specialization\mentor_entity($notmainentityid);
+        $notmainentity->update_can_be_main_entity(false);
 
         $userlist = [
             [
                 'lastname' => 'lastname5',
                 'firstname' => 'firstname5',
-                'email' => 'lastname5.firstname5@test.com',
+                'email' => 'lastname5.firstname5@gmail.com',
                 'auth' => 'manual',
             ],
         ];
         
-        local_mentor_core_create_users_csv($userlist, [], $entityid);
-        $user = $DB->get_record('user', ['email' => 'lastname5.firstname5@test.com']);
+        local_mentor_core_create_users_csv($userlist, [], $notmainentity->id);
+        $user = $DB->get_record('user', ['email' => 'lastname5.firstname5@gmail.com']);
         // Assign the entity as a secondary attachment if the import is performed on a non-main space.
         $secondaryentities = $dbi->get_profile_field_value($user->id, 'secondaryentities');
-        self::assertEquals($secondaryentities, $notMainEnttityName);
+        self::assertEquals($notmainenttityname, $secondaryentities);
 
         $userlist = [
             [
@@ -3405,12 +3405,12 @@ test2", $finalcontent);
                 'auth' => 'manual',
             ],
         ];
-        
-        local_mentor_core_create_users_csv($userlist, [], $entityid);
+
+        local_mentor_core_create_users_csv($userlist, [], $notmainentity->id);
         $user = $DB->get_record('user', ['email' => 'lastname6.firstname6@testx.com']);  
         // An external user has as a secondary attachment: the space on which the import is performed.
         $secondaryentities = $dbi->get_profile_field_value($user->id, 'secondaryentities');
-        self::assertEquals($secondaryentities, $notMainEnttityName);
+        self::assertEquals($notmainenttityname, $secondaryentities);
 
         self::resetAllData();
     }
