@@ -727,10 +727,7 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
             $auth));
 
         // User exist.
-        self::assertEquals(\local_mentor_core\profile_api::EMAIL_USED,
-            \local_mentor_core\profile_api::create_and_add_user($lastname, $firstname,
-                $email, $entityid,
-                $region, [], $auth));
+        self::assertEquals(\local_mentor_core\profile_api::EMAIL_USED, \local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid, [], $region, $auth));
 
         $this->resetAllData();
     }

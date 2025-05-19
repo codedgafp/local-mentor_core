@@ -112,7 +112,7 @@ class entity extends model {
     /**
      * entity constructor.
      *
-     * @param int|stdClass $entityorid an entityid is a course category id
+     * @param int|\stdClass $entityorid an entityid is a course category id
      * @throws \moodle_exception
      * @throws \Exception
      */

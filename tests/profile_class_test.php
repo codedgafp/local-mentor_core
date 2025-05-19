@@ -89,7 +89,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         // Get user.
         $profiledata = $db->get_user_by_email('user@gouv.fr');
 
-        $profile = new \local_mentor_core\profile($profiledata->id);
+        $profile = new \local_mentor_core\profile($profiledata);
 
         self::assertEquals($profile->lastname, $lastname);
         self::assertEquals($profile->firstname, $firstname);
@@ -106,7 +106,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
 
         // Refresh profile data.
         $profiledata = $db->get_user_by_id($profiledata->id, true);
-        $profile = new \local_mentor_core\profile($profiledata->id);
+        $profile = new \local_mentor_core\profile($profiledata);
 
         $format = strlen(userdate($userdata->lastaccess, '%d')) === 1 ?
                 '0%d/%m/%Y %R' : '%d/%m/%Y %R';

@@ -267,15 +267,19 @@ class profile_api {
      * @param string $lastname
      * @param string $firstname
      * @param string $email
-     * @param string|int|entity|null $entity
-     * @param string|int|null $region
+     * @param string|int|entity $entity
+     * @param array $secondaryentities
+     * @param string $region
+     * @param string $auth
+     * @param bool $isexternal
+     * @param int $courseid
      * @return bool|int
      * @throws \coding_exception
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function create_and_add_user($lastname, $firstname, $email, $entity = null, $secondaryentities = [], $region
-    = null, $auth = null, $isexternal = false, $courseid = null) {
+    public static function create_and_add_user(string $lastname, string $firstname, string $email, string|int|entity $entity = null, array $secondaryentities = [], string $region = null, string $auth = null, bool $isexternal = false, int $courseid = null): int|bool
+    {
         global $DB;
         $dbi = database_interface::get_instance();
 
@@ -317,13 +321,13 @@ class profile_api {
         $user->password = 'to be generated';
         $user->mnethostid = 1;
         $user->confirmed = 1;
-        if (!is_null($auth)) {
+        if ($auth !== null) {
             $user->auth = $auth;
         }
 
+        $entityobject = null;
         // Set user main entity.
         if (!is_null($entity) && $entity !== 0 && $entity !== '') {
-
             if (is_number($entity)) {
                 $entityobject = entity_api::get_entity($entity);
                 $entityname = $entityobject->name;
@@ -377,8 +381,10 @@ class profile_api {
             }
         }
 
+        $otherdata = json_encode(['entity' => $entityobject]);
+
         // Create new user.
-        $user->id = self::create_user($user);
+        $user->id = self::create_user($user, $otherdata);
 
         if($isexternal) {
             self::role_assign('utilisateurexterne', $user->id, context_system::instance());
