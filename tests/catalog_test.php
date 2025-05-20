@@ -629,7 +629,6 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
         $user->auth = 'manual'; 
         //From sprint60, 
         //the main entity of the user on create/update, will be affected automatically basing on his email domain
-        $user->profile_field_mainentity = "Bibliothèque de formations";       
         
         $user1id = \local_mentor_core\profile_api::create_user($user);
         self::setUser($user1id);
@@ -714,7 +713,6 @@ class local_mentor_core_catalog_testcase extends advanced_testcase {
         $user->mnethostid = 1;
         $user->confirmed = 1;
         $user->auth = 'manual';
-        $user->profile_field_mainentity = $training->get_entity()->name;
 
         $user1id = \local_mentor_core\profile_api::create_user($user);
         self::setUser($user1id);

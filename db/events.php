@@ -28,15 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 $observers = [
     [
         'eventname' => '\core\event\user_created',
-        'callback' => 'local_mentor_core_observer::add_user_to_cohorts',
-    ],
-    [
-        'eventname' => '\core\event\user_created',
         'callback' => 'local_mentor_core_observer::sync_user_main_entity_on_create',
-    ],
-    [
-        'eventname' => '\core\event\user_updated',
-        'callback' => 'local_mentor_core_observer::sync_user_cohorts'
     ],
     [
         'eventname' => '\core\event\user_updated',

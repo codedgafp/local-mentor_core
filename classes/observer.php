@@ -31,46 +31,7 @@ require_once($CFG->dirroot . '/local/mentor_core/api/entity.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/profile.php');
 
 class local_mentor_core_observer {
-
     /**
-     * Add user to entities cohorts corresponding to his profile
-     *
-     * @param \core\event\user_created $event
-     * @throws Exception
-     */
-    public static function add_user_to_cohorts(\core\event\user_created $event) {
-        global $CFG;
-
-        require_once($CFG->dirroot . '/local/profile/lib.php');
-
-        $userid = $event->objectid;
-
-        $profile = \local_mentor_core\profile_api::get_profile($userid);
-
-        $profile->sync_entities(true);
-    }
-
-    /**
-     *
-     * Sync user to entities cohorts corresponding to his profile
-     *
-     * @param \core\event\user_updated $event
-     * @throws Exception
-     */
-    public static function sync_user_cohorts(\core\event\user_updated $event) {
-        global $CFG;
-
-        require_once($CFG->dirroot . '/local/profile/lib.php');
-
-        $userid = $event->objectid;
-
-        $profile = \local_mentor_core\profile_api::get_profile($userid);
-
-        $profile->sync_entities();
-    }
-
-    /**
-     *
      * Sync user main entity to the corresponding email
      *
      * @param \core\event\user_updated $event
@@ -85,7 +46,6 @@ class local_mentor_core_observer {
     }
 
     /**
-     *
      * Sync entities into user profile field
      *
      * @param \core\event\course_category_deleted $event
