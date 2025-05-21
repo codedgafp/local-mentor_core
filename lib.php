@@ -705,6 +705,8 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
 
     $allowedroles = \local_mentor_core\session_api::get_allowed_roles($courseid);
 
+   
+
     // Reactivate user accounts.
     foreach ($userstoreactivate as $usertoreactivate) {
 
@@ -852,19 +854,6 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
 
     $entity = null;
     $entityObject = null;
-
-    // Reactivate user accounts.
-    foreach ($userstoreactivate as $usertoreactivate) {
-        $email = $usertoreactivate['email'];
-        $user = get_suspended_user_by_email($email);
-
-        // Check if user exists.
-        if ($user === false) continue;
-
-        $profile = profile_api::get_profile($user, true);
-        $profile->reactivate();
-    }
-
     if ($entityid !== null) {
         $entity = new local_mentor_specialization\mentor_entity($entityid);
         if ($entity !== null) {
@@ -879,6 +868,22 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
             return false;
         }
     }
+    // Reactivate user accounts.
+    foreach ($userstoreactivate as $usertoreactivate) {
+        $email = $usertoreactivate['email'];
+        $user = get_suspended_user_by_email($email);
+
+        // Check if user exists.
+        if ($user === false) continue;
+        $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($email, $entity);
+
+        $profile = profile_api::get_profile($user, true);
+        $profile->set_profile_field('secondaryentities', implode(',', $user->profile_field_secondaryentities));
+
+        $profile->reactivate();
+    }
+
+
 
     foreach ($userslist as $index => $line) {
         $email = $line['email'];
@@ -960,6 +965,19 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
 
 /**
  * Set secondary entities for a user based on the entity and email.
+ * 1 - Case: Import on a primary space
+
+*  - The email is not linked to the primary space on which the import is being done:
+* the user has the space on which the import is being done as their secondary affiliation.
+
+*  - The user's email is linked to the primary space on which the import is being done:
+*the user has no secondary affiliation or it is set manually.
+
+* 2 - Case: Import on a non-primary space
+
+* - An external user has as their secondary affiliation: the space on which the import is done.
+
+* - A rights-bearing user has as their secondary affiliation: the space on which the import is done.
  *
  * @param \local_mentor_core\entity $entity
  * @param null|entity $entity
@@ -968,28 +986,18 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
  */
 function local_mentor_core_set_secondary_entities(string $email, entity $entity = null) : array
 {
-    global $DB;
-
     $secondaryentity = [];
 
     if ($entity) {
         $domain = new domain_name();
         $domain->set_user_domain($email);
 
-        $categoriesdomainsbydomain = $DB->get_records(
-            "course_categories_domains", 
-            [
-                "domain_name" => $domain->domain_name,
-                "course_categories_id" => $entity->id,
-                "disabled_at" => null
-            ]
-        );
+        $domain->course_categories_id = $entity->id;
 
-        if (!$entity->can_be_main_entity() || (empty($categoriesdomainsbydomain) && $domain->is_whitelisted())) {
+        if (!$entity->can_be_main_entity() || (!$domain->is_exist() )) {
             $secondaryentity = [$entity->name];
         }
     }
-
     return $secondaryentity;
 }
 
