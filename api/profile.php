@@ -278,7 +278,7 @@ class profile_api {
     = null, $auth = null, $isexternal = false, $courseid = null) {
         global $DB;
         $dbi = database_interface::get_instance();
-       
+
         // Clear lastname and firstname.
         $lastname = str_replace(['<', '>'], '', $lastname);
         $firstname = str_replace(['<', '>'], '', $firstname);
@@ -382,12 +382,6 @@ class profile_api {
 
         if($isexternal) {
             self::role_assign('utilisateurexterne', $user->id, context_system::instance());
-        }
-            
-
-        // Add user to entity cohort if entity is set.
-        if (isset($entityobject)) {
-            $entityobject->add_member($user);
         }
 
         return true;
