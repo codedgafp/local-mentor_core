@@ -875,11 +875,10 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
 
         // Check if user exists.
         if ($user === false) continue;
-        $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($email, $entity);
-
         $profile = profile_api::get_profile($user, true);
+        $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($entity,$profile->get_main_entity()->id);
         $profile->set_profile_field('secondaryentities', implode(',', $user->profile_field_secondaryentities));
-
+        $profile->sync_entities();
         $profile->reactivate();
     }
 
@@ -904,13 +903,14 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
                 $user->auth = $line['auth'];
             }
 
-            //set user second entity
-            $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($email, $entity);
-
             $otherdata = $entityObject !== null ? json_encode(['entity' => $entityObject]) : null;
 
             try {  
                 $user->id = local_mentor_core\profile_api::create_user($user, $otherdata);
+                $profile = profile_api::get_profile($user->id);
+                $secondaryentities = local_mentor_core_set_secondary_entities($entity,$profile->get_main_entity()->id);
+                $profile->set_profile_field('secondaryentities', implode(',', $secondaryentities));
+                $profile->sync_entities();
             } catch (moodle_exception $e) {
                 \core\notification::error(
                     get_string('error_line', 'local_mentor_core', $index + 1)
@@ -921,42 +921,28 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
                 continue;
             }
         } else if ($entityid !== null) {
-            // User update.
-            $dbinterface = \local_mentor_core\database_interface::get_instance();
-
-            // Get main and secondary entity user.
-            $usersecondaryentities = $dbinterface->get_profile_field_value($user->id, 'secondaryentities');
-
-            // Create old user data object for the update event.
-            $olduserdata = new \stdClass();
-            $olduserdata->id = $user->id;
-            $olduserdata->profile_field_secondaryentities = $dbinterface->get_secondaryentity_names_array($usersecondaryentities);
-
-            // Create new user data object for the update event.
-            $newuserdata = new \stdClass();
-            $newuserdata->id = $user->id;
-            $newuserdata->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($email, $entity);
             $profile = profile_api::get_profile($user->id);
-            $profile->set_profile_field('secondaryentities', implode(',', $newuserdata->profile_field_secondaryentities));
-
+            // User update.
             // Create data for user_updated event.
             // WARNING : other event data must be compatible with json encoding.
             $otherdata = json_encode(
                 [
-                    'old' => $olduserdata,
-                    'new' => $newuserdata,
                     'entity' => $entityObject
                 ]
             );
             $data = [
-                'objectid' => $newuserdata->id,
-                'relateduserid' => $newuserdata->id,
-                'context' => \context_user::instance($newuserdata->id),
+                'objectid' => $user->id,
+                'relateduserid' => $user->id,
+                'context' => \context_user::instance($user->id),
                 'other' => $otherdata,
             ];
 
             // Create and trigger event.
             \core\event\user_updated::create($data)->trigger();
+
+            $secondaryentities = local_mentor_core_set_secondary_entities($entity,$profile->get_main_entity()->id);
+            $profile->set_profile_field('secondaryentities', implode(',', $secondaryentities));
+            $profile->sync_entities();
         }
     }
 
@@ -980,23 +966,20 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
 * - A rights-bearing user has as their secondary affiliation: the space on which the import is done.
  *
  * @param \local_mentor_core\entity $entity
- * @param null|entity $entity
- * @param string $email
+ * @param null|entity $user_main_entity
  * @return array
  */
-function local_mentor_core_set_secondary_entities(string $email, entity $entity = null) : array
+function local_mentor_core_set_secondary_entities($entity = null, int $user_main_entity = null) : array
 {
     $secondaryentity = [];
 
     if ($entity) {
-        $domain = new domain_name();
-        $domain->set_user_domain($email);
-
-        $domain->course_categories_id = $entity->id;
-
-        if (!$entity->can_be_main_entity() || (!$domain->is_exist() )) {
+ 
+        if( ($entity->can_be_main_entity() && $user_main_entity != $entity->id) ||  (!$entity->can_be_main_entity()))
+        {
             $secondaryentity = [$entity->name];
         }
+        
     }
     return $secondaryentity;
 }
