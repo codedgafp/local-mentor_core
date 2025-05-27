@@ -584,7 +584,7 @@ class entity extends model {
             // Add main entity course edadmin link.
             foreach (self::SUB_ENTITY_COURSES_EXCLUDED_BUT_MUST_SEEN as $edadmincoursename) {
 
-                if (!empty($type) && isset($parententity->lastedadmincourses[$edadmincoursename])) {
+                if (!empty($type) && $type == $edadmincoursename && isset($parententity->lastedadmincourses[$edadmincoursename])) {
                     return $parententity->lastedadmincourses[$edadmincoursename];
                 }
 

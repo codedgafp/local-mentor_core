@@ -1653,4 +1653,34 @@ class local_mentor_core_entity_class_testcase extends advanced_testcase {
 
         self::resetAllData();
     }
+
+
+     public function test_get_edadmin_courses_filtering_type() {
+       $this->resetAfterTest(true);
+        $this->reset_singletons();
+        self::setAdminUser();
+
+        // Create an entity.
+        $entityname = "Entity name";
+        $entityid = \local_mentor_core\entity_api::create_entity(['name' => $entityname, 'shortname' => $entityname]);
+        $entity = \local_mentor_core\entity_api::get_entity($entityid);
+
+        $entity->create_edadmin_courses_if_missing();
+        $edadmincourses = $entity->get_edadmin_courses();
+
+        self::assertTrue(
+            $edadmincourses['trainings']['id'] != $edadmincourses['session']['id']
+        );
+
+        self::assertEquals(
+            $edadmincourses['trainings']['id'],
+            $entity->get_edadmin_courses('trainings')['id']
+        );
+        
+        self::assertEquals(
+            $edadmincourses['session']['id'],
+            $entity->get_edadmin_courses('session')['id']
+        );
+    }
+
 }
