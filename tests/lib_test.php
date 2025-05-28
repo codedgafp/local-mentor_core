@@ -986,17 +986,16 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'lastname' => 'lastname1',
                 'firstname' => 'firstname1',
                 'email' => 'lastname1.firstname1@gmail.com',
-                'auth' => 'manual',
+                'auth' => 'manual'
             ],
         ];
-       
-        $notification = local_mentor_core_create_users_csv($userlist);
+       $notification = local_mentor_core_create_users_csv($userlist);
 
-        // Two new user.
+       // Two new user.
         self::assertCount(3, $DB->get_records('user'));
-
+        self::assertEquals( get_string('created', 'local_mentor_core'), $notification[2]);
         // Import success.
-        self::assertEquals($notification, true);
+        self::assertCount(1,$notification);
 
         // Create users and add to entity.
         $newentityname = 'Entity1';

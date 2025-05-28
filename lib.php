@@ -882,10 +882,9 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
  * @throws coding_exception
  * @throws moodle_exception
  */
-function local_mentor_core_create_users_csv(array $userslist = [], array $userstoreactivate = [], int $entityid = null): bool
+function local_mentor_core_create_users_csv(array $userslist = [], array $userstoreactivate = [], int $entityid = null): array
 {
-    global $DB;
-
+    $reportData = [];
     $entity = null;
     $entityObject = null;
     if ($entityid !== null) {
@@ -899,33 +898,36 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
                 get_string('errors_report', 'local_mentor_core')
                 . " : L'entité id donné ne correspond à aucune entité existante"
             );
-            return false;
+            return $reportData;
         }
     }
+
     // Reactivate user accounts.
     foreach ($userstoreactivate as $usertoreactivate) {
         $email = $usertoreactivate['email'];
         $user = get_suspended_user_by_email($email);
-
         // Check if user exists.
         if ($user === false) continue;
+
         $profile = profile_api::get_profile($user, true);
         $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($entity,$profile->get_main_entity()->id);
         $profile->set_profile_field('secondaryentities', implode(',', $user->profile_field_secondaryentities));
         $profile->sync_entities();
+        
         $profile->reactivate();
-    }
 
+        $useractivatedkeys = array_keys(array_column($userslist, 'email'), $usertoreactivate['email']);
 
-    if(!empty($useractivatedkeys)) {
-            $reportData[$useractivatedkeys[0]+2] =  get_string('reactivated', 'local_mentor_core');            
+        if(!empty($useractivatedkeys)) {
+                $reportData[$useractivatedkeys[0]+2] =  get_string('reactivated', 'local_mentor_core');
+            
+        }
     }
-    
 
     $emailsSeenInCsv = [];
     foreach ($userslist as $index => $line) {
-        $email = $line['email'];
-        $user = get_user_by_email($email, 'id');
+        $email = $line['email'];       
+        $user = get_user_by_email($email, 'id');   
 
         // User not found : account creation.
         if (false === $user) {
@@ -946,6 +948,10 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
 
             try {  
                 $user->id = local_mentor_core\profile_api::create_user($user, $otherdata);
+                $reportData[$index+2] =  get_string('created', 'local_mentor_core');
+                if (!in_array($email, $emailsSeenInCsv)) {
+                    $emailsSeenInCsv[] = $email;
+                }
                 $profile = profile_api::get_profile($user->id);
                 $secondaryentities = local_mentor_core_set_secondary_entities($entity,$profile->get_main_entity()->id);
                 $profile->set_profile_field('secondaryentities', implode(',', $secondaryentities));
@@ -961,6 +967,7 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
             }
         } else if ($entityid !== null) {
             $profile = profile_api::get_profile($user->id);
+
             // User update.
             // Create data for user_updated event.
             // WARNING : other event data must be compatible with json encoding.
@@ -979,13 +986,22 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
             // Create and trigger event.
             \core\event\user_updated::create($data)->trigger();
 
+            $isReactivated = in_array($email, array_column($userstoreactivate, 'email'), true);
+
+            if (!in_array($email, $emailsSeenInCsv)) {
+               
+                if (!$isReactivated) {
+                    $reportData[$index+2] = get_string('alreadyexists', 'local_mentor_core');
+                }
+                $emailsSeenInCsv[] = $email;
+            }
             $secondaryentities = local_mentor_core_set_secondary_entities($entity,$profile->get_main_entity()->id);
             $profile->set_profile_field('secondaryentities', implode(',', $secondaryentities));
             $profile->sync_entities();
         }
     }
 
-    return true;
+    return $reportData;
 }
 
 /**
