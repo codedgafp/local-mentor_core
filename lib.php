@@ -38,6 +38,7 @@ require_once($CFG->dirroot . '/lib/completionlib.php');
 require_once($CFG->dirroot . '/local/mentor_core/forms/importcsv_form.php');
 require_once($CFG->dirroot . '/local/mentor_core/classes/helper/form_checker.php');
 require_once($CFG->dirroot . '/local/mentor_core/classes/helper/entity_helper.php');
+require_once($CFG->dirroot . '/local/mentor_specialization/classes/models/mentor_entity.php');
 
 /**
  * Set a moodle config
