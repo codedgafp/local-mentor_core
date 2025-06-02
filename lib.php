@@ -910,7 +910,9 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
         if ($user === false) continue;
 
         $profile = profile_api::get_profile($user, true);
-        $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($entity,$profile->get_main_entity()->id);
+
+        $profilemainentity = ($profile->get_main_entity() !== false && $profile->get_main_entity() !== null) ? $profile->get_main_entity()->id : null;
+        $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($entity,$profilemainentity);
         $profile->set_profile_field('secondaryentities', implode(',', $user->profile_field_secondaryentities));
         $profile->sync_entities();
         
@@ -953,7 +955,9 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
                     $emailsSeenInCsv[] = $email;
                 }
                 $profile = profile_api::get_profile($user->id);
-                $secondaryentities = local_mentor_core_set_secondary_entities($entity,$profile->get_main_entity()->id);
+
+                $profilemainentity = ($profile->get_main_entity() !== false && $profile->get_main_entity() !== null) ? $profile->get_main_entity()->id : null;
+                $secondaryentities = local_mentor_core_set_secondary_entities($entity,$profilemainentity);
                 $profile->set_profile_field('secondaryentities', implode(',', $secondaryentities));
                 $profile->sync_entities();
             } catch (moodle_exception $e) {
@@ -971,11 +975,7 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
             // User update.
             // Create data for user_updated event.
             // WARNING : other event data must be compatible with json encoding.
-            $otherdata = json_encode(
-                [
-                    'entity' => $entityObject
-                ]
-            );
+            $otherdata = json_encode(['entity' => $entityObject]);
             $data = [
                 'objectid' => $user->id,
                 'relateduserid' => $user->id,
@@ -1028,14 +1028,10 @@ function local_mentor_core_set_secondary_entities($entity = null, int $user_main
 {
     $secondaryentity = [];
 
-    if ($entity) {
- 
-        if( ($entity->can_be_main_entity() && $user_main_entity != $entity->id) ||  (!$entity->can_be_main_entity()))
-        {
-            $secondaryentity = [$entity->name];
-        }
-        
+    if ($entity && (($entity->can_be_main_entity() && $user_main_entity != $entity->id) || (!$entity->can_be_main_entity()))) {
+        $secondaryentity = [$entity->name];
     }
+
     return $secondaryentity;
 }
 
