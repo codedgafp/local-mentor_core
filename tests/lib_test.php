@@ -912,7 +912,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
         self::assertCount(3, $DB->get_records('user'));
 
         // Import success.
-        self::assertEquals($notification, true);
+        self::assertNotEmpty($notification);
 
         self::resetAllData();
     }
@@ -3414,4 +3414,355 @@ test2", $finalcontent);
 
         self::resetAllData();
     }
+
+    
+    /**
+     * Test local_mentor_core_build_csv_report_lines with missing resultData.
+     * @covers ::local_mentor_core_build_csv_report_lines
+     */
+    public function test_local_mentor_core_build_csv_report_lines_missing_result() {
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+
+        $lines = [
+            "email;lastname;firstname",
+            "user3@example.com;Brown;Charlie"
+        ];
+        $resultData = []; // No result for line 1
+        $delimiter = ';';
+
+        $result = local_mentor_core_build_csv_report_lines($lines, $resultData, $delimiter);
+
+        $this->assertStringContainsString(get_string('not_processed', 'local_mentor_core'), $result[1]);
+    }
+
+    /**
+     * Test local_mentor_core_build_csv_report_lines trims and cleans columns.
+     * @covers ::local_mentor_core_build_csv_report_lines
+     */
+    public function test_local_mentor_core_build_csv_report_lines_trims_and_cleans() {
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+
+        $lines = [
+            "email;lastname;firstname",
+            " user4@example.com ; Doe ; John "
+        ];
+        $resultData = [2 => "created"];
+        $delimiter = ';';
+
+        $result = local_mentor_core_build_csv_report_lines($lines, $resultData, $delimiter);
+
+        $this->assertStringContainsString('user4@example.com', $result[1]);
+        $this->assertStringContainsString('created', $result[1]);
+    }
+
+    /**
+     * Test local_mentor_core_send_report
+     * @covers ::local_mentor_core_send_report
+     */
+    public function test_send_report_creates_file_successfully() {
+        $this->resetAfterTest(true);
+
+        $user = self::getDataGenerator()->create_user([
+            'email' => 'noreply@example.com' 
+        ]);
+
+        // CSV content
+        $csv_content = ['header1;header2', 'value1;value2'];
+        $resultData = [['status' => 'ok', 'line' => 1]];
+
+        $filenameprefix = 'report_test_' . time();
+
+        $result = \local_mentor_core_send_report(
+            $csv_content,
+            $resultData,
+            'semicolon',
+            $filenameprefix,
+            $user->id
+        );
+
+        $this->assertTrue($result);
+
+        // Check that the file has been generated
+        $dirpath = make_temp_directory('userimportreports');
+        $filepath = $dirpath . '/Rapport_' . $filenameprefix . '.csv';
+
+        $this->assertFileExists($filepath);
+
+        // Check that the content is correctly written
+        $content = file_get_contents($filepath);
+        $this->assertStringContainsString('header1', $content);
+        $this->assertStringContainsString('value1', $content);
+    }
+
+     /**
+     *  Test local_mentor_core create users csv function
+     *  test create users csv results data 
+     *
+     * @covers ::local_mentor_core_create_users_csv
+     */
+    public function test_create_users_csv_results_data() {
+        global $DB, $CFG;
+
+        $domain = 'gmail.com';
+        $CFG->allowemailaddresses = $domain;;
+
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+
+        self::setAdminUser();
+
+        // Clean notification.
+        \core\notification::fetch();
+        $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity 1', 'shortname' => 'New Entity 1']);
+
+        // Guest and admin users.
+        self::assertCount(2, $DB->get_records('user'));
+        $CFG->allowemailaddresses = 'gmail.com';
+        $userlist = [
+            [
+                'lastname' => 'lastname1',
+                'firstname' => 'firstname1',
+                'email' => 'lastname1.firstname1@gmail.com',
+                'auth' => 'manual'
+            ],
+        ];
+        //test result data on user creation
+       $resultData = local_mentor_core_create_users_csv($userlist,[], $entityid);
+
+        self::assertEquals( get_string('created', 'local_mentor_core'), $resultData[2]);
+        // Import success.
+        self::assertCount(1,$resultData);
+        // Create suspended user.
+        $suspendeduser = self::getDataGenerator()->create_user([
+            'lastname' => 'suspendeduser',
+            'firstname' => 'suspendeduser',
+            'email' => 'suspendeduser@mail.fr',
+            'username' => 'suspendeduser@mail.fr',
+            'mnethostid' => 1,
+            'confirmed' => 1,
+            'suspended' => 1,
+        ]);
+        //Create user 
+        $user = self::getDataGenerator()->create_user();
+
+
+        //test cases: 
+            // - new user created
+            // - duplated user already created
+            // - reactivate user
+            // - duplated user already reactivated
+            // - user already exist 
+        $userlist = [
+            [
+                'lastname' => 'lastname1',
+                'firstname' => 'firstname1',
+                'email' => 'lastname1.firstname1@gmail.com',
+                'auth' => 'manual'
+            ],
+            [
+                'lastname' => 'user',
+                'firstname' => 'user',
+                'email' => 'user.user@gmail.com',
+                'auth' => 'manual'
+            ],
+            [
+                'lastname' => 'user1',
+                'firstname' => 'user1',
+                'email' => 'user1@test.com',
+                'auth' => 'manual'
+            ],
+            [
+                'lastname' => $user->lastname,
+                'firstname' => $user->firstname,
+                'email' => $user->email,
+                'auth' => 'manual'
+            ],
+            [
+                'lastname' => 'user',
+                'firstname' => 'user',
+                'email' => 'user.user@gmail.com',
+                'auth' => 'manual'
+            ],
+            [
+                'lastname' => 'suspendeduser',
+                'firstname' => 'suspendeduser',
+                'email' => 'suspendeduser@mail.fr',
+                'auth' => 'manual'
+            ],
+            [
+                'lastname' => 'suspendeduser',
+                'firstname' => 'suspendeduser',
+                'email' => 'suspendeduser@mail.fr',
+                'auth' => 'manual'
+            ],
+        ];
+        $userstoactivate = [
+            [
+                'lastname' => 'suspendeduser',
+                'firstname' => 'suspendeduser',
+                'email' => 'suspendeduser@mail.fr',
+            ]
+        ];
+       $resultData = local_mentor_core_create_users_csv($userlist, $userstoactivate,$entityid);
+    // Expected result.
+            $expected = [
+                7 =>  get_string('reactivated', 'local_mentor_core'),
+                2 => get_string('alreadyexists', 'local_mentor_core'),
+                3 =>  get_string('created', 'local_mentor_core'),
+                4 =>  get_string('created', 'local_mentor_core'),
+                5 => get_string('alreadyexists', 'local_mentor_core'),
+            ];
+
+        // Assert the notification array matches the expected result.
+        self::assertEquals($expected, $resultData);    
+    }
+
+         /**
+     *  Test local_mentor_core_enrol_users_csv create users csv function
+     *  test create users csv results data 
+     *
+     * @covers ::local_mentor_core_enrol_users_csv
+     */
+       public function test_enrol_users_csv_results_data() {
+        global $DB, $CFG;
+
+        $domain = 'gmail.com';
+        $CFG->allowemailaddresses = $domain;;
+
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+
+        self::setAdminUser();
+        // Create session.
+        $session = $this->init_session_creation();
+        $session->sessionstartdate = time();
+        $session->update($session);
+        $session->create_manual_enrolment_instance();
+        // Clean notification.
+        \core\notification::fetch();
+
+        // Guest and admin users.
+        self::assertCount(2, $DB->get_records('user'));
+        $CFG->allowemailaddresses = 'gmail.com';
+        $userlist = [
+            [
+                'lastname' => 'lastname1',
+                'firstname' => 'firstname1',
+                'email' => 'lastname1.firstname1@gmail.com',
+                'auth' => 'manual',
+                'groupname' => 'gr1',
+                'role' => 'Participant',
+            ],
+        ];
+        //test result data on user creation
+       $resultData = $resultData =  local_mentor_core_enrol_users_csv($session->get_course()->id, $userlist, []);
+
+        self::assertEquals( get_string('createdenrolled', 'local_mentor_core'), $resultData[2]);
+        // Import success.
+        self::assertCount(1,$resultData);
+        // Create suspended user.
+        $suspendeduser = self::getDataGenerator()->create_user([
+            'lastname' => 'suspendeduser',
+            'firstname' => 'suspendeduser',
+            'email' => 'suspendeduser@mail.fr',
+            'username' => 'suspendeduser@mail.fr',
+            'mnethostid' => 1,
+            'confirmed' => 1,
+            'groupname' => 'gr1',
+            'suspended' => 1,
+        ]);
+        //Create user 
+        $user = self::getDataGenerator()->create_user();
+
+
+        //test cases: 
+            // - new user 
+            // - duplated user already created and enrolled but with different role => role will be updated 
+            // - reactivate user not enrolled
+            // - duplated user already reactivated and enrolled
+            // - user already exist   
+        $userlist = [
+            [
+                'lastname' => 'lastname1',
+                'firstname' => 'firstname1',
+                'email' => 'lastname1.firstname1@gmail.com',
+                'auth' => 'manual',
+                'groupname' => 'gr1',
+                'role' => 'formateur',
+            ],
+            [
+                'lastname' => 'user',
+                'firstname' => 'user',
+                'email' => 'user.user@gmail.com',
+                'auth' => 'manual',
+                'groupname' => 'gr1',
+                'role' => 'Participant',
+            ],
+            [
+                'lastname' => 'user1',
+                'firstname' => 'user1',
+                'email' => 'user1@test.com',
+                'groupname' => 'gr1',
+                'auth' => 'manual',
+                'role' => 'Participant',
+            ],
+            [
+                'lastname' => $user->lastname,
+                'firstname' => $user->firstname,
+                'email' => $user->email,
+                'groupname' => 'gr1',
+                'auth' => 'manual',
+                'role' => 'Participant',
+            ],
+            [
+                'lastname' => 'user',
+                'firstname' => 'user',
+                'email' => 'user.user@gmail.com',
+                'groupname' => 'gr1',
+                'auth' => 'manual',
+                'role' => 'formateur',
+            ],
+            [
+                'lastname' => 'suspendeduser',
+                'firstname' => 'suspendeduser',
+                'email' => 'suspendeduser@mail.fr',
+                'groupname' => 'gr1',
+                'auth' => 'manual',
+                'role' => 'Participant',
+            ],
+            [
+                'lastname' => 'suspendeduser',
+                'firstname' => 'suspendeduser',
+                'email' => 'suspendeduser@mail.fr',
+                'groupname' => 'gr1',
+                'auth' => 'manual',
+                'role' => 'Participant',
+            ],
+        ];
+        $userstoactivate = [
+            [
+                'lastname' => 'suspendeduser',
+                'firstname' => 'suspendeduser',
+                'email' => 'suspendeduser@mail.fr',
+                'groupname' => 'gr1',
+                'role' => 'FakeRole',
+            ]
+        ];
+        $resultData =  local_mentor_core_enrol_users_csv($session->get_course()->id, $userlist, $userstoactivate);
+
+        // Expected result.
+            $expected = [
+                7 =>  get_string('reactivatedenrolled', 'local_mentor_core'),
+                2 =>  get_string('enrolled', 'local_mentor_core'),
+                3 =>  get_string('createdenrolled', 'local_mentor_core'),
+                4 =>  get_string('createdenrolled', 'local_mentor_core'),
+                5 => get_string('enrolled', 'local_mentor_core'),
+                6 => get_string('enrolled', 'local_mentor_core'),
+            ];
+
+        self::assertEquals($expected, $resultData);    
+    }
+
 }

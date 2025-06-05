@@ -696,7 +696,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
  * @throws dml_exception
  * @throws moodle_exception
  */
-function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstoreactivate = [])
+function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstoreactivate = []): array
 {
     global $DB, $CFG;
 
@@ -706,8 +706,11 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
 
     $allowedroles = \local_mentor_core\session_api::get_allowed_roles($courseid);
 
-   
-
+    $reportData = [];
+    
+    // Specifies the number of lines (gap) to insert after the header section.
+    $gap_after_header = 2;
+    $reactivatedUsers = [];
     // Reactivate user accounts.
     foreach ($userstoreactivate as $usertoreactivate) {
 
@@ -721,6 +724,8 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
 
         $profile = profile_api::get_profile($user, true);
         $profile->reactivate();
+        $reactivatedUsers[] = $email;
+
     }
 
     $db = \local_mentor_core\database_interface::get_instance();
@@ -729,10 +734,9 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
     $entityobject = new \stdClass();
     $entityobject->id = $entity->id;
     $entityobject->name = $entity->name;
-
+    $createdUsers = [] ;
     foreach ($userslist as $index => $line) {
         $user = get_user_by_email($line['email'], 'id');
-
         // User not found : account creation.
         if (false === $user) {
             $user = new stdClass();
@@ -751,6 +755,7 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
 
             try {
                 $user->id = local_mentor_core\profile_api::create_user($user, $otherdata);
+                $createdUsers[] = $user->email;
             } catch (moodle_exception $e) {
 
                 \core\notification::error(
@@ -787,7 +792,8 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
             }
 
         }
-
+        $isReactivated = in_array($line['email'], $reactivatedUsers, true);
+        $isNewUser = in_array($line['email'], $createdUsers, true);
         // If user is not already enrolled, enrol him.
         if (true !== $session->user_is_enrolled($user->id)) {
 
@@ -795,6 +801,19 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
 
             $enrolmentresult = enrol_try_internal_enrol($courseid, $user->id, $dbrole->id);
 
+            if ($isReactivated) {
+                    $reportData[$index + $gap_after_header] = get_string('reactivatedenrolled', 'local_mentor_core');
+                    if (($key = array_search($line['email'], $reactivatedUsers, true)) !== false) {
+                        unset($reactivatedUsers[$key]);
+                    }
+                } else if ($isNewUser) {
+                    $reportData[$index + $gap_after_header] = get_string('createdenrolled', 'local_mentor_core');
+                    if (($key = array_search($line['email'], $createdUsers, true)) !== false) {
+                        unset($createdUsers[$key]);
+                    }
+                } else {
+                    $reportData[$index + $gap_after_header] = get_string('enrolled', 'local_mentor_core');
+                }
             // Set user role.
             profile_api::role_assign($role, $user->id, context_course::instance($courseid)->id);
         } else if (
@@ -803,15 +822,29 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
             $dbrole = $DB->get_record('role', ['shortname' => $role])
         ) {
             // If the user is already enrolled, update his role if necessary.
-
             $oldroles = profile_api::get_course_roles($user->id, $courseid);
             // THe CSV file define a new role, so unassign all other roles and assign the new role.
             if (!isset($oldroles[$dbrole->id])) {
-
                 $params = ['userid' => $user->id, 'contextid' => context_course::instance($courseid)->id];
                 role_unassign_all($params);
 
                 enrol_try_internal_enrol($courseid, $user->id, $dbrole->id);
+
+            if ($isReactivated) {
+                    $reportData[$index + $gap_after_header] = get_string('reactivatedenrolled', 'local_mentor_core');
+                    if (($key = array_search($line['email'], $reactivatedUsers, true)) !== false) {
+                        unset($reactivatedUsers[$key]);
+                    }
+                } else if ($isNewUser) {
+ 
+                    $reportData[$index + $gap_after_header] = get_string('createdenrolled', 'local_mentor_core');
+                     if (($key = array_search($line['email'], $createdUsers, true)) !== false) {
+                        unset($createdUsers[$key]);
+                    }
+                } else {
+
+                    $reportData[$index + $gap_after_header] = get_string('enrolled', 'local_mentor_core');
+                }
 
                 // Set user role.
                 profile_api::role_assign($role, $user->id, context_course::instance($courseid)->id);
@@ -837,7 +870,7 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
         }
     }
 
-    return true;
+    return $reportData;
 }
 
 /**
@@ -884,7 +917,12 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
     }
 
 
+    if(!empty($useractivatedkeys)) {
+            $reportData[$useractivatedkeys[0]+2] =  get_string('reactivated', 'local_mentor_core');            
+    }
+    
 
+    $emailsSeenInCsv = [];
     foreach ($userslist as $index => $line) {
         $email = $line['email'];
         $user = get_user_by_email($email, 'id');
@@ -2304,4 +2342,95 @@ function local_mentor_core_get_course_url($course, $ismoodleurl = true)
     }
 
     return $url;
+}
+
+
+/**
+ * Generates a CSV report file, saves it temporarily, and sends it via email to the importing user.
+ *
+ * @param array $csv_content Raw CSV content (each line as a string).
+ * @param array $resultData Additional result data to append to each line (keyed by row index).
+ * @param string $delimitername Name of the delimiter to use ('semicolon', 'comma', etc.).
+ * @param string $filename Base name of the CSV file (without extension).
+ * @param int $importeruser ID of the user to whom the report should be sent.
+ * @return bool True on successful email delivery.
+ * @throws moodle_exception If file cannot be written or email cannot be sent.
+ */
+function local_mentor_core_send_report(array $csv_content, array $resultData,string $delimitername ,string $filename, int $importeruser, int $courseid = null): bool
+{
+    global $CFG;
+    $lines = $csv_content;
+    $newcsv = [];
+    $delimiter = csv_import_reader::get_delimiter($delimitername ?? 'semicolon') ?: ';';
+
+    $newcsv = local_mentor_core_build_csv_report_lines($lines, $resultData, $delimiter);
+
+    $filename = 'Rapport_' . $filename . '.csv';
+    $dirpath = make_temp_directory('userimportreports');
+    $filepath = $dirpath . '/' . $filename ;
+    $file = fopen($filepath, 'w');
+    if ($file === false) {
+        throw new \moodle_exception('Could not open file for writing: ' . $filepath);
+    }
+
+    // write in the csv file
+    fwrite($file, "\xEF\xBB\xBF"); // BOM UTF-8
+    foreach ($newcsv as $line) {
+        fputcsv($file, explode(';', $line), $delimiter);
+    }  
+    fclose($file);
+
+    // Send the file to the user.
+    $user = \core_user::get_user($importeruser);
+    $supportuser = \core_user::get_support_user();
+    $object = isset($courseid) ? get_string('email_send_report_object_session', 'local_mentor_core') : get_string('email_send_report_object_users', 'local_mentor_core');
+
+    $sessioncourseurl = isset($courseid) ?  $CFG->wwwroot . '/course/view.php?id=' .  $courseid: null;
+
+    $content = isset($courseid) ? get_string('email_send_report_content_session', 'local_mentor_core' , $sessioncourseurl) : get_string('email_send_report_content_users', 'local_mentor_core');
+
+    $contenthtml = text_to_html($content, false, false, true);
+
+    $attachmentpath = $filepath;
+    $attachmentname = $filename;
+
+    $email_sent = email_to_user($user, $supportuser, $object, $content, $contenthtml, $attachmentpath, $attachmentname);
+    if (!$email_sent) {
+        throw new \moodle_exception(get_string('errormailreportnotsent', 'local_mentor_core'));
+    }
+    return true;
+}
+
+/**
+* Process CSV lines and append result status to each line.
+*
+* @param array $lines Raw CSV lines.
+* @param array $resultData Result data keyed by row index.
+* @param string $delimiter Delimiter character.
+* @return array Processed CSV lines with result status appended.
+*/
+function local_mentor_core_build_csv_report_lines(array $lines, array $resultData, string $delimiter): array {
+    $newcsv = [];
+    // The variable $gap_header is set to 1 to indicate that the CSV header occupies the first row, so data processing starts from the second row.
+    $gap_header = 1;
+    foreach ($lines as $index => $line) {
+        $line = trim($line ?? '');
+
+        // Header line.
+        if ($index === 0) {
+            $newcsv[] = $line . ';' . get_string('result', 'local_mentor_core');
+            continue;
+        }
+        $columnscsv = str_getcsv(trim($line), $delimiter);
+        $columns = "";
+        foreach ($columnscsv as $column) {
+            $column = trim($column);
+            $column = preg_replace('/\p{C}+/u', "", $column);
+            $columns .= $column . ';';
+        }
+
+        $status = isset($resultData[$index + $gap_header]) ? $resultData[$index + $gap_header] : get_string('not_processed', 'local_mentor_core');
+        $newcsv[] = $columns . $status . ';';
+    }
+    return $newcsv;
 }

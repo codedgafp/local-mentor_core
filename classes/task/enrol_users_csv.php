@@ -51,11 +51,13 @@ class enrol_users_csv extends \core\task\adhoc_task {
         $users = json_decode(json_encode($data->users), true);
         $userstoreactivate = json_decode(json_encode($data->userstoreactivate), true);
 
-        local_mentor_core_enrol_users_csv(
+        $reportData = local_mentor_core_enrol_users_csv(
             $data->courseid, 
             $users,
             $userstoreactivate
         );
+
+        local_mentor_core_send_report($data->csvcontent , $reportData , $data->delimiter_name,$data->filename, $data->user_id, $data->courseid);
 
         return true;
     }

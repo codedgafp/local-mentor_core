@@ -475,3 +475,17 @@ $string['more'] = 'Plus';
 /***************CSV*****************************/
 
 $string['information'] = 'Information';
+$string["result"] = "Résultats";
+$string["email_send_report_object_users"] = '[Mentor] Confirmation d\'import CSV dans un espace dédié';
+$string["email_send_report_content_users"] = 'Bonjour, Votre demande d\'import CSV dans votre espace dédié est terminée. Les utilisateurs ont bien été notifiés. Vous pouvez retrouver le détail en pièce jointe.';
+$string["email_send_report_object_session"] = '[Mentor] Confirmation d\'import CSV dans une session';
+$string["email_send_report_content_session"] = 'Bonjour, Votre demande d\'import CSV dans la session {$a} est terminée. Les utilisateurs ont bien été notifiés.  Vous pouvez retrouver le détail en pièce jointe.';
+$string["not_processed"] = "non traité";
+
+$string['reactivated'] = "réactivé";
+$string['alreadyexists'] = 'déjà existant';
+$string['created'] = 'créé';
+
+$string['reactivatedenrolled'] = 'réactivé et inscrit';
+$string['createdenrolled'] = 'créé et inscrit';
+$string['enrolled'] = 'inscrit';

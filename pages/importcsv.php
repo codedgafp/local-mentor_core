@@ -111,8 +111,17 @@ if (null !== $importusersformdata) {
     $adhoctask->set_custom_data([
         "courseid" => $courseid,
         "users" => $users,
-        "userstoreactivate" => $userstoreactivate
+        "userstoreactivate" => $userstoreactivate,
+        "csvcontent" => $_SESSION['import_csv_raw_content_session'] ?? '',
+        "delimiter_name" => $_SESSION['import_csv_delimiter_name_session'] ?? '',
+        "filename" => $_SESSION['import_csv_filename_session'] ?? '',
+        "user_id" => $USER->id
     ]);
+
+        // Cleanup after use
+    unset($_SESSION['import_csv_raw_content_session']); 
+    unset($_SESSION['import_csv_delimiter_name_session']); 
+    unset($_SESSION['import_csv_filename_session']); 
 
     // Prepare import users task.
     \core\task\manager::queue_adhoc_task($adhoctask);
@@ -143,6 +152,22 @@ if (null !== $csvformdata) {
         $content = str_getcsv($filecontent, "\n");
 
         $out .= $OUTPUT->heading(get_string('import_and_enrol_heading', 'local_mentor_core'));
+
+        // Get the uploaded file name from the filepicker element.
+        $draftitemid = $csvmform->get_data()->userscsv;
+        $usercontext = context_user::instance($USER->id);
+        $fs = get_file_storage();
+        $files = $fs->get_area_files($usercontext->id, 'user', 'draft', $draftitemid, 'id DESC', false);
+        $filename = '';
+        if ($files) {
+            $file = reset($files);
+            $filename = $file->get_filename();
+        }
+        if (!empty($content)) {
+            $_SESSION['import_csv_raw_content_session'] = $content;
+        }
+        $_SESSION['import_csv_delimiter_name_session'] = $csvformdata->delimiter_name;
+        $_SESSION['import_csv_filename_session'] = $filename;
 
         // Errors array.
         $errors = [
