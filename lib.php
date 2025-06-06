@@ -989,13 +989,13 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
             $isReactivated = in_array($email, array_column($userstoreactivate, 'email'), true);
 
             if (!in_array($email, $emailsSeenInCsv)) {
-               
                 if (!$isReactivated) {
                     $reportData[$index+2] = get_string('alreadyexists', 'local_mentor_core');
                 }
                 $emailsSeenInCsv[] = $email;
             }
-            $secondaryentities = local_mentor_core_set_secondary_entities($entity,$profile->get_main_entity()->id);
+            $profilemainentity = ($profile->get_main_entity() !== false && $profile->get_main_entity() !== null) ? $profile->get_main_entity()->id : null;
+            $secondaryentities = local_mentor_core_set_secondary_entities($entity,$profilemainentity);
             $profile->set_profile_field('secondaryentities', implode(',', $secondaryentities));
             $profile->sync_entities();
         }
