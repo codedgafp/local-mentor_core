@@ -501,7 +501,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                 $preview["useridentified"]++;
             }
 
-            $email = $columns[$emailkey];
+            $email = strtolower($columns[$emailkey]);
 
             $countMatchingEmails = 0;
             $countMatchingEmails = count(array_filter($usersExistData, fn($userData) => $userData->email === $email));
@@ -583,7 +583,18 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                             ];
                         }
                     }
+                }else if($u->suspended != 1 && $ignoreline ){
+                    $warnings['list'][] = [
+                        $linenumber,
+                        get_string(
+                        is_null($courseid) ? 'user_already_exists' : 'email_already_used',
+                        'local_mentor_core',
+                        $email
+                        ),
+                    ];
+                    $ignoreline = true;
                 }
+                                            
             }
 
             // User doesn't exists or is suspended.
