@@ -505,7 +505,6 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
 
             $countMatchingEmails = 0;
             $countMatchingEmails = count(array_filter($usersExistData, fn($userData) => $userData->email === $email));
-
             if ($countMatchingEmails > 1) {
                 $warnings['list'][] = [
                     $linenumber,
@@ -533,7 +532,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
 
                     $ignoreline = true;
                 }
-
+                $userExistsToBeUpdated = false;
                 // The user must be reactivated.
                 if (!$ignoreline && $u->suspended == 1) {
                     $preview['validforreactivation'][$email] = $u;
@@ -542,6 +541,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                         $linenumber,
                         get_string('warning_user_suspended', 'local_mentor_core'),
                     ];
+                    $userExistsToBeUpdated = true;
                 }
 
                 // The user exists, now check if he's enrolled.
@@ -581,9 +581,11 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                                 $linenumber,
                                 get_string('newrole', 'local_mentor_core', $strparams),
                             ];
+                            $userExistsToBeUpdated = true;
                         }
                     }
-                }else if($u->suspended != 1 && $ignoreline ){
+                }
+                if(!$userExistsToBeUpdated && !$ignoreline ){
                     $warnings['list'][] = [
                         $linenumber,
                         get_string(
@@ -592,10 +594,12 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                         $email
                         ),
                     ];
-                    $ignoreline = true;
+                    
                 }
-                                            
             }
+                
+                                            
+            
 
             // User doesn't exists or is suspended.
             if (false === $ignoreline && $countMatchingEmails === 0 && !isset($preview['validforreactivation'][$email])) {
@@ -685,7 +689,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
 
             if(isset($emailkey) && isset($columns[$emailkey])) {
                 $email = $columns[$emailkey];
-                $emails[] = $email;          
+                $emails[] = strtolower($email);          
             }           
            
         }       
