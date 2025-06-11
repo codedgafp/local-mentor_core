@@ -81,15 +81,6 @@ class entity_create extends base {
         return "The user with id '$this->userid' created the entity with course category id '$this->objectid'.";
     }
 
-    /**
-     * Return legacy data for add_to_log().
-     *
-     * @return array
-     */
-    protected function get_legacy_logdata() {
-        return [SITEID, 'category', 'add', 'course/view.php?id=' . $this->other['managementcourseid'], $this->objectid];
-    }
-
     public static function get_objectid_mapping() {
         // Categories are not backed up, so no need to map them on restore.
         return ['db' => 'course_categories', 'restore' => base::NOT_MAPPED];
