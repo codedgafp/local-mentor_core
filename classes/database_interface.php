@@ -380,7 +380,7 @@ class database_interface {
             WHERE :data ILIKE \'%\'  || name || \'%\'
             AND parent = 0;
         ', [
-            'data' => $this->db->sql_like_escape($secondaryentitynames)
+            'data' => $secondaryentitynames
         ]);
 
         return array_values(array_map(fn($secondaryentityname) => $secondaryentityname->name, $secondaryentitynamesresult));
