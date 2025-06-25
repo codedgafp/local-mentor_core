@@ -144,6 +144,10 @@ function xmldb_local_mentor_core_upgrade($oldversion) {
         }
     }
 
+    if ($oldversion < 2025060500) {
+        disabled_mathjax_plugin();
+    }
+
     
     apply_mentor_core_upgrades_scripts($oldversion);
 

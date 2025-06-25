@@ -41,5 +41,7 @@ function xmldb_local_mentor_core_install() {
     // Redefined the configuration of the specializations with the basic configuration.
     $CFG->mentor_specializations = $lcfgspecializations;
 
+    disabled_mathjax_plugin();
+
     return true;
 }
