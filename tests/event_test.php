@@ -152,7 +152,6 @@ class local_mentor_core_event_testcase extends advanced_testcase {
      * @covers \local_mentor_core\event\entity_create::get_name
      * @covers \local_mentor_core\event\entity_create::get_url
      * @covers \local_mentor_core\event\entity_create::get_description
-     * @covers \local_mentor_core\event\entity_create::get_legacy_logdata
      * @covers \local_mentor_core\event\entity_create::get_objectid_mapping
      */
     public function test_entity_create_event() {
@@ -197,9 +196,6 @@ class local_mentor_core_event_testcase extends advanced_testcase {
      * @covers \local_mentor_core\event\entity_update::get_name
      * @covers \local_mentor_core\event\entity_update::get_url
      * @covers \local_mentor_core\event\entity_update::get_description
-     * @covers \local_mentor_core\event\entity_update::get_legacy_eventname
-     * @covers \local_mentor_core\event\entity_update::set_legacy_logdata
-     * @covers \local_mentor_core\event\entity_update::get_legacy_logdata
      * @covers \local_mentor_core\event\entity_update::get_objectid_mapping
      */
     public function test_entity_update_event() {
@@ -233,22 +229,22 @@ class local_mentor_core_event_testcase extends advanced_testcase {
         self::assertEquals($event::get_name(), get_string('evententityupdated', 'local_mentor_core'));
         self::assertEquals($event->get_url()->out(),
                 $CFG->wwwroot . '/course/view.php?id=' . $entity->get_edadmin_courses('entities')['id']);
-        self::assertEquals($event::get_legacy_eventname(), 'entity_updated');
         self::assertEquals($event->get_description(), "The user with id '2' updated the entity with category id '$entityid'.");
-
-        $reflectionmethod = new ReflectionMethod('local_mentor_core\event\entity_update', 'get_legacy_logdata');
-        $reflectionmethod->setAccessible(true);
-        $legacylogdata = $reflectionmethod->invoke($event);
-        self::assertEquals(
-                $legacylogdata,
-                [
-                        "1",
-                        "entity",
-                        "update",
-                        "course/view.php?id=" . $entity->get_edadmin_courses('entities')['id'],
-                        $entityid,
-                ]
-        );
+        
+        self::assertEquals($event->objectid, $entityid);
+        self::assertEquals($event->userid, 2); // Admin user
+        self::assertEquals($event->contextlevel, CONTEXT_COURSECAT);
+    
+        // Test du CRUD et niveau éducationnel
+        $eventdata = $event->get_data();
+        self::assertEquals($eventdata['crud'], 'u'); // Update
+        self::assertEquals($eventdata['edulevel'], \core\event\base::LEVEL_OTHER);
+        
+        // Test des données "other"
+        $otherdata = $event->other;
+        self::assertEquals($otherdata['name'], $entity->get_name());
+        self::assertEquals($otherdata['managementcourseid'], $entity->get_edadmin_courses('entities')['id']);
+        
 
         $objectidmapping = $event::get_objectid_mapping();
         self::assertEquals($objectidmapping['db'], 'course_categories');
@@ -264,7 +260,6 @@ class local_mentor_core_event_testcase extends advanced_testcase {
      * @covers \local_mentor_core\event\training_create::get_name
      * @covers \local_mentor_core\event\training_create::get_url
      * @covers \local_mentor_core\event\training_create::get_description
-     * @covers \local_mentor_core\event\training_create::get_legacy_logdata
      * @covers \local_mentor_core\event\training_create::get_objectid_mapping
      */
     public function test_training_create_event() {
@@ -290,11 +285,6 @@ class local_mentor_core_event_testcase extends advanced_testcase {
                 $CFG->wwwroot . '/local/trainings/pages/update_training.php?trainingid=' . $training->id);
         self::assertEquals($event->get_description(), "The user with id '2' created the training with id '$training->id'.");
 
-        $reflectionmethod = new ReflectionMethod('local_mentor_core\event\training_create', 'get_legacy_eventdata');
-        $reflectionmethod->setAccessible(true);
-        $legacyeventdata = $reflectionmethod->invoke($event);
-        self::assertNull($legacyeventdata);
-
         $objectidmapping = $event::get_objectid_mapping();
         self::assertEquals($objectidmapping['db'], 'training');
         self::assertEquals($objectidmapping['restore'], 'training');
@@ -309,10 +299,6 @@ class local_mentor_core_event_testcase extends advanced_testcase {
      * @covers \local_mentor_core\event\training_update::get_name
      * @covers \local_mentor_core\event\training_update::get_url
      * @covers \local_mentor_core\event\training_update::get_description
-     * @covers \local_mentor_core\event\training_update::get_legacy_eventname
-     * @covers \local_mentor_core\event\training_update::get_legacy_eventdata
-     * @covers \local_mentor_core\event\training_update::set_legacy_logdata
-     * @covers \local_mentor_core\event\training_update::get_legacy_logdata
      * @covers \local_mentor_core\event\training_update::get_objectid_mapping
      */
     public function test_training_update_event() {
@@ -338,23 +324,12 @@ class local_mentor_core_event_testcase extends advanced_testcase {
                 'objectid' => $training->id,
                 'context' => $training->get_context(),
         ]);
-        $event->set_legacy_logdata(['test']);
 
         self::assertInstanceOf('local_mentor_core\event\training_update', $event);
         self::assertEquals($event::get_name(), get_string('eventtrainingupdated', 'local_mentor_core'));
         self::assertEquals($event->get_url()->out(),
                 $CFG->wwwroot . '/local/trainings/pages/update_training.php?trainingid=' . $training->id);
-        self::assertEquals($event::get_legacy_eventname(), 'training_updated');
         self::assertEquals($event->get_description(), "The user with id '2' updated the training with id '$training->id'.");
-
-        $reflectionmethod = new ReflectionMethod('local_mentor_core\event\training_update', 'get_legacy_eventdata');
-        $reflectionmethod->setAccessible(true);
-        $legacyeventdata = $reflectionmethod->invoke($event);
-
-        self::assertIsObject($legacyeventdata);
-        self::assertEquals($legacyeventdata->id, $training->id);
-        self::assertEquals($legacyeventdata->courseshortname, $training->courseshortname);
-        self::assertEquals($legacyeventdata->status, $training->status);
 
         $objectidmapping = $event::get_objectid_mapping();
         self::assertEquals($objectidmapping['db'], 'training');
@@ -370,7 +345,6 @@ class local_mentor_core_event_testcase extends advanced_testcase {
      * @covers \local_mentor_core\event\session_create::get_name
      * @covers \local_mentor_core\event\session_create::get_url
      * @covers \local_mentor_core\event\session_create::get_description
-     * @covers \local_mentor_core\event\session_create::get_legacy_logdata
      * @covers \local_mentor_core\event\session_create::get_objectid_mapping
      */
     public function test_session_create_event() {
@@ -408,10 +382,6 @@ class local_mentor_core_event_testcase extends advanced_testcase {
      * @covers \local_mentor_core\event\session_update::get_name
      * @covers \local_mentor_core\event\session_update::get_url
      * @covers \local_mentor_core\event\session_update::get_description
-     * @covers \local_mentor_core\event\session_update::get_legacy_eventname
-     * @covers \local_mentor_core\event\session_update::get_legacy_eventdata
-     * @covers \local_mentor_core\event\session_update::set_legacy_logdata
-     * @covers \local_mentor_core\event\session_update::get_legacy_logdata
      * @covers \local_mentor_core\event\session_update::get_objectid_mapping
      */
     public function test_session_update_event() {
@@ -435,22 +405,12 @@ class local_mentor_core_event_testcase extends advanced_testcase {
                 'objectid' => $session->id,
                 'context' => $session->get_context(),
         ]);
-        $event->set_legacy_logdata(['test']);
 
         self::assertInstanceOf('local_mentor_core\event\session_update', $event);
         self::assertEquals($event::get_name(), get_string('eventsessionupdated', 'local_mentor_core'));
         self::assertEquals($event->get_url()->out(),
                 $CFG->wwwroot . '/local/session/pages/update_session.php?sessionid=' . $session->id);
-        self::assertEquals($event::get_legacy_eventname(), 'session_updated');
         self::assertEquals($event->get_description(), "The user with id '2' updated the session with id '$session->id'.");
-
-        $reflectionmethod = new ReflectionMethod('local_mentor_core\event\session_update', 'get_legacy_eventdata');
-        $reflectionmethod->setAccessible(true);
-        $legacyeventdata = $reflectionmethod->invoke($event);
-
-        self::assertIsObject($legacyeventdata);
-        self::assertEquals($legacyeventdata->id, $session->id);
-        self::assertEquals($legacyeventdata->trainingid, $session->get_training()->id);
 
         $objectidmapping = $event::get_objectid_mapping();
         self::assertEquals($objectidmapping['db'], 'session');

@@ -280,10 +280,7 @@ class training_api {
                 'updatedfields' => $updatedfields,
             ],
         ]);
-        $event->set_legacy_logdata([
-            $trainingid, 'training', 'update', 'local/trainings/pages/update_training.php?trainingid=' . $trainingid,
-            $trainingid,
-        ]);
+       
         $event->trigger();
 
         // Return a refreshed training object.

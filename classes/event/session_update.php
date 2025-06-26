@@ -82,42 +82,6 @@ class session_update extends base {
         return "The user with id '$this->userid' updated the session with id '$this->objectid'.";
     }
 
-    /**
-     * Returns the name of the legacy event.
-     *
-     * @return string legacy event name
-     */
-    public static function get_legacy_eventname() {
-        return 'session_updated';
-    }
-
-    /**
-     * Returns the legacy event data.
-     *
-     * @return \stdClass the session that was updated
-     */
-    protected function get_legacy_eventdata() {
-        return $this->get_record_snapshot('session', $this->objectid);
-    }
-
-    /**
-     * Set the legacy data used for add_to_log().
-     *
-     * @param array $logdata
-     */
-    public function set_legacy_logdata($logdata) {
-        $this->legacylogdata = $logdata;
-    }
-
-    /**
-     * Return legacy data for add_to_log().
-     *
-     * @return array
-     */
-    protected function get_legacy_logdata() {
-        return $this->legacylogdata;
-    }
-
     public static function get_objectid_mapping() {
         return ['db' => 'session', 'restore' => base::NOT_MAPPED];
     }

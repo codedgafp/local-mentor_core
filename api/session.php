@@ -477,13 +477,7 @@ class session_api {
                 'updatedfields' => $updatedfields,
             ],
         ]);
-        $event->set_legacy_logdata([
-            $session->id,
-            'session',
-            'update',
-            'local/session/pages/update_session.php?sessionid=' . $session->id,
-            $session->id,
-        ]);
+       
         $event->trigger();
 
         // Return a refreshed session object.

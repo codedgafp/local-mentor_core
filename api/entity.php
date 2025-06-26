@@ -444,9 +444,7 @@ class entity_api {
                 'updatedfields' => $updatedfields,
             ],
         ]);
-        $event->set_legacy_logdata([
-            $entity->id, 'entity', 'update', 'course/view.php?id=' . $entity->get_edadmin_courses('entities')['id'], $entity->id,
-        ]);
+       
         $event->trigger();
 
         self::$entities[$entityid] = $entity;

@@ -72,18 +72,6 @@ class training_create extends base {
         return "The user with id '$this->userid' created the training with id '$this->objectid'.";
     }
 
-    /**
-     * Return legacy data for add_to_log().
-     *
-     * @return array
-     */
-    protected function get_legacy_logdata() {
-        return [
-            SITEID, 'training', 'add', 'local/trainings/pages/update_training.php?trainingid=' . $this->objectid,
-            $this->objectid,
-        ];
-    }
-
     public static function get_objectid_mapping() {
         return ['db' => 'training', 'restore' => 'training'];
     }

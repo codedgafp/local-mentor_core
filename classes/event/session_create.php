@@ -72,17 +72,6 @@ class session_create extends base {
         return "The user with id '$this->userid' created the session with id '$this->objectid'.";
     }
 
-    /**
-     * Return legacy data for add_to_log().
-     *
-     * @return array
-     */
-    protected function get_legacy_logdata() {
-        return [
-            SITEID, 'session', 'add', 'local/session/pages/update_session.php?sessionid=' . $this->objectid,
-            $this->objectid,
-        ];
-    }
 
     public static function get_objectid_mapping() {
         return ['db' => 'session', 'restore' => base::NOT_MAPPED];

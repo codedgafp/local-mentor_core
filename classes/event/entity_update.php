@@ -85,37 +85,6 @@ class entity_update extends base {
         return "The user with id '$this->userid' updated the entity with category id '$this->objectid'.";
     }
 
-    /**
-     * Returns the name of the legacy event.
-     *
-     * @return string legacy event name
-     */
-    public static function get_legacy_eventname() {
-        return 'entity_updated';
-    }
-
-    /**
-     * Set the legacy data used for add_to_log().
-     *
-     * @param array $logdata
-     */
-    public function set_legacy_logdata($logdata) {
-        $this->legacylogdata = $logdata;
-    }
-
-    /**
-     * Return legacy data for add_to_log().
-     *
-     * @return array
-     */
-    protected function get_legacy_logdata() {
-        if (!empty($this->legacylogdata)) {
-            return $this->legacylogdata;
-        }
-
-        return [SITEID, 'entity', 'update', 'course/view.php?id=' . $this->other['managementcourseid'], $this->objectid];
-    }
-
     public static function get_objectid_mapping() {
         return ['db' => 'course_categories', 'restore' => base::NOT_MAPPED];
     }
