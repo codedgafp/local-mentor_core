@@ -2462,13 +2462,6 @@ function local_mentor_core_build_csv_report_lines(array $lines, array $resultDat
 
 function disabled_mathjax_plugin()
 {
-    $pluginname = 'filter_mathjaxloader';
-
-    $pluginman = core_plugin_manager::instance();
-    $pluginfo = $pluginman->get_plugin_info($pluginname);
-
-    if (!$pluginfo) exit;
-
-    $progress = new null_progress_trace();
-    core_plugin_manager::instance()->uninstall_plugin($pluginname, $progress);
+    mtrace('Disabled Mathjax filter');
+    filter_set_global_state('mathjaxloader', TEXTFILTER_DISABLED);
 }
