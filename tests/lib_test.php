@@ -777,6 +777,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'auth' => 'manual',
                 'groupname' => '',
                 'role' => 'formateur',
+                'linenumber' => 2
             ],
         ];
 
@@ -897,6 +898,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'auth' => 'manual',
                 'groupname' => 'gr1',
                 'role' => 'FakeRole',
+                'linenumber' => 2,
             ],
         ];
 
@@ -986,7 +988,8 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'lastname' => 'lastname1',
                 'firstname' => 'firstname1',
                 'email' => 'lastname1.firstname1@gmail.com',
-                'auth' => 'manual'
+                'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
        $notification = local_mentor_core_create_users_csv($userlist);
@@ -1007,6 +1010,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'firstname' => 'firstname3',
                 'email' => 'lastname3.firstname1@gmail.com',
                 'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
 
@@ -1031,6 +1035,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'firstname' => 'firstname4',
                 'email' => 'lastname4.firstname4@gmail.com',
                 'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
 
@@ -1070,6 +1075,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'firstname' => 'firstname1',
                 'email' => 'lastname1.firstname1@gmail.com',
                 'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
 
@@ -1112,6 +1118,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'firstname' => 'firstname1',
                 'email' => 'lastname1.firstname1@gmail.com',
                 'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
 
@@ -1162,6 +1169,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'firstname' => 'firstname1',
                 'email' => 'lastname1.firstname1@gmail.com',
                 'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
 
@@ -1230,6 +1238,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
                 'firstname' => 'firstname1',
                 'email' => 'lastname1.firstname1@gmail.com',
                 'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
         $newentityname = 'Entity1';
@@ -3329,6 +3338,7 @@ test2", $finalcontent);
                 'firstname' => 'firstname3',
                 'email' => 'lastname3.firstname1@gmail.com',
                 'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
         
@@ -3366,6 +3376,7 @@ test2", $finalcontent);
                 'firstname' => 'firstname4',
                 'email' => 'lastname4.firstname4@test.com',
                 'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
         
@@ -3387,6 +3398,7 @@ test2", $finalcontent);
                 'firstname' => 'firstname5',
                 'email' => 'lastname5.firstname5@gmail.com',
                 'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
         
@@ -3402,6 +3414,7 @@ test2", $finalcontent);
                 'firstname' => 'firstname6',
                 'email' => 'lastname6.firstname6@testx.com',
                 'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
 
@@ -3524,7 +3537,8 @@ test2", $finalcontent);
                 'lastname' => 'lastname1',
                 'firstname' => 'firstname1',
                 'email' => 'lastname1.firstname1@gmail.com',
-                'auth' => 'manual'
+                'auth' => 'manual',
+                'linenumber' => 2
             ],
         ];
         //test result data on user creation
@@ -3558,43 +3572,50 @@ test2", $finalcontent);
                 'lastname' => 'lastname1',
                 'firstname' => 'firstname1',
                 'email' => 'lastname1.firstname1@gmail.com',
-                'auth' => 'manual'
+                'auth' => 'manual',
+                'linenumber' => 2
             ],
             [
                 'lastname' => 'user',
                 'firstname' => 'user',
                 'email' => 'user.user@gmail.com',
-                'auth' => 'manual'
+                'auth' => 'manual',
+                'linenumber' => 3
             ],
             [
                 'lastname' => 'user1',
                 'firstname' => 'user1',
                 'email' => 'user1@test.com',
-                'auth' => 'manual'
+                'auth' => 'manual',
+                'linenumber' => 4
             ],
             [
                 'lastname' => $user->lastname,
                 'firstname' => $user->firstname,
                 'email' => $user->email,
-                'auth' => 'manual'
+                'auth' => 'manual',
+                'linenumber' => 5
             ],
             [
                 'lastname' => 'user',
                 'firstname' => 'user',
                 'email' => 'user.user@gmail.com',
-                'auth' => 'manual'
+                'auth' => 'manual',
+                'linenumber' => 6
             ],
             [
                 'lastname' => 'suspendeduser',
                 'firstname' => 'suspendeduser',
                 'email' => 'suspendeduser@mail.fr',
-                'auth' => 'manual'
+                'auth' => 'manual',
+                'linenumber' => 7
             ],
             [
                 'lastname' => 'suspendeduser',
                 'firstname' => 'suspendeduser',
                 'email' => 'suspendeduser@mail.fr',
-                'auth' => 'manual'
+                'auth' => 'manual',
+                'linenumber' => 8
             ],
         ];
         $userstoactivate = [
@@ -3653,6 +3674,7 @@ test2", $finalcontent);
                 'auth' => 'manual',
                 'groupname' => 'gr1',
                 'role' => 'Participant',
+                'linenumber' => 2
             ],
         ];
         //test result data on user creation
@@ -3690,6 +3712,7 @@ test2", $finalcontent);
                 'auth' => 'manual',
                 'groupname' => 'gr1',
                 'role' => 'formateur',
+                'linenumber' => 2
             ],
             [
                 'lastname' => 'user',
@@ -3698,6 +3721,7 @@ test2", $finalcontent);
                 'auth' => 'manual',
                 'groupname' => 'gr1',
                 'role' => 'Participant',
+                'linenumber' => 3
             ],
             [
                 'lastname' => 'user1',
@@ -3706,6 +3730,7 @@ test2", $finalcontent);
                 'groupname' => 'gr1',
                 'auth' => 'manual',
                 'role' => 'Participant',
+                'linenumber' => 4
             ],
             [
                 'lastname' => $user->lastname,
@@ -3714,6 +3739,7 @@ test2", $finalcontent);
                 'groupname' => 'gr1',
                 'auth' => 'manual',
                 'role' => 'Participant',
+                'linenumber' => 5
             ],
             [
                 'lastname' => 'user',
@@ -3722,6 +3748,7 @@ test2", $finalcontent);
                 'groupname' => 'gr1',
                 'auth' => 'manual',
                 'role' => 'formateur',
+                'linenumber' => 6
             ],
             [
                 'lastname' => 'suspendeduser',
@@ -3730,6 +3757,7 @@ test2", $finalcontent);
                 'groupname' => 'gr1',
                 'auth' => 'manual',
                 'role' => 'Participant',
+                'linenumber' => 7
             ],
             [
                 'lastname' => 'suspendeduser',
@@ -3738,6 +3766,7 @@ test2", $finalcontent);
                 'groupname' => 'gr1',
                 'auth' => 'manual',
                 'role' => 'Participant',
+                'linenumber' => 8
             ],
         ];
         $userstoactivate = [

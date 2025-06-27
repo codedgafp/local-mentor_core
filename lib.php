@@ -723,9 +723,7 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
     $allowedroles = \local_mentor_core\session_api::get_allowed_roles($courseid);
 
     $reportData = [];
-    
-    // Specifies the number of lines (gap) to insert after the header section.
-    $gap_after_header = 2;
+
     $reactivatedUsers = [];
     // Reactivate user accounts.
     foreach ($userstoreactivate as $usertoreactivate) {
@@ -814,24 +812,13 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
         if (true !== $session->user_is_enrolled($user->id)) {
 
             $dbrole = $DB->get_record('role', ['shortname' => $role]);
-
             $enrolmentresult = enrol_try_internal_enrol($courseid, $user->id, $dbrole->id);
-
-            if ($isReactivated) {
-                    $reportData[$index + $gap_after_header] = get_string('reactivatedenrolled', 'local_mentor_core');
-                    if (($key = array_search($line['email'], $reactivatedUsers, true)) !== false) {
-                        unset($reactivatedUsers[$key]);
-                    }
-                } else if ($isNewUser) {
-                    $reportData[$index + $gap_after_header] = get_string('createdenrolled', 'local_mentor_core');
-                    if (($key = array_search($line['email'], $createdUsers, true)) !== false) {
-                        unset($createdUsers[$key]);
-                    }
-                } else {
-                    $reportData[$index + $gap_after_header] = get_string('enrolled', 'local_mentor_core');
-                }
-            // Set user role.
-            profile_api::role_assign($role, $user->id, context_course::instance($courseid)->id);
+            if( $enrolmentresult )
+            {
+                set_result_status($reportData, $line["linenumber"], $line['email'], $reactivatedUsers, $createdUsers, $isReactivated, $isNewUser);
+                // Set user role.
+                profile_api::role_assign($role, $user->id, context_course::instance($courseid)->id);
+            }            
         } else if (
             isset($line['role']) &&
             null !== $line['role'] &&
@@ -844,28 +831,14 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
                 $params = ['userid' => $user->id, 'contextid' => context_course::instance($courseid)->id];
                 role_unassign_all($params);
 
-                enrol_try_internal_enrol($courseid, $user->id, $dbrole->id);
-
-            if ($isReactivated) {
-                    $reportData[$index + $gap_after_header] = get_string('reactivatedenrolled', 'local_mentor_core');
-                    if (($key = array_search($line['email'], $reactivatedUsers, true)) !== false) {
-                        unset($reactivatedUsers[$key]);
-                    }
-                } else if ($isNewUser) {
- 
-                    $reportData[$index + $gap_after_header] = get_string('createdenrolled', 'local_mentor_core');
-                     if (($key = array_search($line['email'], $createdUsers, true)) !== false) {
-                        unset($createdUsers[$key]);
-                    }
-                } else {
-
-                    $reportData[$index + $gap_after_header] = get_string('enrolled', 'local_mentor_core');
+                $enrolmentresult = enrol_try_internal_enrol($courseid, $user->id, $dbrole->id);
+                if( $enrolmentresult )
+                {
+                set_result_status($reportData, $line["linenumber"], $line['email'], $reactivatedUsers, $createdUsers, $isReactivated, $isNewUser);
+                    // Set user role.
+                    profile_api::role_assign($role, $user->id, context_course::instance($courseid)->id);
                 }
-
-                // Set user role.
-                profile_api::role_assign($role, $user->id, context_course::instance($courseid)->id);
             }
-
         }
 
         // Add user to group, if given.
@@ -887,6 +860,23 @@ function local_mentor_core_enrol_users_csv($courseid, $userslist = [], $userstor
     }
 
     return $reportData;
+}
+
+function set_result_status(array &$reportData, int $linenumber,string $email, array &$reactivatedUsers, array &$createdUsers, bool $isReactivated, bool $isNewUser): void
+{
+    if ($isReactivated) {
+        $reportData[$linenumber] = get_string('reactivatedenrolled', 'local_mentor_core');
+        if (($key = array_search($email, $reactivatedUsers, true)) !== false) {
+            unset($reactivatedUsers[$key]);
+        }
+    } else if ($isNewUser) {
+        $reportData[$linenumber] = get_string('createdenrolled', 'local_mentor_core');
+        if (($key = array_search($email, $createdUsers, true)) !== false) {
+            unset($createdUsers[$key]);
+        }
+    } else {
+        $reportData[$linenumber] = get_string('enrolled', 'local_mentor_core');
+    }
 }
 
 /**
@@ -934,11 +924,14 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
         
         $profile->reactivate();
 
+        // Find the "linenumber" in $userslist where the email matches the one to reactivate 
         $useractivatedkeys = array_keys(array_column($userslist, 'email'), $usertoreactivate['email']);
+        $linenumber = !empty($useractivatedkeys) && isset($userslist[$useractivatedkeys[0]]['linenumber'])
+            ? $userslist[$useractivatedkeys[0]]['linenumber']
+            : null;
 
-        if(!empty($useractivatedkeys)) {
-                $reportData[$useractivatedkeys[0]+2] =  get_string('reactivated', 'local_mentor_core');
-            
+        if($linenumber != null) {
+                $reportData[$linenumber] =  get_string('reactivated', 'local_mentor_core');            
         }
     }
 
@@ -966,7 +959,7 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
 
             try {  
                 $user->id = local_mentor_core\profile_api::create_user($user, $otherdata);
-                $reportData[$index+2] =  get_string('created', 'local_mentor_core');
+                $reportData[$line["linenumber"]] =  get_string('created', 'local_mentor_core');
                 if (!in_array($email, $emailsSeenInCsv)) {
                     $emailsSeenInCsv[] = $email;
                 }
@@ -1006,7 +999,7 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
 
             if (!in_array($email, $emailsSeenInCsv)) {
                 if (!$isReactivated) {
-                    $reportData[$index+2] = get_string('alreadyexists', 'local_mentor_core');
+                    $reportData[$line["linenumber"]] = get_string('alreadyexists', 'local_mentor_core');
                 }
                 $emailsSeenInCsv[] = $email;
             }
@@ -2438,6 +2431,7 @@ function local_mentor_core_send_report(array $csv_content, array $resultData,str
 * @return array Processed CSV lines with result status appended.
 */
 function local_mentor_core_build_csv_report_lines(array $lines, array $resultData, string $delimiter): array {
+
     $newcsv = [];
     // The variable $gap_header is set to 1 to indicate that the CSV header occupies the first row, so data processing starts from the second row.
     $gap_header = 1;
