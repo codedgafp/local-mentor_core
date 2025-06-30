@@ -116,7 +116,7 @@ function construct_user_by_emails_request(array $emails, string $addSelectParame
         $params[$paramName] = $email; 
     }
 
-    $select = 'email IN (' . implode(', ', $placeholders) . ')';
+    $select = 'LOWER(email) IN (' . implode(', ', $placeholders) . ')';
 
     if ($addSelectParameters) {
         $select .= ' ' . $addSelectParameters;

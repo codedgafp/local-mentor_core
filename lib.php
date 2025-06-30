@@ -504,7 +504,9 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
             $email = strtolower($columns[$emailkey]);
 
             $countMatchingEmails = 0;
-            $countMatchingEmails = count(array_filter($usersExistData, fn($userData) => $userData->email === $email));
+            $countMatchingEmails = count( array_filter($usersExistData, function($item) use ($email) {
+                return strtolower($item->email) === strtolower($email);
+                }));
             if ($countMatchingEmails > 1) {
                 $warnings['list'][] = [
                     $linenumber,
@@ -520,9 +522,9 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
 
             // If the user exists, check if an other user as an email equals to the username.
             if ($countMatchingEmails == 1) {
-                $u = (array_values(array_filter($usersExistData, fn($userData) => $userData->email === $email))[0] ?? null);
+                $u = (array_values(array_filter($usersExistData, fn($userData) => strtolower($userData->email) === $email))[0] ?? null);
 
-                $users = array_filter($usersExistUsernameEmail, fn($userData) => $userData->email === $email);
+                $users = array_filter($usersExistUsernameEmail, fn($userData) =>strtolower($userData->email) === $email);
 
                 if(count($users) >= 2) {
                     $warnings['list'][] = [
@@ -585,17 +587,16 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                         }
                     }
                 }
-                if(!$userExistsToBeUpdated && !$ignoreline ){
+                if(is_null($courseid))
+                {
+                    if(!$userExistsToBeUpdated && !$ignoreline ){
                     $warnings['list'][] = [
                         $linenumber,
-                        get_string(
-                        is_null($courseid) ? 'user_already_exists' : 'email_already_used',
-                        'local_mentor_core',
-                        $email
-                        ),
-                    ];
-                    
+                        get_string('user_already_exists','local_mentor_core',$email),
+                    ];                    
+                   }
                 }
+                
             }
                 
                                             
