@@ -2737,7 +2737,7 @@ class local_mentor_core_session_testcase extends advanced_testcase {
 
         // Is manager of two entities.
         self::assertIsObject($entityselector);
-        self::assertObjectHasAttribute('switchentities', $entityselector);
+        self::assertObjectHasProperty('switchentities', $entityselector);
         self::assertIsArray($entityselector->switchentities);
         self::assertCount(2, $entityselector->switchentities);
 

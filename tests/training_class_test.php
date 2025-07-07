@@ -898,9 +898,9 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
 
         $editform = $training->prepare_edit_form();
 
-        self::assertObjectHasAttribute('content', $editform);
-        self::assertObjectHasAttribute('thumbnail', $editform);
-        self::assertObjectHasAttribute('traininggoal', $editform);
+        self::assertObjectHasProperty('content', $editform);
+        self::assertObjectHasProperty('thumbnail', $editform);
+        self::assertObjectHasProperty('traininggoal', $editform);
 
         self::resetAllData();
     }
@@ -945,31 +945,31 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
         // With admin user.
         $templatedata = $training->convert_for_template();
 
-        self::assertObjectHasAttribute('id', $templatedata);
+        self::assertObjectHasProperty('id', $templatedata);
         self::assertEquals($training->id, $templatedata->id);
 
-        self::assertObjectHasAttribute('name', $templatedata);
+        self::assertObjectHasProperty('name', $templatedata);
         self::assertEquals($training->name, $templatedata->name);
 
-        self::assertObjectHasAttribute('courseurl', $templatedata);
+        self::assertObjectHasProperty('courseurl', $templatedata);
         self::assertEquals($training->get_url()->out(), $templatedata->courseurl);
 
-        self::assertObjectHasAttribute('content', $templatedata);
+        self::assertObjectHasProperty('content', $templatedata);
         self::assertEquals($training->content, $templatedata->content);
 
-        self::assertObjectHasAttribute('traininggoal', $templatedata);
+        self::assertObjectHasProperty('traininggoal', $templatedata);
         self::assertEquals($training->traininggoal, $templatedata->traininggoal);
 
-        self::assertObjectHasAttribute('isreviewer', $templatedata);
+        self::assertObjectHasProperty('isreviewer', $templatedata);
         self::assertFalse($templatedata->isreviewer);
 
-        self::assertObjectHasAttribute('entityid', $templatedata);
+        self::assertObjectHasProperty('entityid', $templatedata);
         self::assertEquals($training->get_entity()->id, $templatedata->entityid);
 
-        self::assertObjectHasAttribute('entityname', $templatedata);
+        self::assertObjectHasProperty('entityname', $templatedata);
         self::assertEquals($training->get_entity()->name, $templatedata->entityname);
 
-        self::assertObjectHasAttribute('thumbnail', $templatedata);
+        self::assertObjectHasProperty('thumbnail', $templatedata);
         $urlfile = \moodle_url::make_pluginfile_url(
             $filerecord->contextid,
             $filerecord->component,
@@ -986,31 +986,31 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
         // With participant.
         $templatedata = $training->convert_for_template();
 
-        self::assertObjectHasAttribute('id', $templatedata);
+        self::assertObjectHasProperty('id', $templatedata);
         self::assertEquals($training->id, $templatedata->id);
 
-        self::assertObjectHasAttribute('name', $templatedata);
+        self::assertObjectHasProperty('name', $templatedata);
         self::assertEquals($training->name, $templatedata->name);
 
-        self::assertObjectHasAttribute('courseurl', $templatedata);
+        self::assertObjectHasProperty('courseurl', $templatedata);
         self::assertEquals($training->get_url()->out(), $templatedata->courseurl);
 
-        self::assertObjectHasAttribute('content', $templatedata);
+        self::assertObjectHasProperty('content', $templatedata);
         self::assertEquals($training->content, $templatedata->content);
 
-        self::assertObjectHasAttribute('traininggoal', $templatedata);
+        self::assertObjectHasProperty('traininggoal', $templatedata);
         self::assertEquals($training->traininggoal, $templatedata->traininggoal);
 
-        self::assertObjectHasAttribute('isreviewer', $templatedata);
+        self::assertObjectHasProperty('isreviewer', $templatedata);
         self::assertTrue($templatedata->isreviewer);
 
-        self::assertObjectHasAttribute('entityid', $templatedata);
+        self::assertObjectHasProperty('entityid', $templatedata);
         self::assertEquals($training->get_entity()->id, $templatedata->entityid);
 
-        self::assertObjectHasAttribute('entityname', $templatedata);
+        self::assertObjectHasProperty('entityname', $templatedata);
         self::assertEquals($training->get_entity()->name, $templatedata->entityname);
 
-        self::assertObjectHasAttribute('thumbnail', $templatedata);
+        self::assertObjectHasProperty('thumbnail', $templatedata);
         $urlfile = \moodle_url::make_pluginfile_url(
             $filerecord->contextid,
             $filerecord->component,

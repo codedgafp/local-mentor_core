@@ -580,16 +580,16 @@ class local_mentor_core_library_testcase extends advanced_testcase {
 
         $renderer = \local_mentor_core\library_api::get_params_renderer();
 
-        self::assertObjectHasAttribute('collections', $renderer);
+        self::assertObjectHasProperty('collections', $renderer);
         self::assertCount(1, $renderer->collections);
         self::assertEquals($renderer->collections['0'], 'Management');
 
-        self::assertObjectHasAttribute('entities', $renderer);
+        self::assertObjectHasProperty('entities', $renderer);
         self::assertCount(1, $renderer->entities);
         self::assertEquals($renderer->entities[0]['id'], $entityid);
         self::assertEquals($renderer->entities[0]['name'], $entity->name);
 
-        self::assertObjectHasAttribute('trainings', $renderer);
+        self::assertObjectHasProperty('trainings', $renderer);
         self::assertCount(1, $renderer->trainings);
         self::assertEquals($renderer->trainings[0]->id, $traininglibrary->id);
         self::assertEquals(
@@ -617,16 +617,16 @@ class local_mentor_core_library_testcase extends advanced_testcase {
         self::assertEquals($renderer->trainings[0]->collectiontiles[0]->name, 'Management');
         self::assertEquals($renderer->trainings[0]->collectiontiles[0]->color, 'rgba(11, 107, 168, 0.3)');
 
-        self::assertObjectHasAttribute('trainingscount', $renderer);
+        self::assertObjectHasProperty('trainingscount', $renderer);
         self::assertEquals(1, $renderer->trainingscount);
 
-        self::assertObjectHasAttribute('available_trainings', $renderer);
+        self::assertObjectHasProperty('available_trainings', $renderer);
 
-        self::assertObjectHasAttribute('trainings_dictionnary', $renderer);
+        self::assertObjectHasProperty('trainings_dictionnary', $renderer);
         $dictonnary = json_decode($renderer->trainings_dictionnary);
-        self::assertObjectHasAttribute($traininglibrary->id, $dictonnary);
+        self::assertObjectHasProperty($traininglibrary->id, $dictonnary);
 
-        self::assertObjectHasAttribute('isdev', $renderer);
+        self::assertObjectHasProperty('isdev', $renderer);
         self::assertEquals(0, $renderer->isdev);
 
         self::resetAllData();

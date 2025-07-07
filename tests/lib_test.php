@@ -1353,68 +1353,68 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
 
         self::assertIsObject($profilefieldsvaluesobject);
 
-        self::assertObjectHasAttribute('shortname', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('shortname', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->shortname, 'mainentity');
 
-        self::assertObjectHasAttribute('name', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('name', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->name, 'Entité de rattachement');
 
-        self::assertObjectHasAttribute('datatype', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('datatype', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->datatype, 'menu');
 
-        self::assertObjectHasAttribute('description', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('description', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->description, '');
 
-        self::assertObjectHasAttribute('descriptionformat', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('descriptionformat', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->descriptionformat, 1);
 
-        self::assertObjectHasAttribute('categoryid', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('categoryid', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->categoryid, 1);
 
-        self::assertObjectHasAttribute('sortorder', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('sortorder', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->sortorder, 2);
 
-        self::assertObjectHasAttribute('required', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('required', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->required, 1);
 
-        self::assertObjectHasAttribute('locked', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('locked', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->locked, 0);
 
-        self::assertObjectHasAttribute('visible', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('visible', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->visible, 2);
 
-        self::assertObjectHasAttribute('forceunique', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('forceunique', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->forceunique, 0);
 
-        self::assertObjectHasAttribute('signup', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('signup', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->signup, 0);
 
-        self::assertObjectHasAttribute('defaultdata', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('defaultdata', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->defaultdata, '');
 
-        self::assertObjectHasAttribute('defaultdataformat', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('defaultdataformat', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->defaultdataformat, 0);
 
-        self::assertObjectHasAttribute('param1', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('param1', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->param1, 'Entity1');
 
-        self::assertObjectHasAttribute('param2', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('param2', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->param2, null);
 
-        self::assertObjectHasAttribute('param3', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('param3', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->param3, null);
 
-        self::assertObjectHasAttribute('param4', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('param4', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->param4, null);
 
-        self::assertObjectHasAttribute('param5', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('param5', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->param5, null);
 
         // With field 14 unset.
         unset($profilefieldsvalues[0][14]);
         $profilefieldsvaluesobject = local_mentor_core_create_field_object_to_use($profilefieldsvalues[0]);
 
-        self::assertObjectHasAttribute('param1', $profilefieldsvaluesobject);
+        self::assertObjectHasProperty('param1', $profilefieldsvaluesobject);
         self::assertEquals($profilefieldsvaluesobject->param1, null);
 
         self::resetAllData();

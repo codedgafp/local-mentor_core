@@ -1914,31 +1914,31 @@ class local_mentor_core_session_class_testcase extends advanced_testcase {
 
         self::assertIsObject($datatempalte);
 
-        self::assertObjectHasAttribute('id', $datatempalte);
+        self::assertObjectHasProperty('id', $datatempalte);
         self::assertEquals($session->id, $datatempalte->id);
 
-        self::assertObjectHasAttribute('fullname', $datatempalte);
+        self::assertObjectHasProperty('fullname', $datatempalte);
         self::assertEquals($session->fullname, $datatempalte->fullname);
 
-        self::assertObjectHasAttribute('status', $datatempalte);
+        self::assertObjectHasProperty('status', $datatempalte);
         self::assertEquals($session->status, $datatempalte->status);
 
-        self::assertObjectHasAttribute('placesavailable', $datatempalte);
+        self::assertObjectHasProperty('placesavailable', $datatempalte);
         self::assertEquals('', $datatempalte->placesavailable);
 
-        self::assertObjectHasAttribute('istrainer', $datatempalte);
+        self::assertObjectHasProperty('istrainer', $datatempalte);
         self::assertTrue($datatempalte->istrainer);
 
-        self::assertObjectHasAttribute('istutor', $datatempalte);
+        self::assertObjectHasProperty('istutor', $datatempalte);
         self::assertFalse($datatempalte->istutor);
 
-        self::assertObjectHasAttribute('isparticipant', $datatempalte);
+        self::assertObjectHasProperty('isparticipant', $datatempalte);
         self::assertFalse($datatempalte->isparticipant);
 
-        self::assertObjectHasAttribute('trainingid', $datatempalte);
+        self::assertObjectHasProperty('trainingid', $datatempalte);
         self::assertEquals($sessiontraining->id, $datatempalte->trainingid);
 
-        self::assertObjectHasAttribute('thumbnail', $datatempalte);
+        self::assertObjectHasProperty('thumbnail', $datatempalte);
         self::assertEquals(\moodle_url::make_pluginfile_url(
             $filerecord->contextid,
             $filerecord->component,
@@ -1948,32 +1948,32 @@ class local_mentor_core_session_class_testcase extends advanced_testcase {
             $filerecord->filename
         )->out(), $datatempalte->thumbnail);
 
-        self::assertObjectHasAttribute('sessionstartdate', $datatempalte);
+        self::assertObjectHasProperty('sessionstartdate', $datatempalte);
         self::assertEquals($nowdate, $datatempalte->sessionstartdate);
 
-        self::assertObjectHasAttribute('sessionenddate', $datatempalte);
+        self::assertObjectHasProperty('sessionenddate', $datatempalte);
         self::assertEquals($nowplusonedaydate, $datatempalte->sessionenddate);
 
-        self::assertObjectHasAttribute('placesnotlimited', $datatempalte);
+        self::assertObjectHasProperty('placesnotlimited', $datatempalte);
         self::assertTrue($datatempalte->placesnotlimited);
 
-        self::assertObjectHasAttribute('sessiononedaydate', $datatempalte);
+        self::assertObjectHasProperty('sessiononedaydate', $datatempalte);
         self::assertFalse($datatempalte->sessiononedaydate);
 
-        self::assertObjectHasAttribute('courseurl', $datatempalte);
+        self::assertObjectHasProperty('courseurl', $datatempalte);
         self::assertEquals($CFG->wwwroot . '/course/view.php?id=' . $sessioncourse->id, $datatempalte->courseurl);
 
-        self::assertObjectHasAttribute('isenrol', $datatempalte);
+        self::assertObjectHasProperty('isenrol', $datatempalte);
         self::assertFalse($datatempalte->isenrol);
 
-        self::assertObjectHasAttribute('isinpreparation', $datatempalte);
+        self::assertObjectHasProperty('isinpreparation', $datatempalte);
         self::assertTrue($datatempalte->isinpreparation);
-        self::assertObjectNotHasAttribute('isopenedregistration', $datatempalte);
-        self::assertObjectNotHasAttribute('isinprogress', $datatempalte);
-        self::assertObjectNotHasAttribute('completed', $datatempalte);
-        self::assertObjectNotHasAttribute('isarchived', $datatempalte);
-        self::assertObjectNotHasAttribute('isreported', $datatempalte);
-        self::assertObjectNotHasAttribute('iscanceled', $datatempalte);
+        self::assertObjectNotHasProperty('isopenedregistration', $datatempalte);
+        self::assertObjectNotHasProperty('isinprogress', $datatempalte);
+        self::assertObjectNotHasProperty('completed', $datatempalte);
+        self::assertObjectNotHasProperty('isarchived', $datatempalte);
+        self::assertObjectNotHasProperty('isreported', $datatempalte);
+        self::assertObjectNotHasProperty('iscanceled', $datatempalte);
 
         // Add max participant.
         $data = new stdClass();
@@ -1981,88 +1981,88 @@ class local_mentor_core_session_class_testcase extends advanced_testcase {
         $session->update($data);
 
         $datatempalte = $session->convert_for_template();
-        self::assertObjectHasAttribute('placesavailable', $datatempalte);
+        self::assertObjectHasProperty('placesavailable', $datatempalte);
         self::assertEquals(12, $datatempalte->placesavailable);
 
-        self::assertObjectHasAttribute('placesnotlimited', $datatempalte);
+        self::assertObjectHasProperty('placesnotlimited', $datatempalte);
         self::assertFalse($datatempalte->placesnotlimited);
 
         // Update status (to open registration).
         $session->update_status(\local_mentor_core\session::STATUS_OPENED_REGISTRATION);
         $datatempalte = $session->convert_for_template();
 
-        self::assertObjectNotHasAttribute('isinpreparation', $datatempalte);
-        self::assertObjectHasAttribute('isopenedregistration', $datatempalte);
+        self::assertObjectNotHasProperty('isinpreparation', $datatempalte);
+        self::assertObjectHasProperty('isopenedregistration', $datatempalte);
         self::assertTrue($datatempalte->isopenedregistration);
-        self::assertObjectNotHasAttribute('isinprogress', $datatempalte);
-        self::assertObjectNotHasAttribute('completed', $datatempalte);
-        self::assertObjectNotHasAttribute('isarchived', $datatempalte);
-        self::assertObjectNotHasAttribute('isreported', $datatempalte);
-        self::assertObjectNotHasAttribute('iscanceled', $datatempalte);
+        self::assertObjectNotHasProperty('isinprogress', $datatempalte);
+        self::assertObjectNotHasProperty('completed', $datatempalte);
+        self::assertObjectNotHasProperty('isarchived', $datatempalte);
+        self::assertObjectNotHasProperty('isreported', $datatempalte);
+        self::assertObjectNotHasProperty('iscanceled', $datatempalte);
 
         // Update status (to in progress).
         $session->update_status(\local_mentor_core\session::STATUS_IN_PROGRESS);
         $datatempalte = $session->convert_for_template();
 
-        self::assertObjectNotHasAttribute('isinpreparation', $datatempalte);
-        self::assertObjectNotHasAttribute('isopenedregistration', $datatempalte);
-        self::assertObjectHasAttribute('isinprogress', $datatempalte);
+        self::assertObjectNotHasProperty('isinpreparation', $datatempalte);
+        self::assertObjectNotHasProperty('isopenedregistration', $datatempalte);
+        self::assertObjectHasProperty('isinprogress', $datatempalte);
         self::assertTrue($datatempalte->isinprogress);
-        self::assertObjectNotHasAttribute('completed', $datatempalte);
-        self::assertObjectNotHasAttribute('isarchived', $datatempalte);
-        self::assertObjectNotHasAttribute('isreported', $datatempalte);
-        self::assertObjectNotHasAttribute('iscanceled', $datatempalte);
+        self::assertObjectNotHasProperty('completed', $datatempalte);
+        self::assertObjectNotHasProperty('isarchived', $datatempalte);
+        self::assertObjectNotHasProperty('isreported', $datatempalte);
+        self::assertObjectNotHasProperty('iscanceled', $datatempalte);
 
         // Update status (to completed).
         $session->update_status(\local_mentor_core\session::STATUS_COMPLETED);
         $datatempalte = $session->convert_for_template();
 
-        self::assertObjectNotHasAttribute('isinpreparation', $datatempalte);
-        self::assertObjectNotHasAttribute('isopenedregistration', $datatempalte);
-        self::assertObjectNotHasAttribute('isinprogress', $datatempalte);
-        self::assertObjectHasAttribute('completed', $datatempalte);
+        self::assertObjectNotHasProperty('isinpreparation', $datatempalte);
+        self::assertObjectNotHasProperty('isopenedregistration', $datatempalte);
+        self::assertObjectNotHasProperty('isinprogress', $datatempalte);
+        self::assertObjectHasProperty('completed', $datatempalte);
         self::assertTrue($datatempalte->completed);
-        self::assertObjectNotHasAttribute('isarchived', $datatempalte);
-        self::assertObjectNotHasAttribute('isreported', $datatempalte);
-        self::assertObjectNotHasAttribute('iscanceled', $datatempalte);
+        self::assertObjectNotHasProperty('isarchived', $datatempalte);
+        self::assertObjectNotHasProperty('isreported', $datatempalte);
+        self::assertObjectNotHasProperty('iscanceled', $datatempalte);
 
         // Update status (to archived).
         $session->update_status(\local_mentor_core\session::STATUS_ARCHIVED);
         $datatempalte = $session->convert_for_template();
 
-        self::assertObjectNotHasAttribute('isinpreparation', $datatempalte);
-        self::assertObjectNotHasAttribute('isopenedregistration', $datatempalte);
-        self::assertObjectNotHasAttribute('isinprogress', $datatempalte);
-        self::assertObjectNotHasAttribute('completed', $datatempalte);
-        self::assertObjectHasAttribute('isarchived', $datatempalte);
+        self::assertObjectNotHasProperty('isinpreparation', $datatempalte);
+        self::assertObjectNotHasProperty('isopenedregistration', $datatempalte);
+        self::assertObjectNotHasProperty('isinprogress', $datatempalte);
+        self::assertObjectNotHasProperty('completed', $datatempalte);
+        self::assertObjectHasProperty('isarchived', $datatempalte);
         self::assertTrue($datatempalte->isarchived);
-        self::assertObjectNotHasAttribute('isreported', $datatempalte);
-        self::assertObjectNotHasAttribute('iscanceled', $datatempalte);
+        self::assertObjectNotHasProperty('isreported', $datatempalte);
+        self::assertObjectNotHasProperty('iscanceled', $datatempalte);
 
         // Update status (to reported).
         $session->update_status(\local_mentor_core\session::STATUS_REPORTED);
         $datatempalte = $session->convert_for_template();
 
-        self::assertObjectNotHasAttribute('isinpreparation', $datatempalte);
-        self::assertObjectNotHasAttribute('isopenedregistration', $datatempalte);
-        self::assertObjectNotHasAttribute('isinprogress', $datatempalte);
-        self::assertObjectNotHasAttribute('completed', $datatempalte);
-        self::assertObjectNotHasAttribute('isarchived', $datatempalte);
-        self::assertObjectHasAttribute('isreported', $datatempalte);
+        self::assertObjectNotHasProperty('isinpreparation', $datatempalte);
+        self::assertObjectNotHasProperty('isopenedregistration', $datatempalte);
+        self::assertObjectNotHasProperty('isinprogress', $datatempalte);
+        self::assertObjectNotHasProperty('completed', $datatempalte);
+        self::assertObjectNotHasProperty('isarchived', $datatempalte);
+        self::assertObjectHasProperty('isreported', $datatempalte);
         self::assertTrue($datatempalte->isreported);
-        self::assertObjectNotHasAttribute('iscanceled', $datatempalte);
+        self::assertObjectNotHasProperty('iscanceled', $datatempalte);
 
         // Update status (to cancelled).
         $session->update_status(\local_mentor_core\session::STATUS_CANCELLED);
         $datatempalte = $session->convert_for_template();
 
-        self::assertObjectNotHasAttribute('isinpreparation', $datatempalte);
-        self::assertObjectNotHasAttribute('isopenedregistration', $datatempalte);
-        self::assertObjectNotHasAttribute('isinprogress', $datatempalte);
-        self::assertObjectNotHasAttribute('completed', $datatempalte);
-        self::assertObjectNotHasAttribute('isarchived', $datatempalte);
-        self::assertObjectNotHasAttribute('isreported', $datatempalte);
-        self::assertObjectHasAttribute('iscanceled', $datatempalte);
+        self::assertObjectNotHasProperty('isinpreparation', $datatempalte);
+        self::assertObjectNotHasProperty('isopenedregistration', $datatempalte);
+        self::assertObjectNotHasProperty('isinprogress', $datatempalte);
+        self::assertObjectNotHasProperty('completed', $datatempalte);
+        self::assertObjectNotHasProperty('isarchived', $datatempalte);
+        self::assertObjectNotHasProperty('isreported', $datatempalte);
+        self::assertObjectHasProperty('iscanceled', $datatempalte);
         self::assertTrue($datatempalte->iscanceled);
 
         $this->resetAllData();
