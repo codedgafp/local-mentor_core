@@ -612,7 +612,7 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
         $email = "user1@gouv.fr";
 
         self::assertCount(0, $entity->get_members());
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid, [], $region,
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid, $region,
             $auth));
         self::assertCount(1, $entity->get_members());
 
@@ -622,7 +622,7 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
         $email = "user2@gouv.fr";
 
         self::assertCount(1, $entity->get_members());
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entity, [], $region,
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entity, $region,
             $auth));
         self::assertCount(2, $entity->get_members());
 
@@ -633,74 +633,85 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
         $entityname = $entity->get_name();
 
         self::assertCount(2, $entity->get_members());
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityname, [],
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityname,
             $region,
             $auth));
         self::assertCount(3, $entity->get_members());
 
         $this->resetAllData();
     }
+     /**
+      * Test create and add user
+      * With secondary entity
+      *
+      * @covers \local_mentor_core\profile_api::create_and_add_user
+      * @covers \local_mentor_core\profile_api::create_user
+      * @covers \local_mentor_core\database_interface::get_instance
+      * @covers \local_mentor_core\entity_api::get_entity
+      * @covers \local_mentor_core\entity_api::get_entity_by_name
+      */
+    public function test_create_and_add_user_ok_secondary_entity() {
+        global $CFG ,$DB;
+        
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+        $this->init_role();
 
-    // TODO: test à revoir lors de l'évolution de la gestion des entité secondaires lors de l'import unitaire
-    // /**
-    //  * Test create and add user
-    //  * With secondary entity
-    //  *
-    //  * @covers \local_mentor_core\profile_api::create_and_add_user
-    //  * @covers \local_mentor_core\profile_api::create_user
-    //  * @covers \local_mentor_core\database_interface::get_instance
-    //  * @covers \local_mentor_core\entity_api::get_entity
-    //  * @covers \local_mentor_core\entity_api::get_entity_by_name
-    //  */
-    // public function test_create_and_add_user_ok_secondary_entity() {
-    //     $this->resetAfterTest(true);
-    //     $this->reset_singletons();
-    //     $this->init_role();
+        self::setAdminUser();
 
-    //     self::setAdminUser();
+        $CFG->allowemailaddresses = '.archi.fr .interieur.gouv.fr ira-nantes.fr';
 
-    //     $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity 1', 'shortname' => 'New Entity 1']);
-    //     $entity2id = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity 2', 'shortname' => 'New Entity 2']);
-    //     $entity2 = \local_mentor_core\entity_api::get_entity($entity2id);
-    //     $region = 'Corse';
-    //     $auth = 'manual';
+        $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity 1', 'shortname' => 'New Entity 1']);
 
-    //     // Whith entity id.
-    //     $lastname = "user1";
-    //     $firstname = "user1";
-    //     $email = "user1@gouv.fr";
+        $activeDomain1 = (object) [
+            'course_categories_id' => $entityid,
+            'domain_name' => '.interieur.gouv.fr',
+            'created_at' => time(),
+            'disabled_at' => null
+        ];       
 
-    //     self::assertCount(0, $entity2->get_members());
-    //     self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid, [$entity2id],
-    //         $region,
-    //         $auth));
-    //     self::assertCount(1, $entity2->get_members());
+        $DB->insert_record('course_categories_domains', $activeDomain1, false);
 
-    //     // Whith entity object.
-    //     $lastname = "user2";
-    //     $firstname = "user2";
-    //     $email = "user2@gouv.fr";
+        $entity = \local_mentor_core\entity_api::get_entity($entityid);
+        $region = 'Corse';
+        $auth = 'manual';
 
-    //     self::assertCount(1, $entity2->get_members());
-    //     self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid, [$entity2],
-    //         $region,
-    //         $auth));
-    //     self::assertCount(2, $entity2->get_members());
+        // Whith entity id.
+        $lastname = "user1";
+        $firstname = "user1";
+        $email = "user1@g.interieur.gouv.fr";
 
-    //     // Whith entity name.
-    //     $lastname = "user3";
-    //     $firstname = "user3";
-    //     $email = "user3@gouv.fr";
-    //     $entity2name = $entity2->get_name();
 
-    //     self::assertCount(2, $entity2->get_members());
-    //     self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid,
-    //         [$entity2name], $region,
-    //         $auth));
-    //     self::assertCount(3, $entity2->get_members());
+        self::assertCount(0, $entity->get_members());
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid,
+            $region,
+            $auth));
+        self::assertCount(1, $entity->get_members());
 
-    //     $this->resetAllData();
-    // }
+        // Whith entity object.
+        $lastname = "user2";
+        $firstname = "user2";
+        $email = "user2@gouv.fr";
+
+        self::assertCount(1, $entity->get_members());
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid,
+            $region,
+            $auth));
+        self::assertCount(2, $entity->get_members());
+
+        // Whith entity name.
+        $lastname = "user3";
+        $firstname = "user3";
+        $email = "user3@gouv.fr";
+
+        self::assertCount(2, $entity->get_members());
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid,
+            $region,
+            $auth));
+        self::assertCount(3, $entity->get_members());
+
+        $this->resetAllData();
+    }
 
     /**
      * Test create and add user with existed user
@@ -723,11 +734,11 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
         $firstname = "user1";
         $email = "user1@gouv.fr";
 
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid, [], $region,
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid, $region,
             $auth));
 
         // User exist.
-        self::assertEquals(\local_mentor_core\profile_api::EMAIL_USED, \local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid, [], $region, $auth));
+        self::assertEquals(\local_mentor_core\profile_api::EMAIL_USED, \local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid, $region, $auth));
 
         $this->resetAllData();
     }
@@ -759,7 +770,7 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
         self::assertTrue(\local_mentor_core\profile_api::EMAIL_NOT_ALLOWED === \local_mentor_core\profile_api::create_and_add_user
             ($lastname, $firstname,
                 $email, $entityid,
-                [], $region,
+                $region,
                 $auth));
 
         $this->resetAllData();

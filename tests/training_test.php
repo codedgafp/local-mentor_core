@@ -1019,7 +1019,7 @@ class local_mentor_core_training_testcase extends advanced_testcase {
         $firstname = 'firstname';
         $email = 'user@mail.fr';
         $auth = 'manual';
-        \local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entity, [],
+        \local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entity,
             null, $auth);
         $user = \core_user::get_user_by_email($email);
 

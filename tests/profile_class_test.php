@@ -84,7 +84,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
 
         // Create user.
         self::assertTrue(\local_mentor_core\profile_api::create_and_add_user(
-                $lastname, $firstname, $email, $entityid, [], null, $auth));
+                $lastname, $firstname, $email, $entityid, null, $auth));
 
         // Get user.
         $profiledata = $db->get_user_by_email('user@gouv.fr');
@@ -137,7 +137,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         $auth = 'manual';
 
         // Create user.
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, [], null, $auth));
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, null, $auth));
 
         // Get user.
         $profiledata = $db->get_user_by_email('user@gouv.fr');
@@ -169,7 +169,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         $auth = 'manual';
 
         // Create user.
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, [], null, $auth));
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, null, $auth));
 
         // Get user.
         $profiledata = $db->get_user_by_email('user@gouv.fr');
@@ -202,7 +202,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         $auth = 'manual';
 
         // Create user.
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, [], null, $auth));
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, null, $auth));
 
         // Get user.
         $profiledata = $db->get_user_by_email('user@gouv.fr');
@@ -247,7 +247,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         $auth = 'manual';
 
         // Create user.
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, [], null, $auth));
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, null, $auth));
 
         // Get user.
         $profiledata = $db->get_user_by_email($email);
@@ -261,7 +261,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         $email2 = 'user2@gouv.fr';
 
         // Create user.
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname2, $firstname2, $email2, 1, [], null, $auth));
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname2, $firstname2, $email2, 1,null, $auth));
 
         // Get user.
         $profiledata2 = $db->get_user_by_email($email2);
@@ -296,7 +296,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
 
         // Create user.
         //event with no entity in params, the user will be attached automatically to a main entity
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, [], null, $auth));
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, null, $auth));
 
         // Get user.
         $profiledata = $db->get_user_by_email($email);
@@ -328,7 +328,7 @@ class local_mentor_core_profile_class_testcase extends advanced_testcase {
         $auth = 'manual';
 
         // Create user.
-        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, [], null, $auth));
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, null, null, $auth));
 
         // Get user.
         $profiledata = $db->get_user_by_email($email);

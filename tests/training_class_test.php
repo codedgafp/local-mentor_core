@@ -352,7 +352,7 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
 
         $entity = $this->create_entity('ENTITY');
         $training = $this->create_training($entity);
-        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, [], null, 'manual');
+        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, null, 'manual');
         $user = \core_user::get_user_by_email('user@gouv.fr');
 
         // Is not training manager.
@@ -380,9 +380,9 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
 
         $entity = $this->create_entity('ENTITY');
         $training = $this->create_training($entity);
-        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, [], null, 'manual');
+        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, null, 'manual');
         $user = \core_user::get_user_by_email('user@gouv.fr');
-
+var_dump($training->is_updater($user->id));
         // Is not training updater.
         self::assertFalse($training->is_updater($user->id));
 
@@ -408,7 +408,7 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
 
         $entity = $this->create_entity('ENTITY');
         $training = $this->create_training($entity);
-        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, [], null, 'manual');
+        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, null, 'manual');
         $user = \core_user::get_user_by_email('user@gouv.fr');
 
         // Is not training deleter.
@@ -436,7 +436,7 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
 
         $entity = $this->create_entity('ENTITY');
         $training = $this->create_training($entity);
-        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, [], null, 'manual');
+        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, null, 'manual');
 
         // 3 enrolment instances.
         self::assertCount(3, $training->get_enrolment_instances());
@@ -466,7 +466,7 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
 
         $entity = $this->create_entity('ENTITY');
         $training = $this->create_training($entity);
-        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, [], null, 'manual');
+        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, null, 'manual');
 
         // Manual enrolment instance exist.
         $manualenrolment = $training->get_enrolment_instances_by_type('manual');
@@ -497,7 +497,7 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
 
         $entity = $this->create_entity('ENTITY');
         $training = $this->create_training($entity);
-        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, [], null, 'manual');
+        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, null, 'manual');
 
         // Manual enrolment instance exist.
         $manualenrolment = $training->get_enrolment_instances_by_type('manual');
@@ -531,7 +531,7 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
 
         $entity = $this->create_entity('ENTITY');
         $training = $this->create_training($entity);
-        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, [], null, 'manual');
+        \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, null, 'manual');
 
         // Manual enrolment instance exist.
         self::assertTrue($training->create_manual_enrolment_instance());

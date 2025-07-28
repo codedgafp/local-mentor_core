@@ -916,12 +916,6 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
         if ($user === false) continue;
 
         $profile = profile_api::get_profile($user, true);
-
-        $profilemainentity = ($profile->get_main_entity() !== false && $profile->get_main_entity() !== null) ? $profile->get_main_entity()->id : null;
-        $user->profile_field_secondaryentities = local_mentor_core_set_secondary_entities($entity,$profilemainentity);
-        $profile->set_profile_field('secondaryentities', implode(',', $user->profile_field_secondaryentities));
-        $profile->sync_entities();
-        
         $profile->reactivate();
 
         // Find the "linenumber" in $userslist where the email matches the one to reactivate 
@@ -963,12 +957,7 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
                 if (!in_array($email, $emailsSeenInCsv)) {
                     $emailsSeenInCsv[] = $email;
                 }
-                $profile = profile_api::get_profile($user->id);
 
-                $profilemainentity = ($profile->get_main_entity() !== false && $profile->get_main_entity() !== null) ? $profile->get_main_entity()->id : null;
-                $secondaryentities = local_mentor_core_set_secondary_entities($entity,$profilemainentity);
-                $profile->set_profile_field('secondaryentities', implode(',', $secondaryentities));
-                $profile->sync_entities();
             } catch (moodle_exception $e) {
                 \core\notification::error(
                     get_string('error_line', 'local_mentor_core', $index + 1)
@@ -1003,10 +992,6 @@ function local_mentor_core_create_users_csv(array $userslist = [], array $userst
                 }
                 $emailsSeenInCsv[] = $email;
             }
-            $profilemainentity = ($profile->get_main_entity() !== false && $profile->get_main_entity() !== null) ? $profile->get_main_entity()->id : null;
-            $secondaryentities = local_mentor_core_set_secondary_entities($entity,$profilemainentity);
-            $profile->set_profile_field('secondaryentities', implode(',', $secondaryentities));
-            $profile->sync_entities();
         }
     }
 

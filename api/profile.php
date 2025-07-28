@@ -278,7 +278,7 @@ class profile_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function create_and_add_user(string $lastname, string $firstname, string $email, string|int|entity $entity = null, array $secondaryentities = [], string $region = null, string $auth = null, bool $isexternal = false, int $courseid = null): int|bool
+    public static function create_and_add_user(string $lastname, string $firstname, string $email, string|int|entity $entity = null, string $region = null, string $auth = null, bool $isexternal = false, int $courseid = null): int|bool
     {
         global $DB;
         $dbi = database_interface::get_instance();
@@ -342,26 +342,6 @@ class profile_api {
             $user->profile_field_mainentity = $entityname;
         }
 
-        // Set user secondary entities.
-        if (!empty($secondaryentities)) {
-
-            $user->profile_field_secondaryentities = [];
-
-            foreach ($secondaryentities as $secondaryentity) {
-                if (is_number($secondaryentity)) {
-                    $entityobject = entity_api::get_entity($secondaryentity);
-                    $entityname = $entityobject->name;
-                } else if (is_object($secondaryentity)) {
-                    $entityobject = $secondaryentity;
-                    $entityname = $entityobject->name;
-                } else if (is_string($secondaryentity)) {
-                    $entityobject = entity_api::get_entity_by_name($secondaryentity);
-                    $entityname = $entityobject->name;
-                }
-
-                $user->profile_field_secondaryentities[] = $entityname;
-            }
-        }
 
         // Set user region.
         if (!is_null($region) && $region !== get_string('none', 'local_mentor_core')) {
