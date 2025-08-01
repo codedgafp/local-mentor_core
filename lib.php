@@ -2386,7 +2386,10 @@ function local_mentor_core_send_report(array $csv_content, array $resultData,str
 
     $newcsv = local_mentor_core_build_csv_report_lines($lines, $resultData, $delimiter);
 
-    $filename = 'Rapport_' . $filename . '.csv';
+    $filename = 'Rapport_' . $filename;
+    if (strpos($filename, '.csv') === false) {
+        $filename .= ".csv";
+    }
     $dirpath = make_temp_directory('userimportreports');
     $filepath = $dirpath . '/' . $filename ;
     $file = fopen($filepath, 'w');
