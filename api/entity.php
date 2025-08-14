@@ -25,8 +25,8 @@
 
 namespace local_mentor_core;
 
-use core\event\course_category_deleted;
 use \core_course_category;
+use local_categories_domains\repository\categories_domains_repository;
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/local/mentor_core/classes/database_interface.php');
@@ -41,8 +41,8 @@ require_once($CFG->dirroot . '/local/mentor_core/api/profile.php');
  * @author     rcolet <remi.colet@edunao.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class entity_api {
-
+class entity_api
+{
     private static $entities = [];
 
     /**
@@ -55,8 +55,8 @@ class entity_api {
      *
      * TODO : set refresh to false and update unit tests
      */
-    public static function get_entity($entityid, $refresh = true) {
-
+    public static function get_entity($entityid, $refresh = true)
+    {
         if ($refresh || empty(self::$entities[$entityid])) {
             // An entity can be extended by a specialization plugin.
             $specialization = specialization::get_instance();
@@ -83,7 +83,8 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function get_entity_by_name($entityname, $mainonly = false, $refresh = true) {
+    public static function get_entity_by_name($entityname, $mainonly = false, $refresh = true)
+    {
         $db = database_interface::get_instance();
 
         // The category must exists.
@@ -117,13 +118,24 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function get_all_entities($mainonly = true, $exclude = [], $refresh = false, $filter = null, $includehidden
-    = true, $includecannotbemainentity = true, $searchtext = null) {
+    public static function get_all_entities(
+        $mainonly = true,
+        $exclude = [],
+        $refresh = false,
+        $filter = null,
+        $includehidden
+        = true,
+        $includecannotbemainentity = true,
+        $searchtext = null
+    ) {
         $db = database_interface::get_instance();
 
         // Entities are main course categories.
-        $entitylist = $mainonly ? $db->get_all_main_categories($refresh, $includehidden, $filter) : $db->get_all_entities($refresh,
-            $filter, $includehidden);
+        $entitylist = $mainonly ? $db->get_all_main_categories($refresh, $includehidden, $filter) : $db->get_all_entities(
+            $refresh,
+            $filter,
+            $includehidden
+        );
 
         $entities = [];
 
@@ -140,18 +152,18 @@ class entity_api {
                 continue;
             }
 
-            if (!$includehidden && $objentity->get_category_option_value($entity->id, 'hidden')){
+            if (!$includehidden && $objentity->get_category_option_value($entity->id, 'hidden')) {
                 continue;
             }
-            
+
             // Check if the entity matches the search text
             if ($searchtext && $objentity->shortname && stripos($objentity->shortname, $searchtext) === false) {
                 continue;
             }
-            
+
             $entities[] = $objentity;
         }
-        
+
         return $entities;
     }
 
@@ -163,7 +175,8 @@ class entity_api {
      * @return bool
      * @throws \dml_exception
      */
-    public static function entity_exists($entityname, $refresh = false) {
+    public static function entity_exists($entityname, $refresh = false)
+    {
         $db = database_interface::get_instance();
         $category = $db->get_course_category_by_name($entityname, $refresh);
         return !empty($category);
@@ -177,7 +190,8 @@ class entity_api {
      * @return bool
      * @throws \dml_exception
      */
-    public static function main_entity_exists($entityname, $refresh = false) {
+    public static function main_entity_exists($entityname, $refresh = false)
+    {
         $db = database_interface::get_instance();
         $category = $db->get_main_entity_by_name($entityname, $refresh);
         return !empty($category);
@@ -191,7 +205,8 @@ class entity_api {
      * @return bool
      * @throws \dml_exception
      */
-    public static function shortname_exists($shortname, $ignorecategoryid = 0) {
+    public static function shortname_exists($shortname, $ignorecategoryid = 0)
+    {
         $db = database_interface::get_instance();
         return $db->entity_shortname_exists($shortname, $ignorecategoryid);
     }
@@ -205,7 +220,8 @@ class entity_api {
      * @return bool
      * @throws \dml_exception
      */
-    public static function sub_entity_exists($entityname, $parentid, $refresh = false) {
+    public static function sub_entity_exists($entityname, $parentid, $refresh = false)
+    {
         $db = database_interface::get_instance();
         $category = $db->get_sub_entity_by_name($entityname, $parentid, $refresh);
         return !empty($category);
@@ -220,7 +236,8 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function create_entity($formdata) {
+    public static function create_entity($formdata)
+    {
         global $CFG;
         require_once($CFG->dirroot . '/local/profile/lib.php');
 
@@ -339,7 +356,8 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function create_sub_entity($formdata) {
+    public static function create_sub_entity($formdata)
+    {
 
         // Key parentid is required in formdata.
         if (!isset($formdata['parentid'])) {
@@ -413,17 +431,18 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function update_entity($entityid, $data, $mform = null) {
+    public static function update_entity($entityid, $data, $mform = null)
+    {
         $entity = self::get_entity($entityid);
         $contactpage = $entity->get_contact_page_course();
-        
-        if(isset($data->canbemainentity) && isset($contactpage)){
+
+        if (isset($data->canbemainentity) && isset($contactpage)) {
             $contactpage->visibleold = $contactpage->visible;
             $contactpage->visible = $data->canbemainentity == '0' ? '0' : '1';
             $db = database_interface::get_instance();
             $db->update_record('course', $contactpage);
         }
-        
+
         // Capture the updated fields for the log data.
         $updatedfields = [];
         foreach (get_object_vars($entity) as $field => $value) {
@@ -444,7 +463,7 @@ class entity_api {
                 'updatedfields' => $updatedfields,
             ],
         ]);
-       
+
         $event->trigger();
 
         self::$entities[$entityid] = $entity;
@@ -466,9 +485,14 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function get_managed_entities_object($user = null, $mainonly = true, $filter = null, $refresh = false,
-        $includehidden = true, $includeothermanage = false) {
-
+    public static function get_managed_entities_object(
+        $user = null,
+        $mainonly = true,
+        $filter = null,
+        $refresh = false,
+        $includehidden = true,
+        $includeothermanage = false
+    ) {
         $db = \local_mentor_core\database_interface::get_instance();
 
         // Use the current user if $user is null.
@@ -477,8 +501,11 @@ class entity_api {
             $user = $USER;
         }
 
-        $entitylist = $mainonly ? $db->get_all_main_categories($refresh, $includehidden) : $db->get_all_entities($refresh,
-            $filter, $includehidden);
+        $entitylist = $mainonly ? $db->get_all_main_categories($refresh, $includehidden) : $db->get_all_entities(
+            $refresh,
+            $filter,
+            $includehidden
+        );
 
         // An admin can manage all the entities.
         if (is_siteadmin($user)) {
@@ -504,11 +531,13 @@ class entity_api {
         foreach ($entitylist as $entity) {
             $context = \context_coursecat::instance($entity->id);
 
-            if (local_mentor_core_has_capabilities(
-                $capabilities,
-                $context,
-                $user
-            )) {
+            if (
+                local_mentor_core_has_capabilities(
+                    $capabilities,
+                    $context,
+                    $user
+                )
+            ) {
                 $managedentities[$entity->id] = $entity;
             }
         }
@@ -534,9 +563,15 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function get_managed_entities($user = null, $mainonly = true, $filter = null, $refresh = false, $includehidden
-    = true, $includeothermanage = false) {
-
+    public static function get_managed_entities(
+        $user = null,
+        $mainonly = true,
+        $filter = null,
+        $refresh = false,
+        $includehidden
+        = true,
+        $includeothermanage = false
+    ) {
         $entities = self::get_managed_entities_object($user, $mainonly, $filter, $refresh, $includehidden, $includeothermanage);
 
         $managedentities = [];
@@ -562,8 +597,15 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function count_managed_entities($user = null, $mainonly = true, $filter = null, $refresh = false, $includehidden
-    = true, $includeothermanage = false) {
+    public static function count_managed_entities(
+        $user = null,
+        $mainonly = true,
+        $filter = null,
+        $refresh = false,
+        $includehidden
+        = true,
+        $includeothermanage = false
+    ) {
         return count(self::get_managed_entities_object($user, $mainonly, $filter, $refresh, $includehidden, $includeothermanage));
     }
 
@@ -577,8 +619,8 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function get_entities_where_trainings_managed($user = null, $mainonly = true) {
-
+    public static function get_entities_where_trainings_managed($user = null, $mainonly = true)
+    {
         // Use the current user if $user is null.
         if (empty($user)) {
             global $USER;
@@ -614,8 +656,8 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function get_entities_where_sessions_managed($user = null, $mainonly = true) {
-
+    public static function get_entities_where_sessions_managed($user = null, $mainonly = true)
+    {
         // Use the current user if $user is null.
         if (empty($user)) {
             global $USER;
@@ -650,8 +692,12 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function get_entities_list($mainonly = true, $refresh = false, $includehidden = true,
-        $includecannotbemainentity = true) {
+    public static function get_entities_list(
+        $mainonly = true,
+        $refresh = false,
+        $includehidden = true,
+        $includecannotbemainentity = true
+    ) {
 
         // Order by entity name.
         $filter = new \stdClass();
@@ -661,11 +707,11 @@ class entity_api {
         $entitieslist = self::get_all_entities($mainonly, [], $refresh, $filter, $includehidden, $includecannotbemainentity);
 
         // Get all name of entities.
-        $entitiesnames = array_map(function($entity) {
+        $entitiesnames = array_map(function ($entity) {
             return $entity->name;
         }, $entitieslist);
 
-        usort($entitiesnames, function($a, $b) {
+        usort($entitiesnames, function ($a, $b) {
             return strcmp(local_mentor_core_sanitize_string($a), local_mentor_core_sanitize_string($b));
         });
 
@@ -680,7 +726,8 @@ class entity_api {
      * @return \moodleform
      * @throws \moodle_exception
      */
-    public static function get_entity_form($url, $entityid) {
+    public static function get_entity_form($url, $entityid)
+    {
         global $CFG;
         require_once($CFG->dirroot . '/local/mentor_core/forms/entity_form.php');
 
@@ -698,8 +745,6 @@ class entity_api {
         return $specialization->get_specialization('get_entity_form', $form, $url);
     }
 
-
-
     /**
      * Get sub entity form
      *
@@ -708,7 +753,8 @@ class entity_api {
      * @return \moodleform
      * @throws \moodle_exception
      */
-    public static function get_sub_entity_form($url, $entityid) {
+    public static function get_sub_entity_form($url, $entityid)
+    {
         global $CFG;
         require_once($CFG->dirroot . '/local/mentor_core/forms/sub_entity_form.php');
 
@@ -727,7 +773,8 @@ class entity_api {
      *
      * @return string html
      */
-    public static function get_new_entity_form() {
+    public static function get_new_entity_form()
+    {
         global $PAGE;
         $specialization = specialization::get_instance();
 
@@ -746,7 +793,8 @@ class entity_api {
      *
      * @return string html
      */
-    public static function get_new_sub_entity_form() {
+    public static function get_new_sub_entity_form()
+    {
         global $PAGE;
         $specialization = specialization::get_instance();
 
@@ -765,7 +813,8 @@ class entity_api {
      *
      * @return string html
      */
-    public static function get_delete_subentity_form() {
+    public static function get_delete_subentity_form()
+    {
         global $PAGE;
         $specialization = specialization::get_instance();
 
@@ -780,25 +829,27 @@ class entity_api {
      * Get delete subentity form
      *
      */
-    public static function get_deletable_subentities($entityid, $searchtext = ''){
+    public static function get_deletable_subentities($entityid, $searchtext = '')
+    {
         global $USER;
-        
+
         $db = database_interface::get_instance();
-        return array_values($db->search_deletable_subentities($USER->id, $entityid, $searchtext,is_siteadmin()));
+        return array_values($db->search_deletable_subentities($USER->id, $entityid, $searchtext, is_siteadmin()));
     }
 
     /**
      * Delete subentity
      */
-    public static function delete_subentity($subentityid){
+    public static function delete_subentity($subentityid)
+    {
         global $DB;
         $category = core_course_category::get($subentityid);
-        try{
+        try {
             $deletedcourses = $category->delete_full(false);
-            if(is_array($deletedcourses)){
+            if (is_array($deletedcourses)) {
                 return get_string('deletesubentitysuccessmessage', 'local_entities');
             }
-        }catch(\moodle_exception $e){
+        } catch (\moodle_exception $e) {
             return $e->getMessage();
         }
     }
@@ -808,7 +859,8 @@ class entity_api {
      *
      * @return string html
      */
-    public static function get_default_entity_form() {
+    public static function get_default_entity_form()
+    {
         global $PAGE;
         $specialization = specialization::get_instance();
 
@@ -830,7 +882,8 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function get_user_entities($userid) {
+    public static function get_user_entities($userid)
+    {
         $db = database_interface::get_instance();
 
         $dbentities = $db->get_user_entities($userid);
@@ -853,7 +906,8 @@ class entity_api {
      * @return array
      * @throws \dml_exception
      */
-    public static function search_main_entities($searchtext, $includehidden = true) {
+    public static function search_main_entities($searchtext, $includehidden = true)
+    {
         global $USER;
 
         $db = database_interface::get_instance();
@@ -872,14 +926,14 @@ class entity_api {
         ));
     }
 
-    
     /**
      * Get the specilization of the entity javascript
      *
      * @param string $defaultjs
      * @return mixed
      */
-    public static function get_entity_javascript($defaultjs) {
+    public static function get_entity_javascript($defaultjs)
+    {
         $specialization = specialization::get_instance();
         return $specialization->get_specialization('get_entity_javascript', $defaultjs);
     }
@@ -892,7 +946,8 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function has_sub_entities($entityid) {
+    public static function has_sub_entities($entityid)
+    {
         $entity = self::get_entity($entityid);
         return $entity->has_sub_entities();
     }
@@ -906,7 +961,8 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function cleanup_training_recyblebin($entityid, $urlredirect = null) {
+    public static function cleanup_training_recyblebin($entityid, $urlredirect = null)
+    {
         // Get entity.
         $entity = self::get_entity($entityid);
 
@@ -945,7 +1001,8 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function cleanup_session_recyblebin($entityid, $urlredirect = null) {
+    public static function cleanup_session_recyblebin($entityid, $urlredirect = null)
+    {
         // Get entity.
         $entity = self::get_entity($entityid);
 
@@ -986,8 +1043,8 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function get_entities_can_import_training_library_object($user = null, $refresh = false, $includehidden = true) {
-
+    public static function get_entities_can_import_training_library_object($user = null, $refresh = false, $includehidden = true)
+    {
         $db = \local_mentor_core\database_interface::get_instance();
 
         // Use the current user if $user is null.
@@ -1027,7 +1084,8 @@ class entity_api {
      *
      * @return string
      */
-    public static function get_edadmin_course_view_capability() {
+    public static function get_edadmin_course_view_capability()
+    {
         return 'local/entities:manageentity';
     }
 
@@ -1038,7 +1096,8 @@ class entity_api {
      * @param string $capability
      * @return array
      */
-    public static function get_categories_with_capability($userid, $capability) {
+    public static function get_categories_with_capability($userid, $capability)
+    {
         $db = \local_mentor_core\database_interface::get_instance();
         return $db->get_categories_with_capability($userid, $capability);
     }
@@ -1051,12 +1110,13 @@ class entity_api {
      * @throws \dml_exception
      * @throws moodle_exception
      */
-    public static function hide_presentation($params) {
+    public static function hide_presentation($params)
+    {
         global $DB;
-        
-        $isVisible = (int)$params['isVisible'];
+
+        $isVisible = (int) $params['isVisible'];
         $courseId = $params['courseId'];
-        
+
         $oldVisible = $DB->get_field('course', 'visible', ['id' => $courseId]);
         $success = $DB->set_field('course', 'visibleold', $oldVisible, ['id' => $courseId]);
         $success &= $DB->set_field('course', 'visible', $isVisible, ['id' => $courseId]);
@@ -1067,8 +1127,6 @@ class entity_api {
         }
     }
 
-
-
     /**
      * Get the main entity by shortname
      *
@@ -1077,10 +1135,22 @@ class entity_api {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public static function get_main_entity_by_shortname($shortname) {
+    public static function get_main_entity_by_shortname($shortname)
+    {
         $db = database_interface::get_instance();
         return $db->get_main_entity_by_shortname($shortname);
     }
 
+    /**
+     * Count how many active domains are linked to a category and return a boolean value.
+     * @param array $params ["courseid"]
+     * @return bool
+     */
+    public static function check_entity_no_more_domain_link(array $params): bool
+    {
+        $categoriesdomainsrepository = new categories_domains_repository();
+        $activedomains = $categoriesdomainsrepository->get_active_domains_by_course_id($params["courseid"]);
 
+        return $activedomains === 0;
+    }
 }

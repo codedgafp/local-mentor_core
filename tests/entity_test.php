@@ -1,4 +1,6 @@
 <?php
+
+use local_mentor_core\entity_api;
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -28,6 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 use local_mentor_core\helper\testhelper;
+use local_categories_domains\repository\categories_domains_repository;
 
 require_once($CFG->dirroot . '/local/mentor_core/api/entity.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/training.php');
@@ -195,9 +198,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         try {
             // Get entity object for default category.
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
 
-            $entity = \local_mentor_core\entity_api::get_entity($entityid);
+            $entity = entity_api::get_entity($entityid);
         } catch (\Exception $e) {
             self::fail($e->getMessage());
         }
@@ -214,9 +217,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test of the creation of an entity
      *
-     * @covers \local_mentor_core\entity_api::create_entity
-     * @covers \local_mentor_core\entity_api::entity_exists
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::create_entity
+     * @covers entity_api::entity_exists
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\entity::assign_manager
      * @covers \local_mentor_core\entity::update
      * @covers \local_mentor_core\entity::create_edadmin_courses_if_missing
@@ -237,7 +240,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -246,7 +249,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         // Test if we have received an identifier.
         self::assertIsInt($entityid);
 
-        $entity = \local_mentor_core\entity_api::get_entity($entityid);
+        $entity = entity_api::get_entity($entityid);
         self::assertEquals('shortnameentity', $entity->shortname);
 
         $entitydata = $this->get_entities_data()[1];
@@ -254,7 +257,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            \local_mentor_core\entity_api::create_entity($entitydata);
+            entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::assertInstanceOf('moodle_exception', $e);
@@ -266,10 +269,10 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test of the creation of a sub entity
      *
-     * @covers \local_mentor_core\entity_api::create_entity
-     * @covers \local_mentor_core\entity_api::create_sub_entity
-     * @covers \local_mentor_core\entity_api::entity_exists
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::create_entity
+     * @covers entity_api::create_sub_entity
+     * @covers entity_api::entity_exists
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\entity::assign_manager
      * @covers \local_mentor_core\entity::update
      * @covers \local_mentor_core\entity::create_edadmin_courses_if_missing
@@ -291,7 +294,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -307,7 +310,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub entity creation.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_entity($subentitydata);
+            $subentityid = entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             self::assertInstanceOf('moodle_exception', $e);
         }
@@ -316,13 +319,13 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         self::assertIsInt($subentityid);
 
         // Check name and parent of sub entity.
-        $subentity = \local_mentor_core\entity_api::get_entity($subentityid);
+        $subentity = entity_api::get_entity($subentityid);
         self::assertEquals($subentity->get_name(), $subentitydata['name']);
         self::assertEquals($subentity->get_main_entity()->id, $entityid);
 
         // Try to create the same sub entity.
         try {
-            \local_mentor_core\entity_api::create_entity($subentitydata);
+            entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if entity not exist.
             self::assertInstanceOf('moodle_exception', $e);
@@ -334,10 +337,10 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test of the creation of a sub entity with name used
      *
-     * @covers \local_mentor_core\entity_api::create_entity
-     * @covers \local_mentor_core\entity_api::create_sub_entity
-     * @covers \local_mentor_core\entity_api::entity_exists
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::create_entity
+     * @covers entity_api::create_sub_entity
+     * @covers entity_api::entity_exists
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\entity::assign_manager
      * @covers \local_mentor_core\entity::update
      * @covers \local_mentor_core\entity::create_edadmin_courses_if_missing
@@ -358,7 +361,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -375,7 +378,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test with an empty parent id.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_sub_entity($subentitydata);
+            $subentityid = entity_api::create_sub_entity($subentitydata);
             self::fail();
         } catch (\Exception $e) {
             // Failed because parentid is empty.
@@ -387,7 +390,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test with an empty parent id.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_sub_entity($subentitydata);
+            $subentityid = entity_api::create_sub_entity($subentitydata);
             self::fail();
         } catch (\Exception $e) {
             // Failed because parentid is unset.
@@ -399,7 +402,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub entity creation.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_entity($subentitydata);
+            $subentityid = entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -409,13 +412,13 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         self::assertIsInt($subentityid);
 
         // Check name and parent of sub entity.
-        $subentity = \local_mentor_core\entity_api::get_entity($subentityid);
+        $subentity = entity_api::get_entity($subentityid);
         self::assertEquals($subentity->get_name(), $subentitydata['name']);
         self::assertEquals($subentity->get_main_entity()->id, $entityid);
 
         // Try to create the same sub entity.
         try {
-            \local_mentor_core\entity_api::create_entity($subentitydata);
+            entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed because name of this entity is already in use.
             self::assertInstanceOf('moodle_exception', $e);
@@ -427,9 +430,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test the entity update
      *
-     * @covers \local_mentor_core\entity_api::update_entity
-     * @covers \local_mentor_core\entity_api::create_entity
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::update_entity
+     * @covers entity_api::create_entity
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\entity::update
      * @covers \local_mentor_core\entity::get_context
      * @covers \local_mentor_core\entity::get_name
@@ -452,19 +455,19 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
         }
 
-        $entity = \local_mentor_core\entity_api::get_entity($entityid);
+        $entity = entity_api::get_entity($entityid);
 
         $newdata = new stdClass();
         $newdata->name = 'Name updated';
 
         try {
-            $result = \local_mentor_core\entity_api::update_entity($entity->id, $newdata);
+            $result = entity_api::update_entity($entity->id, $newdata);
         } catch (\Exception $e) {
             self::fail($e->getMessage());
         }
@@ -478,9 +481,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test the sub entity update
      *
-     * @covers \local_mentor_core\entity_api::update_entity
-     * @covers \local_mentor_core\entity_api::create_entity
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::update_entity
+     * @covers entity_api::create_entity
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\entity::update
      * @covers \local_mentor_core\entity::get_context
      * @covers \local_mentor_core\entity::get_name
@@ -503,7 +506,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -514,7 +517,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub Entity creation.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_entity($subentitydata);
+            $subentityid = entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -526,12 +529,12 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $newdata->parentid = $entityid;
 
         try {
-            $result = \local_mentor_core\entity_api::update_entity($subentityid, $newdata);
+            $result = entity_api::update_entity($subentityid, $newdata);
         } catch (\Exception $e) {
             self::fail($e->getMessage());
         }
 
-        $subentity = \local_mentor_core\entity_api::get_entity($subentityid);
+        $subentity = entity_api::get_entity($subentityid);
 
         // Check if the update is ok.
         self::assertTrue($result);
@@ -544,8 +547,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get entity
      *
-     * @covers \local_mentor_core\entity_api::get_entity
-     * @covers \local_mentor_core\entity_api::create_entity
+     * @covers entity_api::get_entity
+     * @covers entity_api::create_entity
      * @covers \local_mentor_core\specialization::__construct
      * @covers \local_mentor_core\specialization::get_instance
      * @covers \local_mentor_core\specialization::get_specialization
@@ -562,7 +565,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -570,7 +573,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test get entity.
         try {
-            $entity = \local_mentor_core\entity_api::get_entity($entityid);
+            $entity = entity_api::get_entity($entityid);
         } catch (\Exception $e) {
             // Failed if entity not exist.
             self::assertInstanceOf('moodle_exception', $e);
@@ -584,8 +587,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get sub entity
      *
-     * @covers \local_mentor_core\entity_api::get_entity
-     * @covers \local_mentor_core\entity_api::create_entity
+     * @covers entity_api::get_entity
+     * @covers entity_api::create_entity
      * @covers \local_mentor_core\specialization::__construct
      * @covers \local_mentor_core\specialization::get_instance
      * @covers \local_mentor_core\specialization::get_specialization
@@ -602,7 +605,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -613,7 +616,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub Entity creation.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_entity($subentitydata);
+            $subentityid = entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -621,7 +624,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test get sub entity.
         try {
-            $subentity = \local_mentor_core\entity_api::get_entity($subentityid);
+            $subentity = entity_api::get_entity($subentityid);
         } catch (\Exception $e) {
             // Failed if entity not exist.
             self::assertInstanceOf('moodle_exception', $e);
@@ -635,9 +638,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get entity by name
      *
-     * @covers \local_mentor_core\entity_api::get_entity_by_name
-     * @covers \local_mentor_core\entity_api::get_entity
-     * @covers \local_mentor_core\entity_api::create_entity
+     * @covers entity_api::get_entity_by_name
+     * @covers entity_api::get_entity
+     * @covers entity_api::create_entity
      */
     public function test_get_entity_by_name_ok() {
         $this->resetAfterTest(true);
@@ -650,7 +653,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -658,7 +661,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test check entity.
         try {
-            $entity = \local_mentor_core\entity_api::get_entity_by_name($entitydata['name']);
+            $entity = entity_api::get_entity_by_name($entitydata['name']);
         } catch (\Exception $e) {
             // Failed if entity does not exist.
             self::assertInstanceOf('moodle_exception', $e);
@@ -669,7 +672,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test check only main entity.
         try {
-            $entity = \local_mentor_core\entity_api::get_entity_by_name($entitydata['name'], true);
+            $entity = entity_api::get_entity_by_name($entitydata['name'], true);
         } catch (\Exception $e) {
             // Failed if entity does not exist.
             self::assertInstanceOf('moodle_exception', $e);
@@ -684,9 +687,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get sub entity by name
      *
-     * @covers \local_mentor_core\entity_api::get_entity_by_name
-     * @covers \local_mentor_core\entity_api::get_entity
-     * @covers \local_mentor_core\entity_api::create_entity
+     * @covers entity_api::get_entity_by_name
+     * @covers entity_api::get_entity
+     * @covers entity_api::create_entity
      */
     public function test_get_sub_entity_by_name_ok() {
         $this->resetAfterTest(true);
@@ -699,7 +702,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -710,7 +713,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub Entity creation.
         try {
-            \local_mentor_core\entity_api::create_entity($subentitydata);
+            entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -718,7 +721,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test get sub entity with name.
         try {
-            $subentity = \local_mentor_core\entity_api::get_entity_by_name($subentitydata['name']);
+            $subentity = entity_api::get_entity_by_name($subentitydata['name']);
         } catch (\Exception $e) {
             // Failed if entity not exist.
             self::assertInstanceOf('moodle_exception', $e);
@@ -733,9 +736,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get all entities function
      *
-     * @covers  \local_mentor_core\entity_api::get_all_entities
-     * @covers  \local_mentor_core\entity_api::create_entity
-     * @covers  \local_mentor_core\entity_api::get_entity
+     * @covers  entity_api::get_all_entities
+     * @covers  entity_api::create_entity
+     * @covers  entity_api::get_entity
      */
     public function test_get_all_entities_ok() {
         global $DB;
@@ -754,7 +757,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         foreach ($entitiesdata as $entitydata) {
             // Test standard Entity creation.
             try {
-                $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+                $entityid = entity_api::create_entity($entitydata);
             } catch (\Exception $e) {
                 // Failed if the name of this entity is already in use.
                 self::fail($e->getMessage());
@@ -763,7 +766,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Get all entities.
         try {
-            $allentities = \local_mentor_core\entity_api::get_all_entities(true, [], true);
+            $allentities = entity_api::get_all_entities(true, [], true);
         } catch (\Exception $e) {
             // Moodle exception.
             self::fail($e->getMessage());
@@ -774,7 +777,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Get all entities with last entity exclude.
         try {
-            $allentitieswithexlude = \local_mentor_core\entity_api::get_all_entities(true, [$entityid], true);
+            $allentitieswithexlude = entity_api::get_all_entities(true, [$entityid], true);
         } catch (\Exception $e) {
             // Moodle exception.
             self::fail($e->getMessage());
@@ -793,7 +796,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
      * @throws dml_exception
      * @throws moodle_exception
      *
-     * @covers  \local_mentor_core\entity_api::get_all_entities
+     * @covers  entity_api::get_all_entities
      */
     public function test_get_all_entities_ok_with_search() {
         global $USER;
@@ -804,12 +807,12 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         self::setAdminUser();
 
-        $entityid = \local_mentor_core\entity_api::create_entity([
+        $entityid = entity_api::create_entity([
                 'name' => 'New Entity 1',
                 'shortname' => 'New Entity 1',
         ]);
 
-        $entityid2 = \local_mentor_core\entity_api::create_entity([
+        $entityid2 = entity_api::create_entity([
                 'name' => 'Sub Entity 2',
                 'shortname' => 'Sub Entity 2',
                 'parentid' => $entityid,
@@ -821,7 +824,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $filter->start = 0;
         $filter->length = 100;
 
-        $allentities = \local_mentor_core\entity_api::get_all_entities(false, [], true, $filter);
+        $allentities = entity_api::get_all_entities(false, [], true, $filter);
         self::assertCount(2, $allentities);
         self::assertEquals($allentities[0]->id, $entityid);
         self::assertEquals($allentities[1]->id, $entityid2);
@@ -832,7 +835,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $filter->start = 0;
         $filter->length = 100;
 
-        $allentities = \local_mentor_core\entity_api::get_all_entities(false, [], true, $filter);
+        $allentities = entity_api::get_all_entities(false, [], true, $filter);
         self::assertCount(2, $allentities);
         self::assertEquals($allentities[0]->id, $entityid);
         self::assertEquals($allentities[1]->id, $entityid2);
@@ -843,7 +846,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $filter->start = 0;
         $filter->length = 100;
 
-        $allentities = \local_mentor_core\entity_api::get_all_entities(false, [], true, $filter);
+        $allentities = entity_api::get_all_entities(false, [], true, $filter);
         self::assertCount(1, $allentities);
         self::assertEquals($allentities[0]->id, $entityid2);
 
@@ -857,7 +860,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
      * @throws dml_exception
      * @throws moodle_exception
      *
-     * @covers  \local_mentor_core\entity_api::count_managed_entities
+     * @covers  entity_api::count_managed_entities
      */
     public function test_get_all_entities_ok_with_order() {
         global $DB;
@@ -870,18 +873,18 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         $DB->delete_records('course_categories');
 
-        $entityid = \local_mentor_core\entity_api::create_entity([
+        $entityid = entity_api::create_entity([
                 'name' => 'New Entity A',
                 'shortname' => 'New Entity A',
         ]);
 
-        $entityid2 = \local_mentor_core\entity_api::create_entity([
+        $entityid2 = entity_api::create_entity([
                 'name' => 'Sub Entity A',
                 'shortname' => 'Sub Entity A',
                 'parentid' => $entityid,
         ]);
 
-        $entityid3 = \local_mentor_core\entity_api::create_entity([
+        $entityid3 = entity_api::create_entity([
                 'name' => 'New Entity B',
                 'shortname' => 'New Entity B',
         ]);
@@ -892,7 +895,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $filter->start = 0;
         $filter->length = 100;
 
-        $allentities = \local_mentor_core\entity_api::get_all_entities(false, [], true, $filter);
+        $allentities = entity_api::get_all_entities(false, [], true, $filter);
         self::assertCount(3, $allentities);
         self::assertEquals($allentities[0]->id, $entityid);
         self::assertEquals($allentities[1]->id, $entityid2);
@@ -904,7 +907,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $filter->start = 0;
         $filter->length = 100;
 
-        $allentities = \local_mentor_core\entity_api::get_all_entities(false, [], true, $filter);
+        $allentities = entity_api::get_all_entities(false, [], true, $filter);
         self::assertCount(3, $allentities);
         self::assertEquals($allentities[0]->id, $entityid3);
         self::assertEquals($allentities[1]->id, $entityid2);
@@ -916,9 +919,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get all entities function with sub entity
      *
-     * @covers  \local_mentor_core\entity_api::get_all_entities
-     * @covers  \local_mentor_core\entity_api::create_entity
-     * @covers  \local_mentor_core\entity_api::get_entity
+     * @covers  entity_api::get_all_entities
+     * @covers  entity_api::create_entity
+     * @covers  entity_api::get_entity
      */
     public function test_get_all_entities_with_sub_entity_ok() {
         global $DB;
@@ -935,7 +938,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -946,7 +949,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub Entity creation.
         try {
-            \local_mentor_core\entity_api::create_entity($subentitydata);
+            entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -954,7 +957,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Get all entities.
         try {
-            $allentities = \local_mentor_core\entity_api::get_all_entities(false, [], true);
+            $allentities = entity_api::get_all_entities(false, [], true);
         } catch (\Exception $e) {
             // Moodle exception.
             self::fail($e->getMessage());
@@ -965,7 +968,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Get all entities with last entity exclude.
         try {
-            $allentitieswithexlude = \local_mentor_core\entity_api::get_all_entities(false, [$entityid], true);
+            $allentitieswithexlude = entity_api::get_all_entities(false, [$entityid], true);
         } catch (\Exception $e) {
             // Moodle exception.
             self::fail($e->getMessage());
@@ -980,8 +983,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test if entity exist
      *
-     * @covers  \local_mentor_core\entity_api::entity_exists
-     * @covers  \local_mentor_core\entity_api::create_entity
+     * @covers  entity_api::entity_exists
+     * @covers  entity_api::create_entity
      */
     public function test_entity_exists_ok() {
         $this->resetAfterTest(true);
@@ -994,7 +997,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -1002,7 +1005,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Check if entity exist after its creation.
         try {
-            self::assertTrue(\local_mentor_core\entity_api::entity_exists($entitydata['name']));
+            self::assertTrue(entity_api::entity_exists($entitydata['name']));
         } catch (\moodle_exception $e) {
             self::fail($e->getMessage());
         }
@@ -1013,8 +1016,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test if sub entity exist
      *
-     * @covers  \local_mentor_core\entity_api::entity_exists
-     * @covers  \local_mentor_core\entity_api::create_entity
+     * @covers  entity_api::entity_exists
+     * @covers  entity_api::create_entity
      * @covers  \local_mentor_core\database_interface::get_sub_entity_by_name
      */
     public function test_sub_entity_exists_ok() {
@@ -1030,7 +1033,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -1041,7 +1044,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub Entity creation.
         try {
-            \local_mentor_core\entity_api::create_entity($subentitydata);
+            entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -1049,7 +1052,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Check if sub entity exist after its creation.
         try {
-            self::assertTrue(\local_mentor_core\entity_api::entity_exists($subentitydata['name']));
+            self::assertTrue(entity_api::entity_exists($subentitydata['name']));
         } catch (\moodle_exception $e) {
             self::fail($e->getMessage());
         }
@@ -1064,11 +1067,11 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
      * @throws dml_exception
      * @throws moodle_exception
      *
-     * @covers  \local_mentor_core\entity_api::get_managed_entities
-     * @covers  \local_mentor_core\entity_api::get_managed_entities_object
-     * @covers  \local_mentor_core\entity_api::get_all_entities
-     * @covers  \local_mentor_core\entity_api::create_entity
-     * @covers  \local_mentor_core\entity_api::get_entity
+     * @covers  entity_api::get_managed_entities
+     * @covers  entity_api::get_managed_entities_object
+     * @covers  entity_api::get_all_entities
+     * @covers  entity_api::create_entity
+     * @covers  entity_api::get_entity
      * @covers  \local_mentor_core\entity::is_manager
      * @covers  \local_mentor_core\entity::get_members
      * @covers  \local_mentor_core\entity::get_cohort
@@ -1093,7 +1096,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -1104,7 +1107,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub Entity creation.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_entity($subentitydata);
+            $subentityid = entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -1112,20 +1115,20 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         self::setUser($newuser);
 
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities();
+        $managedentities = entity_api::get_managed_entities();
 
         // The user must not manage any entity at this point.
         self::assertCount(0, $managedentities);
 
         try {
-            $entity = \local_mentor_core\entity_api::get_entity($entityid);
+            $entity = entity_api::get_entity($entityid);
         } catch (\Exception $e) {
             // Fail if entity not exist.
             self::fail($e->getMessage());
         }
 
         try {
-            $subentity = \local_mentor_core\entity_api::get_entity($subentityid);
+            $subentity = entity_api::get_entity($subentityid);
         } catch (\Exception $e) {
             // Fail if entity not exist.
             self::fail($e->getMessage());
@@ -1146,14 +1149,14 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         // One members exist.
         self::assertCount(0, $subentity->get_members());
 
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities();
+        $managedentities = entity_api::get_managed_entities();
 
         // Check if the user can manage the entity.
         self::assertCount(1, $managedentities);
 
         self::setAdminUser();
 
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities($USER, false);
+        $managedentities = entity_api::get_managed_entities($USER, false);
 
         // Check if the user can manage the entity. 
         // Two created just before, +1 created at the begining to insert a default entity (create_default_entity).
@@ -1169,11 +1172,11 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
      * @throws dml_exception
      * @throws moodle_exception
      *
-     * @covers  \local_mentor_core\entity_api::get_managed_entities
-     * @covers  \local_mentor_core\entity_api::get_managed_entities_object
-     * @covers  \local_mentor_core\entity_api::get_all_entities
-     * @covers  \local_mentor_core\entity_api::create_entity
-     * @covers  \local_mentor_core\entity_api::get_entity
+     * @covers  entity_api::get_managed_entities
+     * @covers  entity_api::get_managed_entities_object
+     * @covers  entity_api::get_all_entities
+     * @covers  entity_api::create_entity
+     * @covers  entity_api::get_entity
      * @covers  \local_mentor_core\entity::is_manager
      * @covers  \local_mentor_core\entity::get_members
      * @covers  \local_mentor_core\entity::get_cohort
@@ -1195,7 +1198,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         $newuser = self::getDataGenerator()->create_user();
 
-        $entity1id = \local_mentor_core\entity_api::create_entity(
+        $entity1id = entity_api::create_entity(
             [
                 'name' => 'entity1',
                 'shortname' => 'entity1',
@@ -1203,22 +1206,22 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
             ]
         );
 
-        $entity2id = \local_mentor_core\entity_api::create_entity(
+        $entity2id = entity_api::create_entity(
             [
                 'name' => 'entity2',
                 'shortname' => 'entity2',
             ]
         );
 
-        $entity2 = \local_mentor_core\entity_api::get_entity($entity2id);
+        $entity2 = entity_api::get_entity($entity2id);
         self::getDataGenerator()->role_assign('referentlocal', $newuser->id, $entity2->get_context()->id);
 
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities($newuser);
+        $managedentities = entity_api::get_managed_entities($newuser);
 
         // Check if the user can manage the entity.
         self::assertCount(1, $managedentities);
 
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities($newuser, true, null, false, true, true);
+        $managedentities = entity_api::get_managed_entities($newuser, true, null, false, true, true);
 
         // Check if the user can manage the entity or session/training to the entity.
         self::assertCount(2, $managedentities);
@@ -1234,8 +1237,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
      * @throws dml_exception
      * @throws moodle_exception
      *
-     * @covers  \local_mentor_core\entity_api::get_managed_entities
-     * @covers  \local_mentor_core\entity_api::get_managed_entities_object
+     * @covers  entity_api::get_managed_entities
+     * @covers  entity_api::get_managed_entities_object
      * @covers  \local_mentor_core\database_interface::get_all_entities
      */
     public function test_get_managed_entities_ok_with_filter() {
@@ -1251,7 +1254,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $DB->delete_records('course_categories');
 
         $firstentityid = testhelper::create_default_entity($this, 'entity0');
-        \local_mentor_core\entity_api::create_entity(
+        entity_api::create_entity(
             [
                     'name' => 'subentity0',
                     'shortname' => 'subentity0',
@@ -1264,14 +1267,14 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         for ($i = 1; $i < 10; $i++) {
             $entityname = 'entity' . $i;
 
-            $entityid = \local_mentor_core\entity_api::create_entity(
+            $entityid = entity_api::create_entity(
                     [
                             'name' => $entityname,
                             'shortname' => $entityname,
                     ]
             );
 
-            \local_mentor_core\entity_api::create_entity(
+            entity_api::create_entity(
                     [
                             'name' => 'sub' . $entityname,
                             'shortname' => 'sub' . $entityname,
@@ -1290,33 +1293,33 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $data->start = 0;
 
         // With admin.
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities(null, false, $data, true);
+        $managedentities = entity_api::get_managed_entities(null, false, $data, true);
         self::assertCount(10, $managedentities);
         self::assertEquals('entity0', current($managedentities)->name);
 
         $data->length = 5;
         $data->start = 5;
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities(null, false, $data, true);
+        $managedentities = entity_api::get_managed_entities(null, false, $data, true);
         self::assertCount(5, $managedentities);
         self::assertEquals('subentity2', current($managedentities)->name);
 
         $data->length = 10;
         $data->start = 0;
         $data->order['dir'] = 'DESC';
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities(null, false, $data, true);
+        $managedentities = entity_api::get_managed_entities(null, false, $data, true);
         self::assertCount(10, $managedentities);
         self::assertEquals('subentity9', current($managedentities)->name);
 
         $data->order['dir'] = 'ASC';
         $data->search = ['value' => 'entity3'];
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities(null, false, $data, true);
+        $managedentities = entity_api::get_managed_entities(null, false, $data, true);
         self::assertCount(2, $managedentities);
         self::assertEquals('entity3', current($managedentities)->name);
 
         for ($i = 10; $i < 20; $i++) {
             $entityname = 'entity' . $i;
 
-            $entityid = \local_mentor_core\entity_api::create_entity(
+            $entityid = entity_api::create_entity(
                     [
                             'name' => $entityname,
                             'shortname' => $entityname,
@@ -1324,7 +1327,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
                     ]
             );
 
-            \local_mentor_core\entity_api::create_entity(
+            entity_api::create_entity(
                     [
                             'name' => 'sub' . $entityname,
                             'shortname' => 'sub' . $entityname,
@@ -1343,26 +1346,26 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $data->length = 10;
         $data->start = 0;
 
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities($newuser, false, $data, true);
+        $managedentities = entity_api::get_managed_entities($newuser, false, $data, true);
         self::assertCount(10, $managedentities);
         self::assertEquals('entity10', current($managedentities)->name);
 
         $data->length = 5;
         $data->start = 5;
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities($newuser, false, $data, true);
+        $managedentities = entity_api::get_managed_entities($newuser, false, $data, true);
         self::assertCount(5, $managedentities);
         self::assertEquals('subentity12', current($managedentities)->name);
 
         $data->length = 10;
         $data->start = 0;
         $data->order['dir'] = 'DESC';
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities($newuser, false, $data, true);
+        $managedentities = entity_api::get_managed_entities($newuser, false, $data, true);
         self::assertCount(10, $managedentities);
         self::assertEquals('subentity19', current($managedentities)->name);
 
         $data->order['dir'] = 'ASC';
         $data->search = ['value' => 'entity13'];
-        $managedentities = \local_mentor_core\entity_api::get_managed_entities($newuser, false, $data, true);
+        $managedentities = entity_api::get_managed_entities($newuser, false, $data, true);
         self::assertCount(2, $managedentities);
         self::assertEquals('entity13', current($managedentities)->name);
 
@@ -1372,10 +1375,10 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get entities list
      *
-     * @covers  \local_mentor_core\entity_api::get_entities_list
-     * @covers  \local_mentor_core\entity_api::get_all_entities
-     * @covers  \local_mentor_core\entity_api::get_entity
-     * @covers  \local_mentor_core\entity_api::create_entity
+     * @covers  entity_api::get_entities_list
+     * @covers  entity_api::get_all_entities
+     * @covers  entity_api::get_entity
+     * @covers  entity_api::create_entity
      */
     public function test_get_entities_list_ok() {
         global $DB;
@@ -1396,7 +1399,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         foreach ($entitiesdata as $entitydata) {
             // Test standard Entity creation.
             try {
-                $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+                $entityid = entity_api::create_entity($entitydata);
                 $list[] = $entitydata['name'];
             } catch (\Exception $e) {
                 // Failed if the name of this entity is already in use.
@@ -1407,7 +1410,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         try {
             self::assertEquals(
                     implode("\n", $list),
-                    \local_mentor_core\entity_api::get_entities_list(true, true)
+                    entity_api::get_entities_list(true, true)
             );
         } catch (\Exception $e) {
             self::fail($e->getMessage());
@@ -1419,10 +1422,10 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get entities list with sub entity
      *
-     * @covers  \local_mentor_core\entity_api::get_entities_list
-     * @covers  \local_mentor_core\entity_api::get_all_entities
-     * @covers  \local_mentor_core\entity_api::get_entity
-     * @covers  \local_mentor_core\entity_api::create_entity
+     * @covers  entity_api::get_entities_list
+     * @covers  entity_api::get_all_entities
+     * @covers  entity_api::get_entity
+     * @covers  entity_api::create_entity
      */
     public function test_get_entities_list_with_sub_entity_ok() {
         global $DB;
@@ -1442,7 +1445,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
             $list[] = $entitydata['name'];
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
@@ -1454,7 +1457,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub Entity creation.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_entity($subentitydata);
+            $subentityid = entity_api::create_entity($subentitydata);
             $list[] = $subentitydata['name'];
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
@@ -1464,7 +1467,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         try {
             self::assertEquals(
                     implode("\n", $list),
-                    \local_mentor_core\entity_api::get_entities_list(false, true)
+                    entity_api::get_entities_list(false, true)
             );
         } catch (\Exception $e) {
             self::fail($e->getMessage());
@@ -1476,7 +1479,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test of the no creation of an entity
      *
-     * @covers  \local_mentor_core\entity_api::create_entity
+     * @covers  entity_api::create_entity
      */
     public function test_create_entity_nok() {
         $this->resetAfterTest();
@@ -1489,7 +1492,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test with missing entity shortname.
         try {
-            $entity = \local_mentor_core\entity_api::create_entity(['name' => 'missingshortname']);
+            $entity = entity_api::create_entity(['name' => 'missingshortname']);
         } catch (\Exception $e) {
             // Failed if the shortname is missing.
             self::assertInstanceOf('moodle_exception', $e);
@@ -1497,7 +1500,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test with empty entity shortname.
         try {
-            $entity = \local_mentor_core\entity_api::create_entity(['name' => 'missingshortname', 'shortname' => '']);
+            $entity = entity_api::create_entity(['name' => 'missingshortname', 'shortname' => '']);
         } catch (\Exception $e) {
             // Failed if the shortname is empty.
             self::assertInstanceOf('moodle_exception', $e);
@@ -1505,7 +1508,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test with invalid entity shortname.
         try {
-            $entity = \local_mentor_core\entity_api::create_entity(['name' => 'missingshortname', 'shortname' => '<>']);
+            $entity = entity_api::create_entity(['name' => 'missingshortname', 'shortname' => '<>']);
         } catch (\Exception $e) {
             // Failed if the shortname is invalid.
             self::assertInstanceOf('moodle_exception', $e);
@@ -1513,7 +1516,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test with no entity name.
         try {
-            $entity = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entity = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::assertInstanceOf('moodle_exception', $e);
@@ -1521,7 +1524,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test duplicate entity.
         try {
-            $entity = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entity = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::assertInstanceOf('moodle_exception', $e);
@@ -1529,7 +1532,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test with an empty entity name.
         try {
-            $entity = \local_mentor_core\entity_api::create_entity(['name' => '']);
+            $entity = entity_api::create_entity(['name' => '']);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::assertInstanceOf('moodle_exception', $e);
@@ -1537,7 +1540,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test with a shortname too long.
         try {
-            $entity = \local_mentor_core\entity_api::create_entity([
+            $entity = entity_api::create_entity([
                     'name' => 'entityname',
                     'shortname' => 'shortname too long for this entity',
             ]);
@@ -1548,7 +1551,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Create a valid entity.
         try {
-            $entity = \local_mentor_core\entity_api::create_entity([
+            $entity = entity_api::create_entity([
                     'name' => 'entityname',
                     'shortname' => 'entityshortname',
             ]);
@@ -1559,7 +1562,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test with a duplicated shortname.
         try {
-            $entity = \local_mentor_core\entity_api::create_entity([
+            $entity = entity_api::create_entity([
                     'name' => 'entityname2',
                     'shortname' => 'entityshortname',
             ]);
@@ -1574,7 +1577,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get entity fail
      *
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\specialization::__construct
      * @covers \local_mentor_core\specialization::get_instance
      * @covers \local_mentor_core\specialization::get_specialization
@@ -1590,7 +1593,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test entity not found.
         try {
-            $entity = \local_mentor_core\entity_api::get_entity($falseentityid);
+            $entity = entity_api::get_entity($falseentityid);
             self::fail('Not possible exist');
         } catch (\Exception $e) {
             // Entity not exist.
@@ -1603,8 +1606,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get entity by name not exist
      *
-     * @covers \local_mentor_core\entity_api::get_entity_by_name
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::get_entity_by_name
+     * @covers entity_api::get_entity
      */
     public function test_get_entity_by_name_nok() {
         $this->resetAfterTest(true);
@@ -1616,7 +1619,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $existingentity = 'Entity Inexistant Test Name ';
 
         try {
-            \local_mentor_core\entity_api::get_entity_by_name($existingentity);
+            entity_api::get_entity_by_name($existingentity);
         } catch (\Exception $e) {
             self::assertInstanceOf('dml_missing_record_exception', $e);
         }
@@ -1627,7 +1630,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test if entity not exist
      *
-     * @covers  \local_mentor_core\entity_api::entity_exists
+     * @covers  entity_api::entity_exists
      */
     public function test_entity_exists_nok() {
         $this->resetAfterTest(true);
@@ -1637,16 +1640,16 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         self::setAdminUser();
 
         // Check if entity not exist.
-        self::assertFalse(\local_mentor_core\entity_api::entity_exists('Entity Inexistant Test Name'));
+        self::assertFalse(entity_api::entity_exists('Entity Inexistant Test Name'));
     }
 
     /**
      * Test of assigning an unknown user as manager of an entity
      *
-     * @covers \local_mentor_core\entity_api::get_managed_entities
-     * @covers \local_mentor_core\entity_api::get_all_entities
-     * @covers \local_mentor_core\entity_api::create_entity
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::get_managed_entities
+     * @covers entity_api::get_all_entities
+     * @covers entity_api::create_entity
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\entity::is_manager
      * @covers \local_mentor_core\entity::get_members
      * @covers \local_mentor_core\entity::assign_manager
@@ -1664,14 +1667,14 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $userid = 3;
 
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'Test managed entity', 'shortname' => 'TME']);
+            $entityid = entity_api::create_entity(['name' => 'Test managed entity', 'shortname' => 'TME']);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
         }
 
         try {
-            $entity = \local_mentor_core\entity_api::get_entity($entityid);
+            $entity = entity_api::get_entity($entityid);
         } catch (\Exception $e) {
             // Fail if entity not exist.
             self::fail($e->getMessage());
@@ -1696,9 +1699,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get entity form
      *
-     * @covers \local_mentor_core\entity_api::get_entity_form
-     * @covers \local_mentor_core\entity_api::create_entity
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::get_entity_form
+     * @covers entity_api::create_entity
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\specialization::__construct
      * @covers \local_mentor_core\specialization::get_instance
      * @covers \local_mentor_core\specialization::get_specialization
@@ -1716,8 +1719,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $this->init_database();
 
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'Test managed entity', 'shortname' => 'TME']);
-            $entity = \local_mentor_core\entity_api::get_entity($entityid);
+            $entityid = entity_api::create_entity(['name' => 'Test managed entity', 'shortname' => 'TME']);
+            $entity = entity_api::get_entity($entityid);
             $entity->create_edadmin_courses_if_missing();
             $entitycourse = $entity->get_edadmin_courses('entities');
         } catch (\Exception $e) {
@@ -1727,7 +1730,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         $url = new moodle_url('/course/view.php', ['id' => $entitycourse['id']]);
 
-        $entityform = \local_mentor_core\entity_api::get_entity_form($url->out(), $entity->id);
+        $entityform = entity_api::get_entity_form($url->out(), $entity->id);
 
         // Check if the returned value is an object.
         self::assertIsObject($entityform);
@@ -1739,10 +1742,10 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get sub entity form
      *
-     * @covers \local_mentor_core\entity_api::get_entity_form
-     * @covers \local_mentor_core\entity_api::get_sub_entity_form
-     * @covers \local_mentor_core\entity_api::create_entity
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::get_entity_form
+     * @covers entity_api::get_sub_entity_form
+     * @covers entity_api::create_entity
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\specialization::__construct
      * @covers \local_mentor_core\specialization::get_instance
      * @covers \local_mentor_core\specialization::get_specialization
@@ -1764,7 +1767,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -1775,14 +1778,14 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub Entity creation.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_entity($subentitydata);
+            $subentityid = entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
         }
 
         try {
-            $subentity = \local_mentor_core\entity_api::get_entity($subentityid);
+            $subentity = entity_api::get_entity($subentityid);
             $subentity->create_edadmin_courses_if_missing();
             $subentitycourse = $subentity->get_edadmin_courses('entities');
         } catch (\Exception $e) {
@@ -1792,7 +1795,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         $url = new moodle_url('/course/view.php', ['id' => $subentitycourse['id']]);
 
-        $entityform = \local_mentor_core\entity_api::get_entity_form($url->out(), $subentity->id);
+        $entityform = entity_api::get_entity_form($url->out(), $subentity->id);
 
         // Check if the returned value is an object.
         self::assertIsObject($entityform);
@@ -1804,7 +1807,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get new entity form
      *
-     * @covers \local_mentor_core\entity_api::get_new_entity_form
+     * @covers entity_api::get_new_entity_form
      * @covers \local_mentor_core\specialization::__construct
      * @covers \local_mentor_core\specialization::get_instance
      * @covers \local_mentor_core\specialization::get_specialization
@@ -1813,7 +1816,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         $this->reset_singletons();
         $this->init_role();
-        $entityform = \local_mentor_core\entity_api::get_new_entity_form();
+        $entityform = entity_api::get_new_entity_form();
         self::assertIsString($entityform);
         self::resetAllData();
     }
@@ -1821,7 +1824,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get new sub entity form
      *
-     * @covers \local_mentor_core\entity_api::get_new_sub_entity_form
+     * @covers entity_api::get_new_sub_entity_form
      * @covers \local_mentor_core\specialization::__construct
      * @covers \local_mentor_core\specialization::get_instance
      * @covers \local_mentor_core\specialization::get_specialization
@@ -1830,7 +1833,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         $this->reset_singletons();
         $this->init_role();
-        $entityform = \local_mentor_core\entity_api::get_new_sub_entity_form();
+        $entityform = entity_api::get_new_sub_entity_form();
         self::assertIsString($entityform);
         self::resetAllData();
     }
@@ -1838,9 +1841,9 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get user entities
      *
-     * @covers \local_mentor_core\entity_api::get_user_entities
-     * @covers \local_mentor_core\entity_api::get_entity
-     * @covers \local_mentor_core\entity_api::create_entity
+     * @covers entity_api::get_user_entities
+     * @covers entity_api::get_entity
+     * @covers entity_api::create_entity
      * @covers \local_mentor_core\entity::add_member
      */
     public function test_get_user_entities_ok() {
@@ -1853,7 +1856,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $newuser = self::getDataGenerator()->create_user();
 
         // The user is a member of the default entity => auto-attach of main entity
-        $userentities = \local_mentor_core\entity_api::get_user_entities($newuser->id);
+        $userentities = entity_api::get_user_entities($newuser->id);
         self::assertEquals(1, count($userentities));
 
         $entitydata = $this->get_entities_data()[0];
@@ -1861,8 +1864,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
-            $entity = \local_mentor_core\entity_api::get_entity($entityid);
+            $entityid = entity_api::create_entity($entitydata);
+            $entity = entity_api::get_entity($entityid);
 
             $entity->add_member($newuser);
         } catch (\Exception $e) {
@@ -1875,8 +1878,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub Entity creation.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_entity($subentitydata);
-            $subentity = \local_mentor_core\entity_api::get_entity($subentityid);
+            $subentityid = entity_api::create_entity($subentitydata);
+            $subentity = entity_api::get_entity($subentityid);
 
             $subentity->add_member($newuser);
 
@@ -1886,7 +1889,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         }
 
         // Check if the user is a member of each main entity.
-        $userentities = \local_mentor_core\entity_api::get_user_entities($newuser->id);
+        $userentities = entity_api::get_user_entities($newuser->id);
 
         self::assertEquals(count($this->get_entities_data()), count($userentities));
 
@@ -1896,8 +1899,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test of number of Edadmin courses in an entity
      *
-     * @covers \local_mentor_core\entity_api::create_entity
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::create_entity
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\entity::get_edadmin_courses
      */
     public function test_number_of_edadmin_courses_in_an_entity() {
@@ -1912,7 +1915,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'Test local entities', 'shortname' => 'TLE']);
+            $entityid = entity_api::create_entity(['name' => 'Test local entities', 'shortname' => 'TLE']);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -1922,7 +1925,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test of number of edadmin course in the entity.
         try {
-            $entity = \local_mentor_core\entity_api::get_entity($entityid);
+            $entity = entity_api::get_entity($entityid);
             self::assertCount(count($listtypecourse),
                     $entity->get_edadmin_courses());
         } catch (\Exception $e) {
@@ -1936,8 +1939,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test of number of Edadmin courses in a sub entity
      *
-     * @covers \local_mentor_core\entity_api::create_entity
-     * @covers \local_mentor_core\entity_api::get_entity
+     * @covers entity_api::create_entity
+     * @covers entity_api::get_entity
      * @covers \local_mentor_core\entity::get_edadmin_courses
      */
     public function test_number_of_edadmin_courses_in_a_sub_entity() {
@@ -1955,7 +1958,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -1966,7 +1969,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard sub Entity creation.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_entity($subentitydata);
+            $subentityid = entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -1978,7 +1981,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test of number of edadmin course in the sub entity.
         try {
-            $subentity = \local_mentor_core\entity_api::get_entity($subentityid);
+            $subentity = entity_api::get_entity($subentityid);
             self::assertCount((count($listtypecourse) - count($listedadmincourseexception)) +
                               count($listedadmincourseexceptionbutmustseen),
                     $subentity->get_edadmin_courses());
@@ -1993,7 +1996,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test search main entities
      *
-     * @covers \local_mentor_core\entity_api::search_main_entities
+     * @covers entity_api::search_main_entities
      */
     public function test_search_main_entities() {
         global $CFG;
@@ -2010,8 +2013,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
-            $entity1 = \local_mentor_core\entity_api::get_entity($entityid);
+            $entityid = entity_api::create_entity($entitydata);
+            $entity1 = entity_api::get_entity($entityid);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -2022,7 +2025,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -2031,7 +2034,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $searchtext = 'New Entity';
 
         // Search as an admin.
-        $result = \local_mentor_core\entity_api::search_main_entities($searchtext);
+        $result = entity_api::search_main_entities($searchtext);
         self::assertCount(2, $result);
 
         // Set an entity manager.
@@ -2040,7 +2043,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         self::setUser($newuser);
 
         // Search as a manager.
-        $result = \local_mentor_core\entity_api::search_main_entities($searchtext);
+        $result = entity_api::search_main_entities($searchtext);
         self::assertCount(1, $result);
 
         self::resetAllData();
@@ -2049,7 +2052,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get_entity_javascript
      *
-     * @covers \local_mentor_core\entity_api::get_entity_javascript
+     * @covers entity_api::get_entity_javascript
      *
      */
     public function test_get_entity_javascript() {
@@ -2060,7 +2063,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         self::setAdminUser();
 
         try {
-            \local_mentor_core\entity_api::get_entity_javascript('local_entities/local_entities');
+            entity_api::get_entity_javascript('local_entities/local_entities');
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -2072,8 +2075,8 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get sub entity form
      *
-     * @covers \local_mentor_core\entity_api::get_entity
-     * @covers \local_mentor_core\entity_api::has_sub_entities
+     * @covers entity_api::get_entity
+     * @covers entity_api::has_sub_entities
      * @covers \local_mentor_core\entity::has_sub_entities
      */
     public function test_has_sub_entities_ok() {
@@ -2090,28 +2093,28 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
         }
 
         // Has not sub entity.
-        self::assertFalse(\local_mentor_core\entity_api::has_sub_entities($entityid));
+        self::assertFalse(entity_api::has_sub_entities($entityid));
 
         $subentitydata = $this->get_entities_data()[1];
         $subentitydata['parentid'] = $entityid;
 
         // Test standard sub Entity creation.
         try {
-            $subentityid = \local_mentor_core\entity_api::create_entity($subentitydata);
+            $subentityid = entity_api::create_entity($subentitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
         }
 
         // Has sub entity.
-        self::assertTrue(\local_mentor_core\entity_api::has_sub_entities($entityid));
+        self::assertTrue(entity_api::has_sub_entities($entityid));
 
         self::resetAllData();
     }
@@ -2119,7 +2122,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test cleanup training recyblebin without redirection
      *
-     * @covers \local_mentor_core\entity_api::cleanup_training_recyblebin
+     * @covers entity_api::cleanup_training_recyblebin
      *
      */
     public function test_cleanup_training_recyblebin_without_redirection() {
@@ -2143,7 +2146,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         local_mentor_core\training_api::remove_training($training2->id);
         self::assertCount(2, $entity->get_training_recyclebin_items());
 
-        \local_mentor_core\entity_api::cleanup_training_recyblebin($entity->id);
+        entity_api::cleanup_training_recyblebin($entity->id);
 
         self::assertCount(0, $entity->get_training_recyclebin_items());
 
@@ -2153,7 +2156,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test cleanup session recyblebin without redirection
      *
-     * @covers \local_mentor_core\entity_api::cleanup_session_recyblebin
+     * @covers entity_api::cleanup_session_recyblebin
      *
      */
     public function test_cleanup_session_recyblebin_without_redirection() {
@@ -2177,7 +2180,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $session2->delete();
         self::assertCount(2, $entity->get_sessions_recyclebin_items());
 
-        \local_mentor_core\entity_api::cleanup_session_recyblebin($entity->id);
+        entity_api::cleanup_session_recyblebin($entity->id);
 
         self::assertCount(0, $entity->get_sessions_recyclebin_items());
 
@@ -2187,7 +2190,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test if entity shortname exists
      *
-     * @covers \local_mentor_core\entity_api::shortname_exists
+     * @covers entity_api::shortname_exists
      *
      */
     public function test_shortname_exists() {
@@ -2202,7 +2205,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test standard Entity creation.
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             // Failed if the name of this entity is already in use.
             self::fail($e->getMessage());
@@ -2211,10 +2214,10 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         // Test if we have received an identifier.
         self::assertIsInt($entityid);
 
-        self::assertFalse(\local_mentor_core\entity_api::shortname_exists('wrongshortname'));
-        self::assertFalse(\local_mentor_core\entity_api::shortname_exists('shortnameentity', $entityid));
+        self::assertFalse(entity_api::shortname_exists('wrongshortname'));
+        self::assertFalse(entity_api::shortname_exists('shortnameentity', $entityid));
 
-        self::assertTrue(\local_mentor_core\entity_api::shortname_exists('shortnameentity'));
+        self::assertTrue(entity_api::shortname_exists('shortnameentity'));
 
         self::resetAllData();
     }
@@ -2222,7 +2225,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test if entity shortname exists
      *
-     * @covers \local_mentor_core\entity_api::get_entities_where_sessions_managed
+     * @covers entity_api::get_entities_where_sessions_managed
      *
      */
     public function test_get_entities_where_sessions_managed() {
@@ -2237,13 +2240,13 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $DB->delete_records('course_categories');
 
         $entitydata = $this->get_entities_data()[0];
-        $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
-        $entity = \local_mentor_core\entity_api::get_entity($entityid);
+        $entityid = entity_api::create_entity($entitydata);
+        $entity = entity_api::get_entity($entityid);
         $entity2data = $this->get_entities_data()[1];
-        $entity2id = \local_mentor_core\entity_api::create_entity($entity2data);
-        \local_mentor_core\entity_api::get_entity($entity2id);
+        $entity2id = entity_api::create_entity($entity2data);
+        entity_api::get_entity($entity2id);
 
-        $user1entitysessionmanage = \local_mentor_core\entity_api::get_entities_where_sessions_managed();
+        $user1entitysessionmanage = entity_api::get_entities_where_sessions_managed();
 
         self::assertIsArray($user1entitysessionmanage);
         self::assertCount(2, $user1entitysessionmanage);
@@ -2255,13 +2258,13 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         $entity->assign_manager($user1->id);
 
-        $user1entitysessionmanage = \local_mentor_core\entity_api::get_entities_where_sessions_managed($user1);
+        $user1entitysessionmanage = entity_api::get_entities_where_sessions_managed($user1);
 
         self::assertIsArray($user1entitysessionmanage);
         self::assertCount(1, $user1entitysessionmanage);
         self::assertArrayHasKey($entityid, $user1entitysessionmanage);
 
-        $user1entitysessionmanage = \local_mentor_core\entity_api::get_entities_where_sessions_managed($user2);
+        $user1entitysessionmanage = entity_api::get_entities_where_sessions_managed($user2);
 
         self::assertIsArray($user1entitysessionmanage);
         self::assertCount(0, $user1entitysessionmanage);
@@ -2272,7 +2275,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get_entities_can_import_training_library_object
      *
-     * @covers \local_mentor_core\entity_api::get_entities_can_import_training_library_object
+     * @covers entity_api::get_entities_can_import_training_library_object
      *
      */
     public function test_get_entities_can_import_training_library_object() {
@@ -2287,14 +2290,14 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         $DB->delete_records('course_categories');
 
         $entitydata = $this->get_entities_data()[0];
-        $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
-        $entity = \local_mentor_core\entity_api::get_entity($entityid);
+        $entityid = entity_api::create_entity($entitydata);
+        $entity = entity_api::get_entity($entityid);
         $entity2data = $this->get_entities_data()[1];
-        $entity2id = \local_mentor_core\entity_api::create_entity($entity2data);
-        $entity2 = \local_mentor_core\entity_api::get_entity($entity2id);
+        $entity2id = entity_api::create_entity($entity2data);
+        $entity2 = entity_api::get_entity($entity2id);
 
         // Admin.
-        $adminentitysessionmanage = \local_mentor_core\entity_api::get_entities_can_import_training_library_object();
+        $adminentitysessionmanage = entity_api::get_entities_can_import_training_library_object();
 
         self::assertIsArray($adminentitysessionmanage);
         self::assertCount(2, $adminentitysessionmanage);
@@ -2310,7 +2313,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         self::setUser($user1);
 
-        $user1entitysessionmanage = \local_mentor_core\entity_api::get_entities_can_import_training_library_object();
+        $user1entitysessionmanage = entity_api::get_entities_can_import_training_library_object();
 
         self::assertIsArray($user1entitysessionmanage);
         self::assertCount(1, $user1entitysessionmanage);
@@ -2325,7 +2328,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         self::setUser($user2);
 
         // Responsable central de formation.
-        $user2entitysessionmanage = \local_mentor_core\entity_api::get_entities_can_import_training_library_object();
+        $user2entitysessionmanage = entity_api::get_entities_can_import_training_library_object();
 
         self::assertIsArray($user2entitysessionmanage);
         self::assertCount(1, $user2entitysessionmanage);
@@ -2340,7 +2343,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         self::setUser($user3);
 
         // Référent local de formation.
-        $user3entitysessionmanage = \local_mentor_core\entity_api::get_entities_can_import_training_library_object();
+        $user3entitysessionmanage = entity_api::get_entities_can_import_training_library_object();
 
         self::assertIsArray($user3entitysessionmanage);
         self::assertEmpty($user3entitysessionmanage);
@@ -2351,7 +2354,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
     /**
      * Test get edadmin course view capability
      *
-     * @covers \local_mentor_core\entity_api::get_edadmin_course_view_capability
+     * @covers entity_api::get_edadmin_course_view_capability
      *
      */
     public function test_get_edadmin_course_view_capability_entity() {
@@ -2363,7 +2366,7 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         self::assertEquals(
             'local/entities:manageentity',
-            \local_mentor_core\entity_api::get_edadmin_course_view_capability()
+            entity_api::get_edadmin_course_view_capability()
         );
 
         self::resetAllData();
@@ -2386,14 +2389,14 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
         ];
 
         try {
-            $entityid = \local_mentor_core\entity_api::create_entity($entitydata);
+            $entityid = entity_api::create_entity($entitydata);
         } catch (\Exception $e) {
             self::fail($e->getMessage());
         }
 
         // Test if the entity can be retrieved by shortname.
 
-        $entity = \local_mentor_core\entity_api::get_main_entity_by_shortname('mainentity');
+        $entity = entity_api::get_main_entity_by_shortname('mainentity');
 
 
         self::assertEquals($entityid, $entity->id);
@@ -2402,8 +2405,43 @@ class local_mentor_core_entity_testcase extends advanced_testcase {
 
         // Test with a non-existing shortname.
 
-        $entity = \local_mentor_core\entity_api::get_main_entity_by_shortname('nonexistentshortname');
+        $entity = entity_api::get_main_entity_by_shortname('nonexistentshortname');
         self::assertFalse($entity);
         self::resetAllData();
+    }
+
+    public function test_check_entity_no_more_domain_link()
+    {
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+
+        global $DB;
+
+        $category = $this->getDataGenerator()->create_category();
+        $course = $this->getDataGenerator()->create_course(['category' => $category->id]);
+
+        // test category with no domains link
+        $iscategorycanbesecondaryentity = entity_api::check_entity_no_more_domain_link(["courseid" => $course->id]);
+        self::assertTrue($iscategorycanbesecondaryentity);
+
+        // test category with at least 1 domain link
+        $domainname = 'mail.com';
+        $domain = (object) [
+            'course_categories_id' => $category->id,
+            'domain_name' => $domainname,
+            'created_at' => time(),
+            'disabled_at' => null
+        ];
+        $DB->insert_record('course_categories_domains', $domain, false);
+
+        $iscategorycanbesecondaryentity = entity_api::check_entity_no_more_domain_link(["courseid" => $course->id]);
+        self::assertFalse($iscategorycanbesecondaryentity);
+        
+        // test category with no more domains link
+        $categoriesdomainsrepository = new categories_domains_repository();
+        $categoriesdomainsrepository->delete_domain($category->id, $domainname);
+
+        $iscategorycanbesecondaryentity = entity_api::check_entity_no_more_domain_link(["courseid" => $course->id]);
+        self::assertTrue($iscategorycanbesecondaryentity);
     }
 }
