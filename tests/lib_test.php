@@ -3255,11 +3255,16 @@ test2", $finalcontent);
 
         $this->resetAfterTest(true);
         $this->reset_singletons();
+        //Test case: not a topics format + no sections
+        // Not topic course format : for exemple weeks
+        $coursedata = new stdClass();
+        $coursedata->fullname = "New course";
+        $coursedata->shortname = "New course";
+        $coursedata->category = 1;
+        $coursedata->idnumber = 1;
+        $coursedata->format = 'weeks';
+        $course = create_course($coursedata);
 
-        // Not topic course.
-        $course = new stdClass();
-        $course->id = 100;
-        $course->format = 'nottopics';
         $url = local_mentor_core_get_course_url($course);
 
         self::assertEquals(
@@ -3267,7 +3272,12 @@ test2", $finalcontent);
             $CFG->wwwroot . '/course/view.php?id=' . $course->id
         );
 
+        //Test case: topics format + no sections
+        // Clear DB.
+        $DB->delete_records('course_format_options');
+
         // Display all section.
+        //No section added yet
         $course->format = 'topics';
         $formatoption = new stdClass();
         $formatoption->courseid = $course->id;
@@ -3276,33 +3286,63 @@ test2", $finalcontent);
         $formatoption->name = 'coursedisplay';
         $formatoption->value = 0;
         $DB->insert_record('course_format_options', $formatoption);
+
+        $url = local_mentor_core_get_course_url($course);
+
+        self::assertEquals(
+            $url->out(false),
+            $CFG->wwwroot . '/course/view.php?id=' . $course->id
+        );
+
+        //Test case: topics format + display all sections in one page
+        // Clear DB.
+        $DB->delete_records('course_format_options');
+
+        //Adding sections
+        // Url to first section.
+        $section = new stdClass();
+        $section->course = $course->id;
+        $section->section = 1;
+        $section->visible = 1;
+        $sectionid = $DB->insert_record('course_sections', $section);
+
+        $course->format = 'topics';
+        $course->coursedisplay = 0;
+
+        $formatoption = new stdClass();
+        $formatoption->courseid = $course->id;
+        $formatoption->format = $course->format;
+        $formatoption->sectionid = 1;
+        $formatoption->name = 'coursedisplay';
+        $formatoption->value = 0; //display all sections in one page
+        $DB->insert_record('course_format_options', $formatoption);
+        
         $url = local_mentor_core_get_course_url($course);
         self::assertEquals(
             $url->out(false),
             $CFG->wwwroot . '/course/view.php?id=' . $course->id
         );
 
-        // Clear DB.
+        //Test case:  display one section per page
+        /// Clear DB.
         $DB->delete_records('course_format_options');
 
-        // Url to first section.
         $course->format = 'topics';
+        $course->coursedisplay = 1;
+
         $formatoption = new stdClass();
         $formatoption->courseid = $course->id;
         $formatoption->format = $course->format;
-        $formatoption->sectionid = 0;
+        $formatoption->sectionid = 1;
         $formatoption->name = 'coursedisplay';
-        $formatoption->value = 1;
+        $formatoption->value = 1; // display one section per page
         $DB->insert_record('course_format_options', $formatoption);
-        $section = new stdClass();
-        $section->course = $course->id;
-        $section->section = 1;
-        $section->visible = 1;
-        $DB->insert_record('course_sections', $section);
+
         $url = local_mentor_core_get_course_url($course);
+
         self::assertEquals(
-            $url->out(false),
-            $CFG->wwwroot . '/course/view.php?id=' . $course->id . '&section=1'
+            $CFG->wwwroot . '/course/section.php?id=' . $sectionid,
+            $url->out(false)
         );
 
         self::resetAllData();

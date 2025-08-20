@@ -2334,16 +2334,18 @@ function local_mentor_core_get_course_url($course, $ismoodleurl = true)
     if ($coursedisplay != 1) {
         return $url;
     }
-
     $firstsection = 1;
 
     // Can we view the first section.
     if ($dbi->is_course_section_visible($course->id, $firstsection)) {
-        if ($ismoodleurl) {
-            $url->param('section', $firstsection);
-        } else {
-            $url .= '&section=' . $firstsection;
-        }
+        // Get all info modules course (for availability section information).
+        $sectionsavailabilitiesinfos = get_fast_modinfo($course->id);
+        // Get course section info.
+        $coursection = $sectionsavailabilitiesinfos->get_section_info($firstsection);
+        $sectionid = $coursection->id;
+        $url = $ismoodleurl ?
+        new \moodle_url('/course/section.php', ['id' => $sectionid]) :
+        $CFG->wwwroot . '/course/section.php?id=' .$sectionid;
     }
 
     return $url;
