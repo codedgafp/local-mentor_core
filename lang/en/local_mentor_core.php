@@ -402,7 +402,7 @@ $string['subentityaddmember'] = 'Un sous-espace ne peut pas ajouter des membres'
 
 $string['requiredfields'] = 'Les champs marqués d\'un * sont obligatoires';
 $string['entitynamelimit'] = 'Le nom de l\'espace ne doit pas dépasser {$a} caractères';
-$string['nosubentitytodeletmessage'] = 'Aucun sous-espace n\'est éligible à la suppression (Existance de formation ou de session)';
+$string['nosubentitytodeletmessage'] = 'Aucun sous-espace n\'est éligible à la suppression (existence d\'au moins une formation ou une session)';
 
 $string['entityshortnamelimit'] = 'Le nom abrégé de l\'espace ne doit pas dépasser {$a} caractères';
 
