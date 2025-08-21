@@ -489,3 +489,6 @@ $string['created'] = 'créé';
 $string['reactivatedenrolled'] = 'réactivé et inscrit';
 $string['createdenrolled'] = 'créé et inscrit';
 $string['enrolled'] = 'inscrit';
+
+$string['usercreate'] = 'L\'utilisateur {$a} sera créé.';
+

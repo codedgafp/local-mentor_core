@@ -597,8 +597,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                    }
                 }
                 
-            }
-                
+            }             
                                             
             
 
@@ -607,7 +606,7 @@ function local_mentor_core_validate_users_csv($content, $delimitername, $coursei
                 $preview['validforcreation']++;
                     $warnings['list'][] = [
                         $linenumber,
-                        get_string('usercreatandenrol', 'local_mentor_core', $email),
+                        is_null($courseid) ? get_string('usercreate', 'local_mentor_core', $email) : get_string('usercreatandenrol', 'local_mentor_core', $email),
                     ];
             }
         }
