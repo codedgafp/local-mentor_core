@@ -81,9 +81,6 @@ $PAGE->requires->js_call_amd('local_mentor_core/importcsv', 'init', $params);
 // Output content.
 $out = '';
 
-echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('import_and_enrol_heading', 'local_mentor_core'));
-
 // Anchor directly to the import report.
 $anchorurl = new moodle_url('/local/mentor_core/pages/importcsv.php', ['courseid' => $courseid], 'import-reports');
 
@@ -133,6 +130,9 @@ if (null !== $importusersformdata) {
         \core\output\notification::NOTIFY_SUCCESS
     );
 }
+
+echo $OUTPUT->header();
+echo $OUTPUT->heading(get_string('import_and_enrol_heading', 'local_mentor_core'));
 
 // Validate given data from CSV.
 if (null !== $csvformdata) {
