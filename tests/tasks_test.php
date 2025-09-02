@@ -195,12 +195,12 @@ class local_mentor_core_tasks_testcase extends advanced_testcase {
             $data->name = 'fullname';
             $data->shortname = 'shortname';
             $data->content = 'summary';
-            $data->status = \local_mentor_core\training::STATUS_ELABORATION_COMPLETED;
+            $data->status = training::STATUS_ELABORATION_COMPLETED;
         } else {
             $data->trainingname = 'fullname';
             $data->trainingshortname = 'shortname';
             $data->trainingcontent = 'summary';
-            $data->trainingstatus = \local_mentor_core\training::STATUS_ELABORATION_COMPLETED;
+            $data->trainingstatus = training::STATUS_ELABORATION_COMPLETED;
         }
 
         // Fields for taining.
@@ -582,5 +582,65 @@ class local_mentor_core_tasks_testcase extends advanced_testcase {
         }
 
         self::resetAllData();
+    }
+
+    public function test_update_course_section_link()
+    {
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+
+        global $DB;
+
+        $session = self::getDataGenerator()->create_course();
+        $sectionrecord = new \stdClass();
+        $sectionrecord->course = $session->id;
+        $sectionrecord->section = 1;
+        $coursesection = self::getDataGenerator()->create_course_section($sectionrecord);
+
+        $courserecord = new \stdClass();
+        $courserecord->summary = "/course/view.php?id={$session->id}&section=1";
+        $course = self::getDataGenerator()->create_course($courserecord);
+
+        $task = new \local_mentor_core\task\data_recovery_course_section_links();
+        $task->execute();
+
+        $course = $DB->get_record('course', ['id' => $course->id]);
+        self::assertEquals(
+            "/course/section.php?id={$coursesection->id}",
+            $course->summary
+        );
+
+        $forumrecord = new stdClass();
+        $forumrecord->course = $course;
+        $forumrecord->intro = "/course/view.php?id={$session->id}&section=999";
+        $forum = $this->getDataGenerator()->create_module('forum', $forumrecord);
+
+        $task = new \local_mentor_core\task\data_recovery_course_section_links();
+        $task->execute();
+
+        $forum = $DB->get_record('forum', ['id' => $forum->id]);
+        self::assertEquals(
+            "/course/view.php?id={$session->id}&section=999",
+            $forum->intro
+        );
+
+        $urlrecord = new stdClass();
+        $urlrecord->course = $course;
+        $urlrecord->intro = "/course/view.php?id={$session->id}&section=1";
+        $urlrecord->externalurl = "/course/section.php?id={$coursesection->id}";
+        $url = $this->getDataGenerator()->create_module('url', $urlrecord);
+
+        $task = new \local_mentor_core\task\data_recovery_course_section_links();
+        $task->execute();
+
+        $url = $DB->get_record('url', ['id' => $url->id]);
+        self::assertEquals(
+            "/course/section.php?id={$coursesection->id}",
+            $url->intro
+        );
+        self::assertEquals(
+            "/course/section.php?id={$coursesection->id}",
+            $url->externalurl
+        );
     }
 }

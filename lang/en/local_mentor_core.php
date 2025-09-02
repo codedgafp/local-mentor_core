@@ -492,3 +492,8 @@ $string['enrolled'] = 'inscrit';
 
 $string['usercreate'] = 'L\'utilisateur {$a} sera créé.';
 
+$string['info_data_found_in_table'] = 'INFO ==> Des données dans la table \'{$a}\' ont été trouvé.';
+$string['info_start_processing'] = 'INFO --> Début du traitement pour l\'id {$a->id} et la colonne \'{$a->column}\'';
+$string['warn_already_compliant'] = 'WARN La donnée [\'id\': {$a->id}, \'{$a->column}\': \'{$a->oldlink}\'] est déjà conforme, ou ne peux pas être mise à jour';
+$string['warn_no_course_section'] = 'WARN Aucune section de cours n\'a été trouvé pour les données [\'course\': {$a->courseid}, \'section\': {$a->section}]';
+$string['ok_data_update'] = 'OK La donnée \'{$a->oldlink}\' a été mise à jour : \'{$a->newlink}\'';
