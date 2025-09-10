@@ -23,8 +23,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use local_mentor_core\session_form;
-use local_mentor_core\specialization;
 use local_mentor_core\training;
 
 defined('MOODLE_INTERNAL') || die();
@@ -584,7 +582,7 @@ class local_mentor_core_tasks_testcase extends advanced_testcase {
         self::resetAllData();
     }
 
-    public function test_update_course_section_link()
+    public function test_update_course_section_link_ok()
     {
         $this->resetAfterTest(true);
         $this->reset_singletons();
@@ -592,26 +590,52 @@ class local_mentor_core_tasks_testcase extends advanced_testcase {
         global $DB;
 
         $session = self::getDataGenerator()->create_course();
-        $sectionrecord = new \stdClass();
-        $sectionrecord->course = $session->id;
-        $sectionrecord->section = 1;
-        $coursesection = self::getDataGenerator()->create_course_section($sectionrecord);
 
-        $courserecord = new \stdClass();
-        $courserecord->summary = "/course/view.php?id={$session->id}&section=1";
-        $course = self::getDataGenerator()->create_course($courserecord);
+        $sectiononerecord = new \stdClass();
+        $sectiononerecord->course = $session->id;
+        $sectiononerecord->section = 1;
+        $sectionone = self::getDataGenerator()->create_course_section($sectiononerecord);
+
+        $courseonerecord = new \stdClass();
+        $courseonerecord->summary = "/course/view.php?id={$session->id}&section=1";
+        $courseone = self::getDataGenerator()->create_course($courseonerecord);
+
+        $sectiontworecord = new \stdClass();
+        $sectiontworecord->course = $session->id;
+        $sectiontworecord->section = 2;
+        $sectiontwo = self::getDataGenerator()->create_course_section($sectiontworecord);
+
+        $coursetworecord = new \stdClass();
+        $coursetworecord->summary = "/course/view.php?id={$session->id}&section=2";
+        $coursetwo = self::getDataGenerator()->create_course($coursetworecord);
 
         $task = new \local_mentor_core\task\data_recovery_course_section_links();
         $task->execute();
 
-        $course = $DB->get_record('course', ['id' => $course->id]);
+        $courseone = $DB->get_record('course', ['id' => $courseone->id]);
         self::assertEquals(
-            "/course/section.php?id={$coursesection->id}",
-            $course->summary
+            "/course/section.php?id={$sectionone->id}",
+            $courseone->summary
         );
 
+        $coursetwo = $DB->get_record('course', ['id' => $coursetwo->id]);
+        self::assertEquals(
+            "/course/section.php?id={$sectiontwo->id}",
+            $coursetwo->summary
+        );
+    }
+
+    public function test_update_course_section_link_warn_no_course_section()
+    {
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+
+        global $DB;
+
+        $session = self::getDataGenerator()->create_course();
+
         $forumrecord = new stdClass();
-        $forumrecord->course = $course;
+        $forumrecord->course = $session;
         $forumrecord->intro = "/course/view.php?id={$session->id}&section=999";
         $forum = $this->getDataGenerator()->create_module('forum', $forumrecord);
 
@@ -623,11 +647,26 @@ class local_mentor_core_tasks_testcase extends advanced_testcase {
             "/course/view.php?id={$session->id}&section=999",
             $forum->intro
         );
+    }
+
+    public function test_update_course_section_link_warn_already_ok()
+    {
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+
+        global $DB;
+
+        $session = self::getDataGenerator()->create_course();
+
+        $sectionrecord = new \stdClass();
+        $sectionrecord->course = $session->id;
+        $sectionrecord->section = 1;
+        $section = self::getDataGenerator()->create_course_section($sectionrecord);
 
         $urlrecord = new stdClass();
-        $urlrecord->course = $course;
+        $urlrecord->course = $session;
         $urlrecord->intro = "/course/view.php?id={$session->id}&section=1";
-        $urlrecord->externalurl = "/course/section.php?id={$coursesection->id}";
+        $urlrecord->externalurl = "/course/section.php?id={$section->id}";
         $url = $this->getDataGenerator()->create_module('url', $urlrecord);
 
         $task = new \local_mentor_core\task\data_recovery_course_section_links();
@@ -635,11 +674,11 @@ class local_mentor_core_tasks_testcase extends advanced_testcase {
 
         $url = $DB->get_record('url', ['id' => $url->id]);
         self::assertEquals(
-            "/course/section.php?id={$coursesection->id}",
+            "/course/section.php?id={$section->id}",
             $url->intro
         );
         self::assertEquals(
-            "/course/section.php?id={$coursesection->id}",
+            "/course/section.php?id={$section->id}",
             $url->externalurl
         );
     }
