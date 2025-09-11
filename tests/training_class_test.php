@@ -382,7 +382,7 @@ class local_mentor_core_training_class_testcase extends advanced_testcase {
         $training = $this->create_training($entity);
         \local_mentor_core\profile_api::create_and_add_user('lastname', 'firstname', 'user@gouv.fr', null, null, 'manual');
         $user = \core_user::get_user_by_email('user@gouv.fr');
-var_dump($training->is_updater($user->id));
+
         // Is not training updater.
         self::assertFalse($training->is_updater($user->id));
 
