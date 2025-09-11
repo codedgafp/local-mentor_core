@@ -70,8 +70,8 @@ class local_mentor_core_session_class_testcase extends advanced_testcase {
     /**
      * Initialization of the session or trainig data
      *
-     * @param false $training
-     * @param null $sessionid
+     * @param $training
+     * @param $sessionid
      * @return stdClass
      */
     public function init_session_data($training = false, $sessionid = null) {
@@ -161,7 +161,7 @@ class local_mentor_core_session_class_testcase extends advanced_testcase {
     /**
      * Init training creation
      *
-     * @return training
+     * @return \local_mentor_core\training
      * @throws moodle_exception
      */
     public function init_training_creation() {
@@ -1080,14 +1080,16 @@ class local_mentor_core_session_class_testcase extends advanced_testcase {
         }
 
         $url = $session->get_url();
-        $section = $url->get_param('section');
-        self::assertNull($section);
+        $path = $url->get_path();
+        self::assertEquals("/moodle/course/view.php", $path);
 
-        course_create_section($course->id, 0);
+        $coursesection = course_create_section($course->id, 0);
 
         $url = $session->get_url();
-        $section = $url->get_param('section');
-        self::assertEquals(1, $section);
+        $path = $url->get_path();
+        self::assertEquals("/moodle/course/section.php", $path);
+        $sectionid = $url->get_param('id');
+        self::assertEquals($coursesection->id, $sectionid);
 
         $this->resetAllData();
     }
