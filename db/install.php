@@ -28,7 +28,7 @@
  * @package   local_mentor_core
  */
 function xmldb_local_mentor_core_install() {
-    global $CFG;
+    global $CFG, $DB;
 
     require_once($CFG->dirroot . '/local/mentor_core/lib.php');
 
@@ -42,6 +42,9 @@ function xmldb_local_mentor_core_install() {
     $CFG->mentor_specializations = $lcfgspecializations;
 
     disabled_mathjax_plugin();
+
+    // Make sure the extension unaccent is available
+    $DB->execute("CREATE EXTENSION IF NOT EXISTS unaccent");
 
     return true;
 }
