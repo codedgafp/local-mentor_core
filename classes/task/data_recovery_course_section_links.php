@@ -21,7 +21,6 @@ class data_recovery_course_section_links extends \core\task\adhoc_task
     public function execute()
     {
         $mcservice = new mentor_core_service();
-
         $datatocheck = $this->datatocheck();
 
         $pattern = '/view\.php\?id=(\d+)(?:&|&amp;)section=(\d+)/';
@@ -30,7 +29,6 @@ class data_recovery_course_section_links extends \core\task\adhoc_task
 
         foreach ($datatocheck as $table => $columns) {
             $datatoupdate = $this->getdatatoupdate($columns, $table);
-
             if (empty($datatoupdate)) {
                 continue;
             }
@@ -47,39 +45,49 @@ class data_recovery_course_section_links extends \core\task\adhoc_task
 
                     $mcservice::debugtrace(get_string('info_start_processing', 'local_mentor_core', ["id" => $data->id, "column" => $column]));
 
-                    $urlparams = $this->geturlparams($pattern, $oldlink);
+                    $urlparamsarray = $this->geturlparams($pattern, $oldlink);
 
-                    if ($urlparams === null) {
+                    if (empty($urlparamsarray)) {
                         $mcservice::debugtrace(get_string('warn_already_compliant', 'local_mentor_core', ["id" => $data->id, "column" => $column, "oldlink" => $oldlink]));
                         continue;
                     }
 
-                    $cachekey = $urlparams['courseid'] . '_' . $urlparams['section'];
-                    if (!isset($sectioncache[$cachekey])) {
-                        $sectioncache[$cachekey] = $this->db->get_record(
-                            'course_sections',
-                            ["course" => $urlparams["courseid"], "section" => $urlparams["section"]],
-                            "id"
-                        );
+                    foreach ($urlparamsarray as $urlparams) {
+                        $cachekey = $urlparams['courseid'] . '_' . $urlparams['section'];
+                        if (!isset($sectioncache[$cachekey])) {
+                            $sectioncache[$cachekey] = $this->db->get_record(
+                                'course_sections',
+                                ["course" => $urlparams["courseid"], "section" => $urlparams["section"]],
+                                "id"
+                            );
+                        }
+
+                        $coursesection = $sectioncache[$cachekey];
+                        if (!$coursesection) {
+                            $mcservice::debugtrace(get_string('warn_no_course_section', 'local_mentor_core', ['courseid' => $urlparams['courseid'], 'section' => $urlparams['section']]));
+                            continue;
+                        }
+
+                        $replacement = "section.php?id={$coursesection->id}";
+
+                        $newlink = preg_replace_callback($pattern, function ($match) use ($urlparams, $replacement) {
+                            [$full, $courseid, $section] = $match;
+
+                            return $courseid == $urlparams['courseid'] && $section == $urlparams['section'] ? $replacement : $full;
+                        }, $oldlink);
+
+                        if ($newlink !== $oldlink) {
+                            $updateparams = new \stdClass;
+                            $updateparams->id = $data->id;
+                            $updateparams->$column = $newlink;
+
+                            $this->db->update_record($table, $updateparams);
+
+                            $mcservice::debugtrace(get_string('ok_data_update', 'local_mentor_core', ['oldlink' => $oldlink, 'newlink' => $newlink]));
+
+                            $oldlink = $newlink;
+                        }
                     }
-
-                    $coursesection = $sectioncache[$cachekey];
-                    if (!$coursesection) {
-                        $mcservice::debugtrace(get_string('warn_no_course_section', 'local_mentor_core', ['courseid' => $urlparams['courseid'], 'section' => $urlparams['section']]));
-                        continue;
-                    }
-
-                    $replacement = "section.php?id={$coursesection->id}";
-
-                    $newlink = preg_replace($pattern, $replacement, $oldlink);
-
-                    $updateparams = new \stdClass;
-                    $updateparams->id = $data->id;
-                    $updateparams->$column = $newlink;
-
-                    $this->db->update_record($table, $updateparams);
-
-                    $mcservice::debugtrace(get_string('ok_data_update', 'local_mentor_core', ['oldlink' => $oldlink, 'newlink' => $newlink]));
                 }
             }
         }
@@ -231,17 +239,21 @@ class data_recovery_course_section_links extends \core\task\adhoc_task
      */
     private function geturlparams(string $patern, string $link): array|null
     {
-        if (preg_match($patern, $link, $matches)) {
-            $url = html_entity_decode($matches[0]);
+        if (preg_match_all($patern, $link, $matches, PREG_SET_ORDER)) {
+            $urlparams = [];
 
-            $parts = parse_url($url);
+            foreach ($matches as $match) {
+                $url = html_entity_decode($match[0]);
+                $parts = parse_url($url);
+                parse_str($parts['query'], $queryParams);
 
-            parse_str($parts['query'], $queryParams);
+                $urlparams[] = [
+                    'courseid' => $queryParams['id'],
+                    'section' => $queryParams['section']
+                ];
+            }
 
-            return [
-                'courseid' => $queryParams['id'],
-                'section' => $queryParams['section']
-            ];
+            return $urlparams;
         }
 
         return null;

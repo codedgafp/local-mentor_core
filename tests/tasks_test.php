@@ -609,6 +609,10 @@ class local_mentor_core_tasks_testcase extends advanced_testcase {
         $coursetworecord->summary = "/course/view.php?id={$session->id}&section=2";
         $coursetwo = self::getDataGenerator()->create_course($coursetworecord);
 
+        $coursethreerecord = new \stdClass();
+        $coursethreerecord->summary = "<div><a href='/course/view.php?id={$session->id}&section=1'>via</a><a href='/course/view.php?id={$session->id}&section=2'>via</a></div>";
+        $coursethree = self::getDataGenerator()->create_course($coursethreerecord);
+
         $task = new \local_mentor_core\task\data_recovery_course_section_links();
         $task->execute();
 
@@ -622,6 +626,12 @@ class local_mentor_core_tasks_testcase extends advanced_testcase {
         self::assertEquals(
             "/course/section.php?id={$sectiontwo->id}",
             $coursetwo->summary
+        );
+
+        $coursethree = $DB->get_record('course', ['id' => $coursethree->id]);
+        self::assertEquals(
+            "<div><a href='/course/section.php?id={$sectionone->id}'>via</a><a href='/course/section.php?id={$sectiontwo->id}'>via</a></div>",
+            $coursethree->summary
         );
     }
 
