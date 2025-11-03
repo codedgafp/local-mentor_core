@@ -98,8 +98,9 @@ class profile_api {
 
         // Ignore the guest user.
         $guestuser = $db->get_user_by_username('guest');
+        $excludedIds = isset($guestuser) ? [$guestuser->id] : [];
 
-        return array_values($db->search_users(($searchtext), [$guestuser->id]));
+        return array_values($db->search_users(($searchtext), $excludedIds));
     }
 
     /**

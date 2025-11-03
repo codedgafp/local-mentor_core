@@ -2264,7 +2264,7 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
             SELECT *
             FROM {user_info_data}
             WHERE ' . $DB->sql_compare_text('data') . ' = ' . $DB->sql_compare_text(':data') .
-                                              'AND fieldid = :fieldid', ['data' => $defaultcategory->name, 'fieldid' => $field->id]);
+                                              ' AND fieldid = :fieldid', ['data' => $defaultcategory->name, 'fieldid' => $field->id]);
 
         self::assertEquals($resultrequest[$user1infodata->id]->userid, $user1id);
         self::assertEquals($resultrequest[$user1infodata->id]->data, $oldentityname);
@@ -2275,7 +2275,7 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
             SELECT *
             FROM {user_info_data}
             WHERE ' . $DB->sql_compare_text('data') . ' = ' . $DB->sql_compare_text(':data') .
-                                              'AND fieldid = :fieldid', ['data' => $newentityname, 'fieldid' => $field->id]);
+                                              ' AND fieldid = :fieldid', ['data' => $newentityname, 'fieldid' => $field->id]);
 
         self::assertEquals($resultrequest[$user1infodata->id]->userid, $user1id);
         self::assertEquals($resultrequest[$user1infodata->id]->data, $newentityname);
