@@ -4708,16 +4708,17 @@
             return CloseOnSelect;
         });
 
-        S2.define('select2/i18n/en', [], function () {
-            // English
+        S2.define('select2/i18n/fr', [], function () {
+            // Français
+
             return {
                 errorLoading: function () {
-                    return 'The results could not be loaded.';
+                    return "Les résultats n'ont pas pu être chargés.";
                 },
                 inputTooLong: function (args) {
                     var overChars = args.input.length - args.maximum;
 
-                    var message = 'Please delete ' + overChars + ' character';
+                    var message = `Veuillez supprimer ${overChars} caractère`;
 
                     if (overChars != 1) {
                         message += 's';
@@ -4728,15 +4729,21 @@
                 inputTooShort: function (args) {
                     var remainingChars = args.minimum - args.input.length;
 
-                    var message = 'Please enter ' + remainingChars + ' or more characters';
+                    var message = `Veuillez saisir ${remainingChars} caractère`;
+
+                    if (remainingChars > 1) {
+                        message += 's';
+                    }
+
+                    message += " ou plus";
 
                     return message;
                 },
                 loadingMore: function () {
-                    return 'Loading more results…';
+                    return  'Chargement de résultats supplémentaires...';
                 },
                 maximumSelected: function (args) {
-                    var message = 'You can only select ' + args.maximum + ' item';
+                    var message = `Vous ne pouvez sélectionner que ${args.maximum} élément`;
 
                     if (args.maximum != 1) {
                         message += 's';
@@ -4745,13 +4752,13 @@
                     return message;
                 },
                 noResults: function () {
-                    return 'No results found';
+                    return 'Aucun résultat trouvé';
                 },
                 searching: function () {
-                    return 'Searching…';
+                    return 'Recherche en cours...';
                 },
                 removeAllItems: function () {
-                    return 'Remove all items';
+                    return 'Supprimer tous les éléments';
                 }
             };
         });
@@ -4791,7 +4798,7 @@
             './dropdown/selectOnClose',
             './dropdown/closeOnSelect',
 
-            './i18n/en'
+            './i18n/fr'
         ], function ($, require,
                      ResultsList,
                      SingleSelection, MultipleSelection, Placeholder, AllowClear,
@@ -4989,7 +4996,7 @@
                 options.language = this._resolveLanguage(options.language);
 
                 // Always fall back to English since it will always be complete
-                options.language.push('en');
+                options.language.push('fr');
 
                 var uniqueLanguages = [];
 
