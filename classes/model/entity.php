@@ -465,11 +465,14 @@ class entity extends model {
             return $url;
         }
 
+        global $DB;
+
         $firstsection = 1;
 
         // Can we view the first section.
         if ($this->dbinterface->is_course_section_visible($course->id, $firstsection)) {
-            $url->param('section', $firstsection);
+            $coursesection = $DB->get_record('course_sections', ['course' => $course->id, 'section' => $firstsection], 'id');
+            $url = new \moodle_url('/course/section.php', ['id' => $coursesection->id]);
         }
 
         return $url;
