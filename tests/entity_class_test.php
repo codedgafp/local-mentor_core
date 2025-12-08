@@ -502,8 +502,8 @@ class local_mentor_core_entity_class_testcase extends advanced_testcase {
         // Create presentation page.
         $entity->create_presentation_page();
 
+        $presentationpagecourse = $entity->get_presentation_page_course();
         $presentationpageurl = $entity->get_presentation_page_url();
-        $presentationpagecourse = get_course($presentationpageurl->get_param('id'));
 
         self::assertEquals($presentationpageurl->get_path(), '/moodle/course/view.php');
         self::assertEquals($presentationpagecourse->fullname, 'Présentation de l\'espace Mentor ' . $entityname);
