@@ -4345,24 +4345,17 @@ class database_interface {
      * @throws \dml_exception
      */
     public function get_courses_when_completion_refreshed($userid) {
-        return $this->db->get_records_sql('
-            SELECT
-                uc.courseid
-            FROM
-                {user_completion} uc
-            JOIN
-                {course} c ON c.id = uc.courseid
-            JOIN
-                {session} s ON s.courseshortname = c.shortname
-            JOIN
-                {logstore_mentor_session2} lms ON lms.sessionid = s.id
-            JOIN
-                {logstore_mentor_user2} lmu ON lmu.userid = uc.userid
-            JOIN
-                {logstore_mentor_log2} lml ON lml.userlogid = lmu.id AND lml.sessionlogid = lms.id
-            WHERE
-                uc.lastupdate < lml.lastview AND uc.userid = :userid
-        ', ['userid' => $userid]);
+        $sql = "SELECT uc.courseid
+                FROM {user_completion} uc
+                INNER JOIN {course} c ON c.id = uc.courseid
+                INNER JOIN {session} s ON s.courseshortname = c.shortname
+                INNER JOIN {user_lastaccess} ul on ul.userid = :userid
+                WHERE uc.lastupdate < ul.timeaccess
+                GROUP BY uc.courseid
+            ";
+        $params['userid'] = $userid;
+
+        return $this->db->get_records_sql($sql, $params);
     }
 
     /**

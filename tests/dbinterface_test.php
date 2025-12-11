@@ -6472,4 +6472,47 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         self::resetAllData();
     }
 
+    public function test_get_courses_when_completion_refreshed() 
+    {
+        global $DB;
+
+        $this->resetAfterTest(true);
+
+        self::setAdminUser();
+
+        $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity', 'shortname' => 'New Entity']);
+        $entity = \local_mentor_core\entity_api::get_entity($entityid);
+        $formationid = $entity->get_entity_formation_category();
+        $training = \local_mentor_core\training_api::create_training((object) [
+            'name' => 'trainingname',
+            'shortname' => 'trainingshortname',
+            'categorychildid' => $formationid,
+            'categoryid' => $entity->id,
+            'status' => \local_mentor_core\training::STATUS_DRAFT,
+            'content' => 'summary'
+        ]);
+        $session1 = \local_mentor_core\session_api::create_session($training->id, 'New Seesion 1', true);
+        \local_mentor_core\session_api::create_session($training->id, 'New Seesion 2', true);
+
+        $user = $this->getDataGenerator()->create_user();
+
+        $usercompletion = new \stdClass();
+        $usercompletion->userid = $user->id;
+        $usercompletion->courseid = $session1->courseid;
+        $usercompletion->completion = 33;
+        $usercompletion->lastupdate = strtotime("- 2 days");
+        $DB->insert_record('user_completion', $usercompletion);
+
+        $userlastaccess = new \stdClass();
+        $userlastaccess->userid = $user->id;
+        $userlastaccess->courseid = $session1->courseid;
+        $userlastaccess->timeaccess = time();
+        $DB->insert_record('user_lastaccess',$userlastaccess); 
+
+        $dbinterface = \local_mentor_core\database_interface::get_instance();
+        $result = $dbinterface->get_courses_when_completion_refreshed($user->id);
+
+        self::assertCount(1, $result);
+        self::assertEquals($session1->courseid, current($result)->courseid);
+    }
 }
