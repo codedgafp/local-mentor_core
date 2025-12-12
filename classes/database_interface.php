@@ -4349,9 +4349,10 @@ class database_interface {
                 FROM {user_completion} uc
                 INNER JOIN {course} c ON c.id = uc.courseid
                 INNER JOIN {session} s ON s.courseshortname = c.shortname
-                INNER JOIN {user_lastaccess} ul on ul.userid = :userid
+                INNER JOIN {user_lastaccess} ul on ul.userid = uc.userid
                 WHERE uc.lastupdate < ul.timeaccess
-                GROUP BY uc.courseid
+                AND uc.userid = :userid
+                GROUP BY uc.courseid 
             ";
         $params['userid'] = $userid;
 
