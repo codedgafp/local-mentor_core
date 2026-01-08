@@ -84,6 +84,18 @@ class profile extends model {
      */
     public $auth;
 
+    public $entityshortname;
+
+    public $hasconfigaccess;
+
+    public $secondaryentities;
+
+    public $department;
+
+    public $category;
+
+    public $status;
+
     /**
      * @var array
      */

@@ -29,8 +29,6 @@ use coding_exception;
 use context_course;
 use dml_exception;
 use Exception;
-use gradereport_singleview\local\screen\select;
-use function local_autogroup\plugin_is_enabled;
 use moodle_exception;
 use moodle_url;
 use stdClass;
@@ -117,6 +115,9 @@ class session extends model {
     /** @var string */
     public $numberparticipants;
 
+    /** @var int */
+    public $timecreated;
+
     // Cache the sessions participants.
     protected $participants;
 
@@ -140,8 +141,11 @@ class session extends model {
      * Caching
      */
     protected $course;
+
     protected $context;
+
     protected $training;
+
     protected $template;
 
     protected $courseusers;
@@ -178,7 +182,7 @@ class session extends model {
 
         foreach ($requiredfields as $requiredfield) {
             if (!property_exists($this->session, $requiredfield)) {
-                throw new \Exception('Missing field: ' . $requiredfield);
+                throw new Exception('Missing field: ' . $requiredfield);
             }
 
             $this->{$requiredfield} = $this->session->{$requiredfield};
@@ -196,7 +200,7 @@ class session extends model {
      */
     public function get_context() {
         if (empty($this->context)) {
-            $this->context = \context_course::instance($this->courseid);
+            $this->context = context_course::instance($this->courseid);
         }
         return $this->context;
     }
@@ -496,7 +500,7 @@ class session extends model {
 
         // Update the session in database.
         if (!$this->dbinterface->update_session($this)) {
-            throw new \moodle_exception('sessionupdatefailed', 'local_mentor_core');
+            throw new moodle_exception('sessionupdatefailed', 'local_mentor_core');
         }
 
         // Update session status.
@@ -510,7 +514,7 @@ class session extends model {
         if (isset($data->status) && $data->status == self::STATUS_OPENED_REGISTRATION) {
             $this->timecreated = time();
             if (!$this->dbinterface->update_session($this)) {
-                throw new \moodle_exception('sessionupdatefailed', 'local_mentor_core');
+                throw new moodle_exception('sessionupdatefailed', 'local_mentor_core');
             }
         }
 
@@ -790,7 +794,7 @@ class session extends model {
     public function is_participant($user) {
         if (is_int($user)) {
             $userid = $user;
-            $user = new \stdClass();
+            $user = new StdClass();
             $user->id = $userid;
         }
 
@@ -1176,13 +1180,13 @@ class session extends model {
     /**
      * Get a lighter version of the current object for an usage on mustache
      *
-     * @return \stdClass
+     * @return StdClass
      * @throws Exception
      */
     public function convert_for_template() {
         global $USER;
 
-        $templateobj = new \stdClass();
+        $templateobj = new StdClass();
         $templateobj->id = $this->id;
         $templateobj->fullname = $this->fullname;
         $templateobj->status = $this->status;
@@ -1200,7 +1204,7 @@ class session extends model {
             'local_trainings',
             'thumbnail',
             $training->id)) {
-            $templateobj->thumbnail = \moodle_url::make_pluginfile_url(
+            $templateobj->thumbnail = moodle_url::make_pluginfile_url(
                 $thumbnail->contextid,
                 $thumbnail->component,
                 $thumbnail->filearea,
@@ -2013,14 +2017,14 @@ class session extends model {
 
         // Generate a backup file to duplicate course.
         if (!$backupfile = $this->generate_backup()) {
-            throw new \Exception('Backup file not created');
+            throw new Exception('Backup file not created');
         }
 
         // Check if the destination category exists.
         if (!$DB->get_record('course_categories', ['id' => $course->category])) {
             // Remove backup file.
             $backupfile->delete();
-            throw new \Exception('Inexistant category : ' . $course->category);
+            throw new Exception('Inexistant category : ' . $course->category);
         }
 
         unset($this->courseshortname);
@@ -2050,7 +2054,7 @@ class session extends model {
             if ($counter++ > $max) {
                 // Remove backup file.
                 $backupfile->delete();
-                throw new \Exception('Limit of the number of loops reached!');
+                throw new Exception('Limit of the number of loops reached!');
             }
         }
 
@@ -2064,7 +2068,7 @@ class session extends model {
         if (!$newtraining->restore_backup($backupfile)) {
             // Remove backup file.
             $backupfile->delete();
-            throw new \Exception('Restoration failed');
+            throw new Exception('Restoration failed');
         }
 
         // Reset user data.
@@ -2125,7 +2129,7 @@ class session extends model {
 
         // Generate a backup file to duplicate course.
         if (!$backupfile = $this->generate_backup()) {
-            throw new \Exception('Backup file not created');
+            throw new Exception('Backup file not created');
         }
 
         $fs = get_file_storage();
@@ -2181,9 +2185,9 @@ class session extends model {
             if (!$training->restore_backup($backupfile)) {
                 // Remove backup file.
                 $backupfile->delete();
-                throw new \Exception('Restoration failed');
+                throw new Exception('Restoration failed');
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $tempbackup->delete();
             $backupfile->delete();
 
@@ -2215,7 +2219,7 @@ class session extends model {
             }
 
             mtrace($e->getMessage());
-            throw new \Exception('Restoration failed');
+            throw new Exception('Restoration failed');
         }
 
         // Reset user data.
@@ -2386,7 +2390,7 @@ class session extends model {
      * Reset all userdata
      */
     public function reset() {
-        $resetdata = new \stdClass();
+        $resetdata = new StdClass();
         $resetdata->reset_start_date = 0;
         $resetdata->reset_end_date = 0;
         $resetdata->reset_events = 1;

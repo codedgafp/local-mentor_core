@@ -25,11 +25,10 @@
 
 namespace local_mentor_core;
 
-use core\event\course_category_updated;
 use core_course_category;
-use local\mentor_specialization\classes\models\mentor_profile;
 use stdClass;
 use context_system;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once "$CFG->dirroot/local/mentor_core/classes/model/session.php";
@@ -42,9 +41,11 @@ class database_interface {
      */
     protected $db;
 
-    protected $entites;
+    protected $entities;
 
     protected $mainentity;
+
+    protected $mainentities;
 
     protected $courses;
 
@@ -55,6 +56,10 @@ class database_interface {
     protected $roles;
 
     protected $users;
+
+    protected $courseformatoptions;
+
+    protected $cohorts;
 
     /**
      * @var self
@@ -97,7 +102,7 @@ class database_interface {
      * @param string $table The name of the database table, without prefix (e.g., 'user', 'course').
      * @param stdClass $record An object containing the updated data for the record. Must include an 'id' property.
      * @return bool True if the record is successfully updated, false otherwise.
-     * @throws dml_exception Throws exception if update fails or if the record with the given ID does not exist.
+     * @throws \dml_exception Throws exception if update fails or if the record with the given ID does not exist.
     */
     public function update_record($table, $record) {
         return $this->db->update_record($table, $record);
@@ -505,12 +510,12 @@ class database_interface {
      * @throws \moodle_exception
      */
     public function create_course_category($entityname, $parent = 0, $idnumber = '') {
-        $data = new \stdClass();
+        $data = new stdClass();
         $data->name = $entityname;
         $data->idnumber = $idnumber;
         $data->parent = $parent;
         $data->description = '';
-        $category = \core_course_category::create($data);
+        $category = core_course_category::create($data);
 
         // Refresh entities cache.
         $this->get_all_entities(true);
@@ -950,7 +955,7 @@ class database_interface {
      * @throws \dml_exception
      */
     public function update_course_name($courseid, $coursename, $fullname = null) {
-        $course = new \stdClass();
+        $course = new stdClass();
         $course->id = $courseid;
 
         if ($fullname) {
@@ -1082,7 +1087,7 @@ class database_interface {
         $this->db->delete_records('course_format_options', ['courseid' => $courseid, 'format' => $format]);
 
         foreach ($options as $option) {
-            $insert = new \stdClass();
+            $insert = new stdClass();
             $insert->courseid = $courseid;
             $insert->format = $format;
             $insert->sectionid = $option->sectionid;
@@ -1516,7 +1521,7 @@ class database_interface {
         try {
             $this->db->delete_records('session_sharing', ['sessionid' => $sessionid]);
             foreach ($entitiesid as $entity) {
-                $sessionshare = new \stdClass();
+                $sessionshare = new stdClass();
                 $sessionshare->sessionid = $sessionid;
                 $sessionshare->coursecategoryid = $entity;
                 $this->db->insert_record('session_sharing', $sessionshare);
@@ -1821,7 +1826,7 @@ class database_interface {
      * @throws \dml_exception
      */
     public function update_session_status($sessionid, $newstatus) {
-        $session = new \stdClass();
+        $session = new stdClass();
         $session->id = $sessionid;
         $session->status = $newstatus;
         return $this->db->update_record('session', $session);
@@ -1887,7 +1892,7 @@ class database_interface {
         // Check if data contains all required fields.
         foreach ($requiredfields as $requiredfield) {
             if (!isset($data->{$requiredfield})) {
-                throw new coding_exception('Missing field ' . $requiredfield);
+                throw new \coding_exception('Missing field ' . $requiredfield);
             }
         }
 
@@ -1947,7 +1952,7 @@ class database_interface {
 
         // Check required entityid field.
         if (!isset($data->entityid)) {
-            throw new coding_exception('Missing field entityid');
+            throw new \coding_exception('Missing field entityid');
         }
 
         $request = '
@@ -2017,7 +2022,7 @@ class database_interface {
      *
      * @param int $trainingid
      * @param string $orderby - optional default empty to skip order by.
-     * @return \stdClass|bool
+     * @return array
      * @throws \dml_exception
      */
     public function get_sessions_by_training_id($trainingid, $orderby = '') {
@@ -2489,7 +2494,7 @@ class database_interface {
                 {course} c ON s.courseshortname = c.shortname
             WHERE
                 s.trainingid = :trainingid
-        ', ['trainingid' => $trainingid], MUST_EXIST);
+        ', ['trainingid' => $trainingid]);
     }
 
     /**
@@ -2809,7 +2814,7 @@ class database_interface {
     /**
      * Get list tasks adhoc
      *
-     * @param null $classname - specify an ad hoc class name
+     * @param $classname - specify an ad hoc class name
      * @return array
      * @throws \dml_exception
      */
@@ -3255,7 +3260,7 @@ class database_interface {
         } else if (!$profilefieldvalue) {
             // Value does not exist.
             $profilefield = $this->db->get_record('user_info_field', ['shortname' => $rolename]);
-            $profilefielddata = new \stdClass();
+            $profilefielddata = new stdClass();
             $profilefielddata->userid = $userid;
             $profilefielddata->fieldid = $profilefield->id;
             $profilefielddata->data = $value;
@@ -3394,7 +3399,7 @@ class database_interface {
      * @throws \dml_exception
      */
     public function add_user_favourite($component, $itemtype, $itemid, $contextid, $userid) {
-        $favourite = new \stdClass();
+        $favourite = new stdClass();
         $favourite->component = $component;
         $favourite->itemtype = $itemtype;
         $favourite->itemid = $itemid;
@@ -3671,7 +3676,7 @@ class database_interface {
             $preference->value = $value;
             $this->db->update_record('user_preferences', $preference);
         } else {
-            $preference = new \stdClass();
+            $preference = new stdClass();
             $preference->userid = $userid;
             $preference->name = $preferencename;
             $preference->value = $value;
@@ -3767,7 +3772,7 @@ class database_interface {
         }
 
         // Add new link.
-        $data = new \stdClass();
+        $data = new stdClass();
         $data->trainingid = $trainingid;
         $data->originaltrainingid = $originaltrainingid;
         $data->timecreated = time();
@@ -4329,7 +4334,7 @@ class database_interface {
             return;
         }
 
-        $usercompletion = new \stdClass();
+        $usercompletion = new stdClass();
         $usercompletion->userid = $userid;
         $usercompletion->courseid = $courseid;
         $usercompletion->completion = $completion;
@@ -4345,7 +4350,7 @@ class database_interface {
      * @throws \dml_exception
      */
     public function get_courses_when_completion_refreshed($userid) {
-        $sql = "SELECT uc.courseid
+        $sql = "SELECT distinct uc.courseid
                 FROM {user_completion} uc
                 INNER JOIN {course} c ON c.id = uc.courseid
                 INNER JOIN {session} s ON s.courseshortname = c.shortname
@@ -4382,7 +4387,7 @@ class database_interface {
      * @param int $day timestamp
      * @param int|null $limitetime
      * @return array
-     * @throws dml_exception
+     * @throws \dml_exception
      */
     public function get_never_logged_user_for_giver_day($day, $limitetime = null) {
         global $DB;
@@ -4412,7 +4417,7 @@ class database_interface {
      * @param int $day timestamp
      * @param int|null $limitetime timestamp
      * @return array
-     * @throws dml_exception
+     * @throws \dml_exception
      */
     public function get_not_logged_user_for_giver_day($day, $limitetime = null) {
         global $DB;
@@ -4440,7 +4445,7 @@ class database_interface {
      *
      * @param int $day timestamp
      * @return array
-     * @throws dml_exception
+     * @throws \dml_exception
      */
     public function get_user_suspended_for_days_given($day) {
         return $this->db->get_records_sql('

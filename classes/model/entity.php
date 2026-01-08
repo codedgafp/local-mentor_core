@@ -99,6 +99,26 @@ class entity extends model {
     public $shortname;
 
     /**
+     * @var array|null
+     */
+    public $entities;
+
+    /**
+     * @var \stdClass
+     */
+    public $session ;
+
+    /**
+     * @var \stdClass
+     */
+    public $trainings;
+
+    /**
+     * @var \stdClass
+     */
+    public $user;
+
+    /**
      * @var string
      */
     public $entitypath;
@@ -106,6 +126,11 @@ class entity extends model {
     public $subentities = null;
 
     public $lastedadmincourses = [];
+
+    /**
+     * @var string
+     */
+    public $idnumber;
 
     protected $context;
 
@@ -375,11 +400,11 @@ class entity extends model {
     /**
      * Create a presentation page for the entity
      *
-     * @return \stdClass
+     * @return bool|\stdClass
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function create_presentation_page() {
+    public function create_presentation_page(): bool|\stdClass {
         global $USER;
 
         // Check capabilities.
@@ -861,7 +886,7 @@ class entity extends model {
         // Set edadmin courses object.
         foreach ($typenamelist as $typename) {
             $this->{$typename} = $existingcourses[$typename] ?? '';
-            $this->courses[$typename] = $this->{$typename};
+            $this->courses[$typename] = $this->{$typename};        
         }
 
         // Return the created courses.
@@ -1145,7 +1170,7 @@ class entity extends model {
                 // Create children category.
                 $category = \core_course_category::create($trainingchild);
             } catch (\Exception $e) {
-                throw new Exception("Unable to create an entity training child category, please try again.");
+                throw new \Exception("Unable to create an entity training child category, please try again.");
             }
 
             return $category->id;
@@ -1329,7 +1354,7 @@ class entity extends model {
     /**
      * Check if the user can manage entity of subentity trainings
      *
-     * @param null $user
+     * @param $user
      * @param bool $checksubentities
      * @return bool
      * @throws \coding_exception
@@ -1366,7 +1391,7 @@ class entity extends model {
     /**
      * Check if the user can manage entity of subentity sessions
      *
-     * @param null $user
+     * @param $user
      * @param bool $checksubentities
      * @return bool
      * @throws \coding_exception

@@ -83,6 +83,10 @@ class training extends model {
 
     public $courseid;
 
+    public $categoryid;
+
+    public $categorychildid;
+
     public $courseformat;
 
     protected $course;
@@ -104,6 +108,10 @@ class training extends model {
     protected $pictures = [];
 
     public $lastupdate;
+
+    public $entityid;
+
+    public $subentityname;
 
     /**
      * training constructor.

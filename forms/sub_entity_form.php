@@ -30,6 +30,8 @@ require_once("$CFG->libdir/formslib.php");
  */
 class sub_entity_form extends \moodleform {
 
+    protected $entity;
+
     /**
      * training_form constructor.
      *
