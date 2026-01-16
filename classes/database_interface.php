@@ -4382,6 +4382,26 @@ class database_interface {
     }
 
     /**
+     * Get the latest data from “course_modules_completion” after the last execution of the “update_users_course_completion” task
+     * 
+     * @param int $tasklastruntime timestamp
+     * @return array
+     */
+    public function get_last_course_modules_completions(int $tasklastruntime): array
+    {
+        $sql = "SELECT cmc.id, cmc.userid, cm.course
+                FROM {course_modules_completion} cmc
+                INNER JOIN {course_modules} cm
+                    ON cm.id = cmc.coursemoduleid
+                WHERE cmc.timemodified > ?
+                ";
+
+        $params['tasklastruntime'] = $tasklastruntime;
+
+        return $this->db->get_records_sql($sql, $params);
+    }
+
+    /**
      * Get users never logged in on a given day
      *
      * @param int $day timestamp

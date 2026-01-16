@@ -428,6 +428,7 @@ $string['alertrestored'] = '\'{$a->name}\' a été restaurée.';
 $string['alertdeleted'] = '\'{$a->name}\'  a été supprimée.';
 
 $string['task_cleanup_trainings_and_sessions'] = 'Nettoyage des formations et sessions orphelines';
+$string['task_update_users_course_completion'] = 'Mise à jour du pourcentage de complétion des cours';
 
 $string['close'] = 'Fermer';
 

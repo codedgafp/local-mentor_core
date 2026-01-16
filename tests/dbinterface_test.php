@@ -6515,4 +6515,41 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         self::assertCount(1, $result);
         self::assertEquals($session1->courseid, current($result)->courseid);
     }
+
+    public function test_get_last_course_modules_completions(): void
+    {
+        global $DB;
+        self::setAdminUser();
+        self::resetAfterTest(true);
+
+        $mcdatabaseinterface = new \local_mentor_core\database_interface();
+
+        // create course to complete
+        $coursetocomplete = self::getDataGenerator()->create_course(['enablecompletion' => 1]);
+
+        // create activity and link to course to complete
+        $recordmodule = new stdClass();
+        $recordmodule->course = $coursetocomplete;
+        $recordmodule->completion = 2;
+        $recordmodule->completionview = 1;
+        $recordmodule->completionexpected = 0;
+        $recordmodule->completionunlocked = 1;
+        $recordmodule->visible = 1;
+        $foruminstance = self::getDataGenerator()->create_module('forum', $recordmodule);
+
+        // create user
+        $participant = self::getDataGenerator()->create_and_enrol($coursetocomplete, 'participant');
+
+        $coursemodulecompleted = $mcdatabaseinterface->get_last_course_modules_completions(strtotime("-1 hours"));
+        self::assertCount(0, $coursemodulecompleted);
+
+        // create course completion
+        new completion_completion(['course' => $coursetocomplete->id, 'userid' => $participant->id]);
+
+        // completed activity
+        core_completion_external::override_activity_completion_status($participant->id, $foruminstance->cmid, COMPLETION_COMPLETE);
+
+        $coursemodulecompleted = $mcdatabaseinterface->get_last_course_modules_completions(strtotime("-1 hours"));
+        self::assertCount(1, $coursemodulecompleted);
+    }
 }
