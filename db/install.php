@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+
+use tool_dataprivacy\api;
+
 /**
  * Database install for the mentor_core local.
  *
@@ -45,6 +48,15 @@ function xmldb_local_mentor_core_install() {
 
     // Make sure the extension unaccent is available
     $DB->execute("CREATE EXTENSION IF NOT EXISTS unaccent");
+
+    $record = (object)[
+        'name' => 'Catégorie par défaut',
+        'description' => 'Catégorie RGPD créée automatiquement',
+        'descriptionformat' => FORMAT_HTML,
+    ];
+
+    api::create_category($record);
+    
 
     return true;
 }

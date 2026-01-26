@@ -396,24 +396,19 @@ class profile_api {
             $user->auth = isset($CFG->defaultauth) ? $CFG->defaultauth : '';
         }
 
-        if (empty($user->auth)) $user->auth = 'ldap_syncplus';
+        if (empty($user->auth)) $user->auth = 'oidc';
 
         // Create a Moodle user.
         $user->id = user_create_user($user, false, false);
         
-        // Use LDAP Sync Plus auth by default.
-        if ($user->auth === 'ldap_syncplus') {
-            // Create user into LDAP.
+        // Use OIDC auth by default.
+        if ($user->auth === 'oidc') {
+            // Create user into OIDC system.
             $auth = get_auth_plugin($user->auth);
 
-            // Check if the user has been created into the ldap.
             if (!$auth->user_create($user, $user->password)) {
                 throw new \moodle_exception('cannotupdateuseronexauth', '', '', $user->auth);
             }
-        }
-        // Update user password into LDAP.
-        if (isset($auth) && !$auth->user_update_password($user, $user->password)) {
-            throw new \moodle_exception('cannotupdateuseronexauth', '', '', $user->auth);
         }
 
         // Pre-process custom profile menu fields data.
