@@ -4363,7 +4363,7 @@ class database_interface {
      * @throws \dml_exception
      */
     public function get_courses_when_completion_refreshed($userid) {
-        $sql = "SELECT distinct uc.courseid
+        $sql = "SELECT DISTINCT uc.courseid
                 FROM {user_completion} uc
                 INNER JOIN {course} c ON c.id = uc.courseid
                 INNER JOIN {session} s ON s.courseshortname = c.shortname
