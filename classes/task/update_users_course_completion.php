@@ -21,33 +21,121 @@ class update_users_course_completion extends \core\task\scheduled_task
 
     public function execute(): void
     {
-        global $DB;
+        global $DB, $CFG;
 
         $taskdata = \core\task\manager::get_scheduled_task(self::class);
         $tasklastruntime = $taskdata->get_last_run_time();
 
         $mcdatabaseinterface = new \local_mentor_core\database_interface();
 
-        $coursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime);        
         $coursearray = [];
+        $courseidscache = [];
+        $lastid = 0;
+        $totalprocessed = 0;
 
-        foreach ($coursemodulescompleted as $coursemodule) {
-            if (!isset($coursearray[$coursemodule->course])) {
-                $coursearray[$coursemodule->course] = $DB->get_record('course', ['id' => $coursemodule->course]);
-            }
+        $countcoursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastid, true);
 
-            $userid = $coursemodule->userid;
-            $course = $coursearray[$coursemodule->course];
-            $courseid = $course->id;
-
-            $newusercompletion = local_mentor_core_calculate_completion_get_progress_percentage($course, $userid);
-
-            $usercompletion = $DB->get_record('user_completion', ['userid' => $userid, 'courseid' => $courseid]);
-
-            if ($usercompletion->completion != $newusercompletion) {
-                $this->log("Le cours [id: $courseid] voit sa complétion mise à jour : $usercompletion->completion => $newusercompletion");
-                $mcdatabaseinterface->set_user_course_completion($userid, $courseid, $newusercompletion);
-            }
+        if ($countcoursemodulescompleted == 0) {
+            $this->log("Aucun enregistrement à traiter.");
+            return;
         }
+
+        $this->log("Nombre total d'enregistrements à traiter : $countcoursemodulescompleted");
+
+        $iterations = ceil($countcoursemodulescompleted / $CFG->completion_limit_result);
+
+        for ($i = 0; $i < $iterations; $i++) {
+            // Get a batch of "course_modules_completions" determined by the limit
+            $coursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastid);
+
+            // Get unique ids from courses and users (to avoids making new requests for the same values)
+            $courseids = [];
+            $userids = [];
+            $newcourseids = [];
+
+            foreach ($coursemodulescompleted as $coursemodule) {
+                if (!isset($courseidscache[$coursemodule->course])) {
+                    $courseidscache[$coursemodule->course] = true;
+                    $newcourseids[$coursemodule->course] = $coursemodule->course;
+                }
+
+                $courseids[$coursemodule->course] = $coursemodule->course;
+                $userids[$coursemodule->userid] = $coursemodule->userid;
+            }
+
+            // Get all courses we found in "course_modules_completions"
+            if (!empty($newcourseids)) {
+                $newcourses = $DB->get_records_list('course', 'id', array_values($newcourseids));
+                foreach ($newcourses as $newcourse) {
+                    $coursearray[$newcourse->id] = $newcourse;
+                }
+            }
+
+            // Get all "user_completions" with one request
+            [$inuseridssql, $useridsparams] = $DB->get_in_or_equal(array_values($userids), SQL_PARAMS_NAMED);
+            [$incourseidssql, $courseidsparams] = $DB->get_in_or_equal(array_values($courseids), SQL_PARAMS_NAMED);
+            $params = array_merge($useridsparams, $courseidsparams);
+
+            $sql = "SELECT CONCAT(userid, '_', courseid) as uniquekey, completion
+                    FROM {user_completion}
+                    WHERE userid $inuseridssql
+                    AND courseid $incourseidssql
+                    ";
+
+            $usercompletions = $DB->get_records_sql($sql, $params);
+
+            $updates = [];
+
+            foreach ($coursemodulescompleted as $coursemodule) {
+                $userid = $coursemodule->userid;
+                $courseid = $coursemodule->course;
+                $uniquekey = $userid . '_' . $courseid;
+
+                $course = $coursearray[$courseid] ?? null;
+
+                if (!$course || isset($updates[$uniquekey]))
+                    continue;
+
+                // Get the new completion
+                $newusercompletion = local_mentor_core_calculate_completion_get_progress_percentage($course, $userid);
+
+                $usercompletion = $usercompletions[$uniquekey] ?? null;
+
+                // Check if the completion need to be updated
+                if ($usercompletion && $usercompletion->completion != $newusercompletion) {
+                    $updates[$uniquekey] = [
+                        'userid' => $userid,
+                        'courseid' => $courseid,
+                        'old' => $usercompletion->completion,
+                        'new' => $newusercompletion
+                    ];
+                }
+            }
+
+            // Update all the completions that need it
+            if (!empty($updates)) {
+                foreach ($updates as $update) {
+                    $this->log("Le cours [id: {$update['courseid']}] voit sa complétion mise à jour : {$update['old']} => {$update['new']}");
+                    $mcdatabaseinterface->set_user_course_completion(
+                        $update['userid'],
+                        $update['courseid'],
+                        $update['new']
+                    );
+                }
+            }
+
+            $lastid = end($coursemodulescompleted)->id;
+            $totalprocessed += count($coursemodulescompleted);
+
+            $progress = round(($i + 1) / $iterations * 100, 2);
+            $this->log("Progression : $progress% | Itération " . ($i + 1) . "/$iterations | Total traité : $totalprocessed | Updates : " . count($updates));
+
+            // Libération mémoire
+            unset($coursemodulescompleted);
+            unset($usercompletions);
+            unset($updates);
+        }
+
+        $this->log("Traitement terminé : $totalprocessed/$countcoursemodulescompleted enregistrements traités");
     }
 }

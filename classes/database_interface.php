@@ -4385,20 +4385,36 @@ class database_interface {
      * Get the latest data from “course_modules_completion” after the last execution of the “update_users_course_completion” task
      * 
      * @param int $tasklastruntime timestamp
-     * @return array
+     * @param int $lastid
+     * @param bool $count
+     * @return array|int
      */
-    public function get_last_course_modules_completions(int $tasklastruntime): array
+    public function get_last_course_modules_completions(int $tasklastruntime, int $lastid, bool $count = false): array|int
     {
-        $sql = "SELECT cmc.id, cmc.userid, cm.course
+        $select = "COUNT(cmc.id)";
+        $endsql = "";
+        $params = [
+            'tasklastruntime' => $tasklastruntime,
+        ];
+
+        if (!$count) {
+            global $CFG;
+            $select = "cmc.id, cmc.userid, cm.course";
+            $endsql = " AND cmc.id > :lastid ORDER BY cmc.id asc LIMIT :limit";
+            $params['lastid'] = $lastid;
+            $params['limit'] = $CFG->completion_limit_result;
+        }
+
+        $sql = "SELECT $select
                 FROM {course_modules_completion} cmc
                 INNER JOIN {course_modules} cm
                     ON cm.id = cmc.coursemoduleid
-                WHERE cmc.timemodified > ?
+                WHERE cmc.timemodified > :tasklastruntime
+                AND cm.visible = 1
+                $endsql
                 ";
 
-        $params['tasklastruntime'] = $tasklastruntime;
-
-        return $this->db->get_records_sql($sql, $params);
+        return $count ? $this->db->count_records_sql($sql, $params) : $this->db->get_records_sql($sql, $params);
     }
 
     /**

@@ -6516,11 +6516,13 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         self::assertEquals($session1->courseid, current($result)->courseid);
     }
 
-    public function test_get_last_course_modules_completions(): void
+    public function test_get_last_course_modules_completions_with_one_user(): void
     {
-        global $DB;
+        global $DB, $CFG;
         self::setAdminUser();
         self::resetAfterTest(true);
+
+        $CFG->completion_limit_result = 50;
 
         $mcdatabaseinterface = new \local_mentor_core\database_interface();
 
@@ -6528,20 +6530,20 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         $coursetocomplete = self::getDataGenerator()->create_course(['enablecompletion' => 1]);
 
         // create activity and link to course to complete
-        $recordmodule = new stdClass();
-        $recordmodule->course = $coursetocomplete;
-        $recordmodule->completion = 2;
-        $recordmodule->completionview = 1;
-        $recordmodule->completionexpected = 0;
-        $recordmodule->completionunlocked = 1;
-        $recordmodule->visible = 1;
-        $foruminstance = self::getDataGenerator()->create_module('forum', $recordmodule);
+        $foruminstance = $this->getDataGenerator()->create_module('forum', [
+            'course' => $coursetocomplete->id,
+            'completion' => COMPLETION_TRACKING_AUTOMATIC,
+            'completionview' => 1,
+            'completionexpected' => 0,
+            'completionunlocked' => 1,
+            'visible' => 1
+        ]);
 
         // create user
         $participant = self::getDataGenerator()->create_and_enrol($coursetocomplete, 'participant');
 
-        $coursemodulecompleted = $mcdatabaseinterface->get_last_course_modules_completions(strtotime("-1 hours"));
-        self::assertCount(0, $coursemodulecompleted);
+        $coursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions(strtotime("-1 hours"), 0);
+        self::assertCount(0, $coursemodulescompleted);
 
         // create course completion
         new completion_completion(['course' => $coursetocomplete->id, 'userid' => $participant->id]);
@@ -6549,7 +6551,57 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         // completed activity
         core_completion_external::override_activity_completion_status($participant->id, $foruminstance->cmid, COMPLETION_COMPLETE);
 
-        $coursemodulecompleted = $mcdatabaseinterface->get_last_course_modules_completions(strtotime("-1 hours"));
-        self::assertCount(1, $coursemodulecompleted);
+        $coursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions(strtotime("-1 hours"), 0);
+        self::assertCount(1, $coursemodulescompleted);
+    }
+
+    public function test_get_last_course_modules_completions_with_a_lot_of_users(): void
+    {
+        global $DB, $CFG;
+        self::setAdminUser();
+        self::resetAfterTest(true);
+
+        $lastid = 0;
+        $CFG->completion_limit_result = 50;
+
+        $mcdatabaseinterface = new \local_mentor_core\database_interface();
+
+        for ($i = 0; $i < 100; $i++) { 
+            // create course to complete
+            $coursetocomplete = self::getDataGenerator()->create_course(['enablecompletion' => 1]);
+
+            // create activity and link to course to complete
+            $foruminstance = $this->getDataGenerator()->create_module('forum', [
+                'course' => $coursetocomplete->id,
+                'completion' => COMPLETION_TRACKING_AUTOMATIC,
+                'completionview' => 1,
+                'completionexpected' => 0,
+                'completionunlocked' => 1,
+                'visible' => 1
+            ]);
+
+            // create user
+            $participant = self::getDataGenerator()->create_and_enrol($coursetocomplete, 'participant');
+
+            // create course completion
+            new completion_completion(['course' => $coursetocomplete->id, 'userid' => $participant->id]);
+
+            // completed activity
+            core_completion_external::override_activity_completion_status($participant->id, $foruminstance->cmid, COMPLETION_COMPLETE);
+        }
+
+        $tasklastruntime = strtotime("-1 hours");
+        $countcoursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastid, true);
+
+        $iterations = ceil($countcoursemodulescompleted / $CFG->completion_limit_result);
+
+        for ($i = 0; $i < $iterations; $i++) {
+            $coursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastid);
+
+            if (empty($coursemodulescompleted)) break;
+
+            self::assertCount($CFG->completion_limit_result, $coursemodulescompleted);
+            $lastid = end($coursemodulescompleted)->id;
+        }
     }
 }
