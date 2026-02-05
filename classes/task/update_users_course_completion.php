@@ -30,10 +30,10 @@ class update_users_course_completion extends \core\task\scheduled_task
 
         $coursearray = [];
         $courseidscache = [];
-        $lastid = 0;
+        $lastrows = 0;
         $totalprocessed = 0;
 
-        $countcoursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastid, true);
+        $countcoursemodulescompleted = count($mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastrows, true));
 
         if ($countcoursemodulescompleted == 0) {
             $this->log("Aucun enregistrement à traiter.");
@@ -46,7 +46,7 @@ class update_users_course_completion extends \core\task\scheduled_task
 
         for ($i = 0; $i < $iterations; $i++) {
             // Get a batch of "course_modules_completions" determined by the limit
-            $coursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastid);
+            $coursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastrows);
 
             // Get unique ids from courses and users (to avoids making new requests for the same values)
             $courseids = [];
@@ -115,7 +115,7 @@ class update_users_course_completion extends \core\task\scheduled_task
             // Update all the completions that need it
             if (!empty($updates)) {
                 foreach ($updates as $update) {
-                    $this->log("Le cours [id: {$update['courseid']}] voit sa complétion mise à jour : {$update['old']} => {$update['new']}");
+                    $this->log("Le cours [id: {$update['courseid']}] pour l'utilisateur [id: {$update['userid']}] voit sa complétion mise à jour : {$update['old']} => {$update['new']}");
                     $mcdatabaseinterface->set_user_course_completion(
                         $update['userid'],
                         $update['courseid'],
@@ -124,11 +124,11 @@ class update_users_course_completion extends \core\task\scheduled_task
                 }
             }
 
-            $lastid = end($coursemodulescompleted)->id;
+            $lastrows += $CFG->completion_limit_result;
             $totalprocessed += count($coursemodulescompleted);
 
             $progress = round(($i + 1) / $iterations * 100, 2);
-            $this->log("Progression : $progress% | Itération " . ($i + 1) . "/$iterations | Total traité : $totalprocessed | Updates : " . count($updates));
+            $this->log("Progression : $progress% | Itération " . ($i + 1) . "/$iterations | Total traité : $totalprocessed | Complétions mises à jour : " . count($updates));
 
             // Libération mémoire
             unset($coursemodulescompleted);

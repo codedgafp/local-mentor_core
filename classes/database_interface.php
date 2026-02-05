@@ -4385,13 +4385,12 @@ class database_interface {
      * Get the latest data from “course_modules_completion” after the last execution of the “update_users_course_completion” task
      * 
      * @param int $tasklastruntime timestamp
-     * @param int $lastid
+     * @param int $lastrows
      * @param bool $count
-     * @return array|int
+     * @return array
      */
-    public function get_last_course_modules_completions(int $tasklastruntime, int $lastid, bool $count = false): array|int
+    public function get_last_course_modules_completions(int $tasklastruntime, int $lastrows, bool $count = false): array
     {
-        $select = "COUNT(cmc.id)";
         $endsql = "";
         $params = [
             'tasklastruntime' => $tasklastruntime,
@@ -4399,22 +4398,23 @@ class database_interface {
 
         if (!$count) {
             global $CFG;
-            $select = "cmc.id, cmc.userid, cm.course";
-            $endsql = " AND cmc.id > :lastid ORDER BY cmc.id asc LIMIT :limit";
-            $params['lastid'] = $lastid;
+            $endsql = " LIMIT :limit OFFSET :lastrows";
             $params['limit'] = $CFG->completion_limit_result;
+            $params['lastrows'] = $lastrows;
         }
 
-        $sql = "SELECT $select
+        $sql = "SELECT CONCAT(cmc.userid, '_', cm.course), cmc.userid, cm.course
                 FROM {course_modules_completion} cmc
                 INNER JOIN {course_modules} cm
                     ON cm.id = cmc.coursemoduleid
                 WHERE cmc.timemodified > :tasklastruntime
                 AND cm.visible = 1
+                GROUP BY cm.course, cmc.userid
+                ORDER BY cm.course, cmc.userid
                 $endsql
                 ";
 
-        return $count ? $this->db->count_records_sql($sql, $params) : $this->db->get_records_sql($sql, $params);
+        return $this->db->get_records_sql($sql, $params);
     }
 
     /**

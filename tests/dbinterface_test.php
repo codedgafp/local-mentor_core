@@ -6561,7 +6561,7 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         self::setAdminUser();
         self::resetAfterTest(true);
 
-        $lastid = 0;
+        $lastrows = 0;
         $CFG->completion_limit_result = 50;
 
         $mcdatabaseinterface = new \local_mentor_core\database_interface();
@@ -6591,17 +6591,18 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         }
 
         $tasklastruntime = strtotime("-1 hours");
-        $countcoursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastid, true);
+        $countcoursemodulescompleted = count($mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastrows, true));
 
         $iterations = ceil($countcoursemodulescompleted / $CFG->completion_limit_result);
 
         for ($i = 0; $i < $iterations; $i++) {
-            $coursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastid);
+            $coursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastrows);
 
             if (empty($coursemodulescompleted)) break;
 
             self::assertCount($CFG->completion_limit_result, $coursemodulescompleted);
-            $lastid = end($coursemodulescompleted)->id;
+
+            $lastrows += $CFG->completion_limit_result;
         }
     }
 }
