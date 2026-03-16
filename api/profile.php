@@ -319,7 +319,7 @@ class profile_api {
         $user->firstname = $firstname;
         $user->email = $email;
         $user->username = local_mentor_core_mail_to_username($email);
-        $user->password = 'to be generated';
+        $user->password = '';
         $user->mnethostid = 1;
         $user->confirmed = 1;
         if ($auth !== null) {
@@ -406,7 +406,7 @@ class profile_api {
             // Create user into OIDC system.
             $auth = get_auth_plugin($user->auth);
 
-            if (!$auth->user_create($user, $user->password)) {
+            if (!$auth->user_create($user, null)) {
                 throw new \moodle_exception('cannotupdateuseronexauth', '', '', $user->auth);
             }
         }
@@ -421,11 +421,6 @@ class profile_api {
         $user->lastnamephonetic = '';
         $user->middlename = '';
         $user->alternatename = '';
-
-        // Manage password.
-        setnew_password_and_mail($user);
-        unset_user_preference('create_password', $user);
-        set_user_preference('auth_forcepasswordchange', 1, $user);
 
         // Prepare event data
         $data = [
