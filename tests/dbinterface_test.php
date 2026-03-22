@@ -6170,16 +6170,46 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
 
         self::assertFalse($dbi->get_user_course_completion($userid, $courseid));
 
-        $usercompletion = new \stdClass();
-        $usercompletion->userid = $userid;
-        $usercompletion->courseid = $courseid;
-        $usercompletion->completion = 100;
-        $usercompletion->lastupdate = time();
-        $DB->insert_record('user_completion', $usercompletion);
+        $old = new \stdClass();
+        $old->userid = $userid;
+        $old->courseid = $courseid;
+        $old->completion = 0;
+        $old->lastupdate = time() - 100;
+        $DB->insert_record('user_completion', $old);
 
-        self::assertIsObject($dbi->get_user_course_completion($userid, $courseid));
+        $result = $dbi->get_user_course_completion($userid, $courseid);
+
+        $this->assertNotFalse($result);
+        $this->assertEquals(0, $result->completion);
+
+        $recent = new \stdClass();
+        $recent->userid = $userid;
+        $recent->courseid = $courseid;
+        $recent->completion = 75;
+        $recent->lastupdate = time();
+        $DB->insert_record('user_completion', $recent);
+
+        $result = $dbi->get_user_course_completion($userid, $courseid);
+
+        $this->assertNotFalse($result);
+        $this->assertEquals(75, $result->completion);
 
         self::resetAllData();
+    }
+
+    /**
+     * Test get_user_course_completion return false when no record exist
+     *
+     * @throws dml_exception
+     * @throws moodle_exception
+     *
+     * @covers  \local_mentor_core\database_interface::get_user_course_completion
+     */
+    public function test_returns_false_when_no_record() {
+        $dbinterface = new \local_mentor_core\database_interface();
+        $result = $dbinterface->get_user_course_completion(1, 1);
+
+        $this->assertFalse($result);
     }
 
     /**

@@ -76,10 +76,17 @@ class update_users_course_completion extends \core\task\scheduled_task
             [$incourseidssql, $courseidsparams] = $DB->get_in_or_equal(array_values($courseids), SQL_PARAMS_NAMED);
             $params = array_merge($useridsparams, $courseidsparams);
 
-            $sql = "SELECT CONCAT(userid, '_', courseid) as uniquekey, completion
-                    FROM {user_completion}
-                    WHERE userid $inuseridssql
-                    AND courseid $incourseidssql
+            $sql = "SELECT CONCAT(uc.userid, '_', uc.courseid) as uniquekey, uc.completion as completion
+                    FROM {user_completion} uc
+                    INNER JOIN (
+                        SELECT userid, courseid, MAX(lastupdate) AS max_date
+                        FROM {user_completion}
+                        WHERE userid $inuseridssql
+                        AND courseid $incourseidssql
+                        GROUP BY userid, courseid
+                    ) latest ON uc.userid = latest.userid
+                            AND uc.courseid = latest.courseid
+                            AND uc.lastupdate = latest.max_date
                     ";
 
             $usercompletions = $DB->get_records_sql($sql, $params);

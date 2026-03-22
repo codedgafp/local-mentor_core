@@ -4292,14 +4292,27 @@ class database_interface {
     }
 
     /**
+     * Note: Moodle allowing to have multiple complation for a same course + user.
+     * We ensure to get only one result by taking the last updated.
+     * 
      * @param int $userid
      * @param int $courseid
      * @return false|\stdClass
      *
      * @throws \dml_exception
      */
-    public function get_user_course_completion($userid, $courseid) {
-        return $this->db->get_record('user_completion', ['userid' => $userid, 'courseid' => $courseid]);
+    public function get_user_course_completion($userid, $courseid)
+    {
+        $records = $this->db->get_records(
+            'user_completion',
+            ['userid' => $userid, 'courseid' => $courseid],
+            'lastupdate DESC',
+            '*',
+            0,
+            1
+        );
+
+        return !empty($records) ? reset($records) : false;
     }
 
     /**
