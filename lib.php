@@ -2334,6 +2334,23 @@ function local_mentor_core_get_course_url($course, $ismoodleurl = true)
     if ($coursedisplay != 1) {
         return $url;
     }
+
+    // Check if the user has a last visited section saved via the ComebackToSection feature.
+    $lastsectionid = isloggedin() ? get_user_preferences('theme_mentor_course_' . $course->id . '_lastsection') : null;
+
+    if ($lastsectionid) {
+        global $DB;
+        // Verify the saved section still exists and belongs to this course.
+        $sectioninfo = $DB->get_record('course_sections', ['id' => $lastsectionid, 'course' => $course->id]);
+        if ($sectioninfo && $dbi->is_course_section_visible($course->id, $sectioninfo->section)) {
+            $url = $ismoodleurl ?
+                new \moodle_url('/course/section.php', ['id' => $lastsectionid]) :
+                $CFG->wwwroot . '/course/section.php?id=' . $lastsectionid;
+            return $url;
+        }
+    }
+
+    // Fallback to first section.
     $firstsection = 1;
 
     // Can we view the first section.
