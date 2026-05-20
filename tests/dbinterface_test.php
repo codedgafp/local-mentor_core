@@ -6183,11 +6183,10 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
         $this->assertEquals(0, $result->completion);
 
         $recent = new \stdClass();
-        $recent->userid = $userid;
-        $recent->courseid = $courseid;
+        $recent->id = $result->id;
         $recent->completion = 75;
         $recent->lastupdate = time();
-        $DB->insert_record('user_completion', $recent);
+        $DB->update_record('user_completion', $recent);
 
         $result = $dbi->get_user_course_completion($userid, $courseid);
 

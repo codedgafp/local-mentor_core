@@ -2883,9 +2883,9 @@ class database_interface {
             SELECT DISTINCT r.*
             FROM {role} r
             JOIN {role_assignments} ra ON ra.roleid = r.id
-            WHERE ra.userid = :userid
+            WHERE ra.userid = :userid AND r.shortname != :externalrole
             ORDER BY r.sortorder',
-            ['userid' => $userid],
+            ['userid' => $userid, 'externalrole' => 'utilisateurexterne'],
             IGNORE_MULTIPLE
         );
     }

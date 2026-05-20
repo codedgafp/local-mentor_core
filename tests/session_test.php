@@ -2904,14 +2904,13 @@ class local_mentor_core_session_testcase extends advanced_testcase {
         self::resetAllData();
     }
 
-
     /**
      * Test retrieving user sessions that are part of a program course
      *
      * @covers \local_mentor_core\session_api::get_user_sessions
      */
     public function test_get_user_sessions_with_program_course() {
-         global $DB;
+        global $DB;
 
         $this->resetAfterTest(true);
         $this->reset_singletons();
@@ -2926,42 +2925,51 @@ class local_mentor_core_session_testcase extends advanced_testcase {
 
         // Get session.
         try {
-            $session = \local_mentor_core\session_api::get_session($sessionid);
+            $session = session_api::get_session($sessionid);
         } catch (\Exception $e) {
             self::fail($e->getMessage());
         }
 
         // Updating the status session to have return sessions.
         $session->opento = 'all';
-        $session->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
-        \local_mentor_core\session_api::update_session($session);
-
-
+        $session->status = session::STATUS_IN_PROGRESS;
+        session_api::update_session($session);
 
         // Create 2 sessions.
-        $session1Id = \local_mentor_core\session_api::create_session($session->get_training()->id, 'Session 1', true);
-        $session2Id = \local_mentor_core\session_api::create_session($session->get_training()->id, 'Session 2', true);
+        $session1Id = session_api::create_session($session->get_training()->id, 'Session 1', true);
+        $session2Id = session_api::create_session($session->get_training()->id, 'Session 2', true);
 
          // Get session.
-         try {
-            $session1 = \local_mentor_core\session_api::get_session($session1Id);
-            $session2 = \local_mentor_core\session_api::get_session($session2Id);
+        try {
+            $session1 = session_api::get_session($session1Id);
+            $session2 = session_api::get_session($session2Id);
         } catch (\Exception $e) {
             self::fail($e->getMessage());
         }
 
         // Updating the status session to have return sessions.
         $session1->opento = 'all';
-        $session1->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
-        \local_mentor_core\session_api::update_session($session1);
-         // Updating the status session to have return sessions.
-         $session2->opento = 'all';
-         $session2->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
-         \local_mentor_core\session_api::update_session($session2);
+        $session1->status = session::STATUS_IN_PROGRESS;
+        session_api::update_session($session1);
+        // Updating the status session to have return sessions.
+        $session2->opento = 'all';
+        $session2->status = session::STATUS_IN_PROGRESS;
+        session_api::update_session($session2);
         // Add sessions A and B as modules to the program session.
-        $DB->insert_record('programcourse', ['course' => $session->get_course()->id, 'courseid' => $session1->get_course()->id,'intro' => '','timemodified' => time()]);
-        $DB->insert_record('programcourse', ['course' => $session->get_course()->id, 'courseid' => $session2->get_course()->id,'intro' => '','timemodified' => time()]);
 
+        $recordmodule = new \stdClass();
+        $recordmodule->course = $session->get_course()->id;
+        $recordmodule->courseid = $session1->get_course()->id;
+        $recordmodule->name = "Program course test";
+        $recordmodule->intro = null;
+        $recordmodule->introformat = 1;
+        $recordmodule->completionall = 1;
+        $recordmodule->timemodified = new \DateTime();
+        $recordmodule->hiddenintro = null;
+        $this->getDataGenerator()->create_module('programcourse', $recordmodule);
+
+        $recordmodule->courseid = $session2->get_course()->id;
+        $this->getDataGenerator()->create_module('programcourse', $recordmodule);
 
         // Create self enrolment instance.
         $session->create_self_enrolment_instance();
@@ -2985,17 +2993,16 @@ class local_mentor_core_session_testcase extends advanced_testcase {
         $instance1->timecreated = time();
         $instance1->timemodified = $instance1->timecreated;
         $dbi->insert_enrol_instance($instance1);
-        
+
         // Enrol user.
         self::setUser($userid);
         $session->enrol_current_user();
-       
-     
+
         // User is enrolled.
-        self::assertCount(1, \local_mentor_core\session_api::get_user_sessions($userid)); 
+        self::assertCount(1, session_api::get_user_sessions($userid)); 
 
         //Get user sessions
-        $userSessions = \local_mentor_core\session_api::get_user_sessions($userid);
+        $userSessions = session_api::get_user_sessions($userid);
 
         self::assertCount(1, $userSessions);       
         self::resetAllData();
@@ -3007,57 +3014,65 @@ class local_mentor_core_session_testcase extends advanced_testcase {
      * @covers \local_mentor_core\session_api::get_user_sessions
      */
     public function test_get_user_archived_sessions_with_program_course() {
-       
         global $DB; 
         $this->resetAfterTest(true);
         $this->reset_singletons();
         $this->init_role();
- 
+
         self::setAdminUser();
 
         $userid = $this->init_create_user();
-              
+
         // Create session.
         $sessionid = $this->init_session_creation("Session Programcourse");
 
         // Get session.
         try {
-            $session = \local_mentor_core\session_api::get_session($sessionid);
+            $session = session_api::get_session($sessionid);
         } catch (\Exception $e) {
             self::fail($e->getMessage());
         }
 
         // Updating the status session to have return sessions.
         $session->opento = 'all';
-        $session->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
-        \local_mentor_core\session_api::update_session($session);
-
-
+        $session->status = session::STATUS_IN_PROGRESS;
+        session_api::update_session($session);
 
         // Create 2 sessions.
-        $session1Id = \local_mentor_core\session_api::create_session($session->get_training()->id, 'Session 1', true);
-        $session2Id = \local_mentor_core\session_api::create_session($session->get_training()->id, 'Session 2', true);
+        $session1Id = session_api::create_session($session->get_training()->id, 'Session 1', true);
+        $session2Id = session_api::create_session($session->get_training()->id, 'Session 2', true);
 
          // Get session.
-         try {
-            $session1 = \local_mentor_core\session_api::get_session($session1Id);
-            $session2 = \local_mentor_core\session_api::get_session($session2Id);
+        try {
+            $session1 = session_api::get_session($session1Id);
+            $session2 = session_api::get_session($session2Id);
         } catch (\Exception $e) {
             self::fail($e->getMessage());
         }
 
         // Updating the status session to have return sessions.
         $session1->opento = 'all';
-        $session1->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
-        \local_mentor_core\session_api::update_session($session1);
+        $session1->status = session::STATUS_IN_PROGRESS;
+        session_api::update_session($session1);
          // Updating the status session to have return sessions.
-         $session2->opento = 'all';
-         $session2->status = \local_mentor_core\session::STATUS_IN_PROGRESS;
-         \local_mentor_core\session_api::update_session($session2);
+        $session2->opento = 'all';
+        $session2->status = session::STATUS_IN_PROGRESS;
+        session_api::update_session($session2);
 
         // Add sessions A and B as modules to the program session.
-        $DB->insert_record('programcourse', ['course' => $session->get_course()->id, 'courseid' => $session1->get_course()->id,'intro' => '','timemodified' => time()]);
-        $DB->insert_record('programcourse', ['course' => $session->get_course()->id, 'courseid' => $session2->get_course()->id,'intro' => '','timemodified' => time()]);
+        $recordmodule = new \stdClass();
+        $recordmodule->course = $session->get_course()->id;
+        $recordmodule->courseid = $session1->get_course()->id;
+        $recordmodule->name = "Program course test";
+        $recordmodule->intro = null;
+        $recordmodule->introformat = 1;
+        $recordmodule->completionall = 1;
+        $recordmodule->timemodified = new \DateTime();
+        $recordmodule->hiddenintro = null;
+        $this->getDataGenerator()->create_module('programcourse', $recordmodule);
+
+        $recordmodule->courseid = $session2->get_course()->id;
+        $this->getDataGenerator()->create_module('programcourse', $recordmodule);
 
         self::setAdminUser();
         // Create self enrolment instance.
@@ -3082,23 +3097,21 @@ class local_mentor_core_session_testcase extends advanced_testcase {
         $instance1->timecreated = time();
         $instance1->timemodified = $instance1->timecreated;
         $dbi->insert_enrol_instance($instance1);
-        
+
         // Enrol user.
         self::setUser($userid);
         $session->enrol_current_user();
-       
-     
-        // User is enrolled.
-        self::assertCount(1, \local_mentor_core\session_api::get_user_sessions($userid)); 
 
+        // User is enrolled.
+        self::assertCount(1, session_api::get_user_sessions($userid)); 
 
         self::setAdminUser();
         //Update session status to archived
-        $session->status = \local_mentor_core\session::STATUS_ARCHIVED;
-        \local_mentor_core\session_api::update_session($session);
+        $session->status = session::STATUS_ARCHIVED;
+        session_api::update_session($session);
         self::setUser($userid);
         //Get user sessions
-        $userSessions = \local_mentor_core\session_api::get_user_sessions($userid);
+        $userSessions = session_api::get_user_sessions($userid);
 
         self::assertCount(1, $userSessions);       
         self::assertEquals($session->id, $userSessions[0]->id);
