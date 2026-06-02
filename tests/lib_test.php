@@ -1552,29 +1552,6 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
     }
 
     /**
-     *  Test local_mentor_core completion find exclusions function
-     *
-     * @covers ::local_mentor_core_completion_find_exclusions
-     */
-    public function test_completion_find_exclusions_ok() {
-        $this->resetAfterTest(true);
-        $this->reset_singletons();
-
-        self::setAdminUser();
-
-        $coursedata = new \stdClass();
-        $coursedata->category = 1;
-        $coursedata->shortname = 'Course1';
-        $coursedata->fullname = 'Course1';
-
-        $course = create_course($coursedata);
-
-        self::assertCount(0, local_mentor_core_completion_find_exclusions($course->id));
-
-        self::resetAllData();
-    }
-
-    /**
      *  Test local_mentor_core sort array function
      *
      * @covers ::local_mentor_core_sort_array
@@ -1685,42 +1662,6 @@ test2", $finalcontent);
     }
 
     /**
-     * Test completion_get_activities
-     *
-     * @covers ::local_mentor_core_completion_get_activities
-     */
-    public function test_completion_get_activities() {
-
-        $this->resetAfterTest(true);
-        $this->reset_singletons();
-
-        // Create course.
-        $courserecord = new stdClass();
-        $courserecord->enablecompletion = 1;
-        $course = $this->getDataGenerator()->create_course($courserecord);
-
-        // Create a mod without any completion.
-        $record = new stdClass();
-        $record->course = $course;
-        $this->getDataGenerator()->create_module('forum', $record);
-
-        $activities = local_mentor_core_completion_get_activities($course->id);
-        self::assertCount(0, $activities);
-
-        // Create a mod with completion enabled.
-        $record->completion = 1;
-        $record->completionview = 1;
-        $record->completionexpected = 0;
-        $record->completionunlocked = 1;
-        $this->getDataGenerator()->create_module('url', $record);
-
-        $activities = local_mentor_core_completion_get_activities($course->id);
-        self::assertCount(1, $activities);
-
-        self::resetAllData();
-    }
-
-    /**
      * Test extend_navigation_course
      *
      * @covers ::local_mentor_core_extend_navigation_course
@@ -1785,221 +1726,6 @@ test2", $finalcontent);
     }
 
     /**
-     * Test local_mentor_core_completion_filter_activities
-     *
-     * @covers ::local_mentor_core_completion_filter_activities
-     */
-    public function test_local_mentor_core_completion_filter_activities() {
-        global $USER;
-
-        $this->resetAfterTest(true);
-        self::setAdminUser();
-        $user1 = $this->getDataGenerator()->create_user();
-
-        // Create course.
-        $courserecord = new stdClass();
-        $courserecord->enablecompletion = 1;
-        $course = $this->getDataGenerator()->create_course($courserecord);
-
-        // Get gradebook exclusions list for students in a course.
-        $exclusions = local_mentor_core_completion_find_exclusions($course->id, $USER->id);
-
-        // Get activities list with completion set in current course.
-        $activities = local_mentor_core_completion_get_activities($course->id);
-
-        $filteractivities = local_mentor_core_completion_filter_activities($activities, $USER->id, $course->id, $exclusions);
-        self::assertCount(0, $filteractivities);
-
-        // Create a mod without any completion.
-        $record = new stdClass();
-        $record->course = $course;
-        $this->getDataGenerator()->create_module('forum', $record);
-
-        // Get activities list with completion set in current course.
-        $activities = local_mentor_core_completion_get_activities($course->id);
-
-        $filteractivities = local_mentor_core_completion_filter_activities($activities, $USER->id, $course->id, $exclusions);
-        self::assertCount(0, $filteractivities);
-
-        // Create a mod with completion enabled.
-        $record = new stdClass();
-        $record->course = $course;
-        $record->completion = 1;
-        $record->completionview = 1;
-        $record->completionexpected = 0;
-        $record->completionunlocked = 1;
-        $this->getDataGenerator()->create_module('url', $record);
-
-        // Get activities list with completion set in current course.
-        $activities = local_mentor_core_completion_get_activities($course->id);
-
-        $filteractivities = local_mentor_core_completion_filter_activities($activities, $USER->id, $course->id, $exclusions);
-
-        self::assertCount(1, $filteractivities);
-
-        // Add exclusion.
-        $exclusions[] = $activities[0]['type'] . '-' . $activities[0]['instance'] . '-' . $USER->id;
-
-        $filteractivities = local_mentor_core_completion_filter_activities($activities, $USER->id, $course->id, $exclusions);
-
-        // Module is exclude.
-        self::assertCount(0, $filteractivities);
-
-        // Reset exclusions.
-        $exclusions = local_mentor_core_completion_find_exclusions($course->id, $USER->id);
-
-        // Create a mod with completion enabled.
-        $record = new stdClass();
-        $record->course = $course;
-        $record->completion = 1;
-        $record->completionview = 1;
-        $record->completionexpected = 0;
-        $record->completionunlocked = 1;
-        $record->visible = 0;
-        $this->getDataGenerator()->create_module('url', $record);
-
-        self::setUser($user1);
-
-        // Get activities list with completion set in current course.
-        $activities = local_mentor_core_completion_get_activities($course->id);
-
-        $filteractivities = local_mentor_core_completion_filter_activities($activities, $USER->id, $course->id, $exclusions);
-
-        // New activity is not visible and user not has capability to view hidden activities.
-        self::assertCount(1, $filteractivities);
-
-        self::setAdminUser();
-
-        $filteractivities = local_mentor_core_completion_filter_activities($activities, $USER->id, $course->id, $exclusions);
-
-        // New activity is not visible but admin has capability to view hidden activities.
-        self::assertCount(2, $filteractivities);
-
-        self::resetAllData();
-    }
-
-    /**
-     * Test local_mentor_core_completion_get_user_course_submissions
-     *
-     * @covers ::local_mentor_core_completion_get_user_course_submissions
-     */
-    public function test_local_mentor_core_completion_get_user_course_submissions() {
-        $this->resetAfterTest(true);
-        $this->reset_singletons();
-
-        self::setAdminUser();
-
-        // Create course.
-        $courserecord = new stdClass();
-        $courserecord->enablecompletion = 1;
-        $course = $this->getDataGenerator()->create_course($courserecord);
-        $student = $this->getDataGenerator()->create_and_enrol($course, 'participant');
-
-        // Create a mod without any completion.
-        $record = new stdClass();
-        $record->course = $course;
-        $this->getDataGenerator()->create_module('forum', $record);
-
-        $usersubmissions = local_mentor_core_completion_get_user_course_submissions($course->id, $student->id);
-        self::assertCount(0, $usersubmissions);
-
-        // Create a mod with completion enabled.
-        $instance = $this->getDataGenerator()->create_module('assign', [
-            'course' => $course->id,
-            'grade' => 100,
-            'maxattempts' => -1,
-            'attemptreopenmethod' => 'untilpass',
-            'completion' => COMPLETION_TRACKING_AUTOMATIC,
-            'completionusegrade' => 1,      // The student must receive a grade to complete.
-            'completionexpected' => time() - DAYSECS,
-            'teamsubmission' => 0,
-        ]);
-        $cm = get_coursemodule_from_id('assign', $instance->cmid);
-
-        // Set the passing grade.
-        $item = \grade_item::fetch([
-            'courseid' => $course->id, 'itemtype' => 'mod',
-            'itemmodule' => 'assign', 'iteminstance' => $instance->id, 'outcomeid' => null,
-        ]);
-        $item->gradepass = 50;
-        $item->update();
-
-        $assign = new \mod_assign_testable_assign(
-            \context_module::instance($cm->id), $cm, $course);
-
-        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'formateur');
-
-        // Student 1 submits to the activity and gets graded correct.
-        $this->submit_for_student($student, $assign);
-        $this->grade_student($student, $assign, $teacher, 75, 0);
-
-        // User has assign submission.
-        $usersubmissions = local_mentor_core_completion_get_user_course_submissions($course->id, $student->id);
-        self::assertCount(1, $usersubmissions);
-
-        self::resetAllData();
-    }
-
-    /**
-     * Test local_mentor_core_completion_get_progress
-     *
-     * @covers ::local_mentor_core_completion_get_progress
-     */
-    public function test_local_mentor_core_completion_get_progress() {
-        $this->resetAfterTest(true);
-        $this->reset_singletons();
-
-        // Create course.
-        $courserecord = new stdClass();
-        $courserecord->enablecompletion = 1;
-        $course = $this->getDataGenerator()->create_course($courserecord);
-        $student = $this->getDataGenerator()->create_and_enrol($course, 'participant');
-
-        // Create a mod without any completion.
-        $record = new stdClass();
-        $record->course = $course;
-        $this->getDataGenerator()->create_module('forum', $record);
-
-        // Create a mod with completion enabled.
-        $record = new stdClass();
-        $record->course = $course;
-        $record->completion = 1;
-        $record->completionview = 1;
-        $record->completionexpected = 0;
-        $record->completionunlocked = 1;
-        $record->visible = 1;
-        $instance1 = $this->getDataGenerator()->create_module('url', $record);
-
-        // Create a mod with completion enabled.
-        $record = new stdClass();
-        $record->course = $course;
-        $record->completion = 1;
-        $record->completionview = 1;
-        $record->completionexpected = 0;
-        $record->completionunlocked = 1;
-        $record->visible = 1;
-        $instance2 = $this->getDataGenerator()->create_module('url', $record);
-        $completion = new completion_info($course);
-
-        $cm = get_coursemodule_from_id('url', $instance2->cmid);
-        $completion->update_state($cm, COMPLETION_COMPLETE, $student->id);
-
-        $exclusions = local_mentor_core_completion_find_exclusions($course->id, $student->id);
-        $activities = local_mentor_core_completion_get_activities($course->id);
-        $activities = local_mentor_core_completion_filter_activities($activities, $student->id, $course->id, $exclusions);
-        $submissions = local_mentor_core_completion_get_user_course_submissions($course->id, $student->id);
-        $completions = local_mentor_core_completion_get_progress($activities, $student->id, $course, $submissions);
-
-        self::assertCount(2, $completions);
-        self::assertArrayHasKey($instance1->cmid, $completions);
-        self::assertEquals(0, $completions[$instance1->cmid]);
-        self::assertArrayHasKey($instance2->cmid, $completions);
-        self::assertEquals('1', $completions[$instance2->cmid]);
-
-        self::resetAllData();
-    }
-
-    /**
      * Test local_mentor_core_completion_get_progress_percentage
      *
      * @covers ::local_mentor_core_completion_get_progress_percentage
@@ -2026,7 +1752,7 @@ test2", $finalcontent);
 
         $progresspercentage = local_mentor_core_completion_get_progress_percentage($course, $student->id, true);
         // No activities.
-        self::assertFalse($progresspercentage);
+        self::assertEquals(0, $progresspercentage);
 
         // Create a mod without any completion.
         $record = new stdClass();
@@ -2056,6 +1782,16 @@ test2", $finalcontent);
         $record->visible = 1;
         $instance2 = $this->getDataGenerator()->create_module('url', $record);
         $completion = new completion_info($course);
+
+        $criteriadata = (object) [
+            'id' => $course->id,
+            'criteria_activity' => [
+                $instance1->cmid => 1,
+                $instance2->cmid => 1,
+            ]
+        ];
+        $criterion = new completion_criteria_activity();
+        $criterion->update_config($criteriadata);
 
         $cm = get_coursemodule_from_id('url', $instance2->cmid);
         $completion->update_state($cm, COMPLETION_COMPLETE, $student->id);

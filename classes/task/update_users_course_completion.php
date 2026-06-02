@@ -10,6 +10,8 @@
 
 namespace local_mentor_core\task;
 
+use block_completion_monitor\service\completion_activities_service;
+
 class update_users_course_completion extends \core\task\scheduled_task
 {
     use \core\task\logging_trait;
@@ -103,8 +105,9 @@ class update_users_course_completion extends \core\task\scheduled_task
                 if (!$course || isset($updates[$uniquekey]))
                     continue;
 
+                $completionservice = new completion_activities_service($course);
                 // Get the new completion
-                $newusercompletion = local_mentor_core_calculate_completion_get_progress_percentage($course, $userid);
+                $newusercompletion = $completionservice->get_course_completion_details($userid)["percentage"];
 
                 $usercompletion = $usercompletions[$uniquekey] ?? null;
 
