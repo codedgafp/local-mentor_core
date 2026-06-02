@@ -25,7 +25,7 @@
 
 use local_mentor_core\entity;
 use local_mentor_core\profile_api;
-use local_categories_domains\model\domain_name;
+use block_completion_monitor\service\completion_activities_service;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -1223,333 +1223,6 @@ defined('COMPLETION_COMPLETE') || define('COMPLETION_COMPLETE', 1);
 defined('COMPLETION_COMPLETE_PASS') || define('COMPLETION_COMPLETE_PASS', 2);
 
 /**
- * Finds gradebook exclusions for students in a course
- *
- * @param int $courseid The ID of the course containing grade items
- * @param int $userid The ID of the user whos grade items are being retrieved
- * @return array of exclusions as activity-user pairs
- */
-function local_mentor_core_completion_find_exclusions($courseid, $userid = null)
-{
-    global $DB;
-
-    // Get gradebook exclusions for students in a course.
-    $query = "SELECT g.id, " . $DB->sql_concat('i.itemmodule', "'-'", 'i.iteminstance', "'-'", 'g.userid') . " as exclusion
-              FROM {grade_grades} g, {grade_items} i
-              WHERE i.courseid = :courseid
-                AND i.id = g.itemid
-                AND g.excluded <> 0";
-
-    $params = ['courseid' => $courseid];
-    if (!is_null($userid)) {
-        $query .= " AND g.userid = :userid";
-        $params['userid'] = $userid;
-    }
-    $results = $DB->get_records_sql($query, $params);
-
-    // Create exclusions list.
-    $exclusions = [];
-    foreach ($results as $value) {
-        $exclusions[] = $value->exclusion;
-    }
-
-    return $exclusions;
-}
-
-/**
- * Returns the activities with completion set in current course
- *
- * @param int $courseid ID of the course
- * @return array Activities with completion settings in the course
- * @throws coding_exception
- * @throws moodle_exception
- */
-function local_mentor_core_completion_get_activities($courseid)
-{
-    $modinfo = get_fast_modinfo($courseid, -1);
-    $sections = $modinfo->get_sections();
-    $activities = [];
-
-    // Create activities list with completion set.
-    foreach ($modinfo->instances as $module => $instances) {
-        $modulename = get_string('pluginname', $module);
-        foreach ($instances as $cm) {
-            if ($cm->completion != COMPLETION_TRACKING_NONE) {
-                $activities[] = [
-                    'type' => $module,
-                    'modulename' => $modulename,
-                    'id' => $cm->id,
-                    'instance' => $cm->instance,
-                    'name' => format_string($cm->name),
-                    'expected' => $cm->completionexpected,
-                    'section' => $cm->sectionnum,
-                    'position' => array_search($cm->id, $sections[$cm->sectionnum]),
-                    'url' => !is_null($cm->url) && method_exists($cm->url, 'out') ? $cm->url->out() : '',
-                    'context' => $cm->context,
-                    'icon' => $cm->get_icon_url(),
-                    'available' => $cm->available,
-                ];
-            }
-        }
-    }
-
-    return $activities;
-}
-
-/**
- * Filters activities that a user cannot see due to grouping constraints
- *
- * @param array $activities The possible activities that can occur for modules
- * @param array $userid The user's id
- * @param int $courseid the course for filtering visibility
- * @param array $exclusions Assignment exemptions for students in the course
- * @return array The array with restricted activities removed
- * @throws coding_exception
- * @throws moodle_exception
- */
-function local_mentor_core_completion_filter_activities($activities, $userid, $courseid, $exclusions)
-{
-    global $CFG;
-    $filteredactivities = [];
-    $modinfo = get_fast_modinfo($courseid, $userid);
-    $coursecontext = CONTEXT_COURSE::instance($courseid);
-
-    // Keep only activities that are visible.
-    foreach ($activities as $activity) {
-
-        $coursemodule = $modinfo->cms[$activity['id']];
-
-        // Check visibility in course.
-        if (!$coursemodule->visible && !has_capability('moodle/course:viewhiddenactivities', $coursecontext, $userid)) {
-            continue;
-        }
-
-        // Check availability, allowing for visible, but not accessible items.
-        if (!empty($CFG->enableavailability)) {
-            if (has_capability('moodle/course:viewhiddenactivities', $coursecontext, $userid)) {
-                $activity['available'] = true;
-            } else {
-                if (isset($coursemodule->available) && !$coursemodule->available && empty($coursemodule->availableinfo)) {
-                    continue;
-                }
-                $activity['available'] = $coursemodule->available;
-            }
-        }
-
-        // Check for exclusions.
-        if (in_array($activity['type'] . '-' . $activity['instance'] . '-' . $userid, $exclusions)) {
-            continue;
-        }
-
-        // Save the visible event.
-        $filteredactivities[] = $activity;
-    }
-    return $filteredactivities;
-}
-
-/**
- * Finds submissions for a user in a course
- * This code is a copy of block_completion_progress
- *
- * @param int $courseid ID of the course
- * @param int $userid ID of user in the course, or 0 for all
- * @return array Course module IDs submissions
- * @throws dml_exception
- */
-function local_mentor_core_completion_get_user_course_submissions($courseid, $userid = 0)
-{
-    global $DB, $CFG;
-
-    require_once($CFG->dirroot . '/mod/quiz/lib.php');
-
-    $submissions = [];
-
-    // Set courseid in query for different activities.
-    $params = [
-        'courseid' => $courseid,
-    ];
-
-    // Set userid in query for different activities.
-    if ($userid) {
-        $assignwhere = 'AND s.userid = :userid';
-        $workshopwhere = 'AND s.authorid = :userid';
-        $quizwhere = 'AND qa.userid = :userid';
-
-        $params += [
-            'userid' => $userid,
-        ];
-    } else {
-        $assignwhere = '';
-        $workshopwhere = '';
-        $quizwhere = '';
-    }
-
-    // Queries to deliver instance IDs of activities with submissions by user.
-    $queries = [
-        [
-            /* Assignments with individual submission, or groups requiring a submission per user,
-            or ungrouped users in a group submission situation. */
-            'module' => 'assign',
-            'query' => "SELECT " . $DB->sql_concat('s.userid', "'-'", 'c.id') . " AS id,
-                         s.userid, c.id AS cmid,
-                         MAX(CASE WHEN ag.grade IS NULL OR ag.grade = -1 THEN 0 ELSE 1 END) AS graded
-                      FROM {assign_submission} s
-                        INNER JOIN {assign} a ON s.assignment = a.id
-                        INNER JOIN {course_modules} c ON c.instance = a.id
-                        INNER JOIN {modules} m ON m.name = 'assign' AND m.id = c.module
-                        LEFT JOIN {assign_grades} ag ON ag.assignment = s.assignment
-                              AND ag.attemptnumber = s.attemptnumber
-                              AND ag.userid = s.userid
-                      WHERE s.latest = 1
-                        AND s.status = 'submitted'
-                        AND a.course = :courseid
-                        AND (
-                            a.teamsubmission = 0 OR
-                            (a.teamsubmission <> 0 AND a.requireallteammemberssubmit <> 0 AND s.groupid = 0) OR
-                            (a.teamsubmission <> 0 AND a.preventsubmissionnotingroup = 0 AND s.groupid = 0)
-                        )
-                        $assignwhere
-                    GROUP BY s.userid, c.id",
-            'params' => [],
-        ],
-        [
-            // Assignments with groups requiring only one submission per group.
-            'module' => 'assign',
-            'query' => "SELECT " . $DB->sql_concat('s.userid', "'-'", 'c.id') . " AS id,
-                         s.userid, c.id AS cmid,
-                         MAX(CASE WHEN ag.grade IS NULL OR ag.grade = -1 THEN 0 ELSE 1 END) AS graded
-                      FROM {assign_submission} gs
-                        INNER JOIN {assign} a ON gs.assignment = a.id
-                        INNER JOIN {course_modules} c ON c.instance = a.id
-                        INNER JOIN {modules} m ON m.name = 'assign' AND m.id = c.module
-                        INNER JOIN {groups_members} s ON s.groupid = gs.groupid
-                        LEFT JOIN {assign_grades} ag ON ag.assignment = gs.assignment
-                              AND ag.attemptnumber = gs.attemptnumber
-                              AND ag.userid = s.userid
-                      WHERE gs.latest = 1
-                        AND gs.status = 'submitted'
-                        AND gs.userid = 0
-                        AND a.course = :courseid
-                        AND (a.teamsubmission <> 0 AND a.requireallteammemberssubmit = 0)
-                        $assignwhere
-                    GROUP BY s.userid, c.id",
-            'params' => [],
-        ],
-        [
-            'module' => 'workshop',
-            'query' => "SELECT " . $DB->sql_concat('s.authorid', "'-'", 'c.id') . " AS id,
-                           s.authorid AS userid, c.id AS cmid,
-                           1 AS graded
-                         FROM {workshop_submissions} s, {workshop} w, {modules} m, {course_modules} c
-                        WHERE s.workshopid = w.id
-                          AND w.course = :courseid
-                          AND m.name = 'workshop'
-                          AND m.id = c.module
-                          AND c.instance = w.id
-                          $workshopwhere
-                      GROUP BY s.authorid, c.id",
-            'params' => [],
-        ],
-        [
-            // Quizzes with 'first' and 'last attempt' grading methods.
-            'module' => 'quiz',
-            'query' => "SELECT " . $DB->sql_concat('qa.userid', "'-'", 'c.id') . " AS id,
-                       qa.userid, c.id AS cmid,
-                       (CASE WHEN qa.sumgrades IS NULL THEN 0 ELSE 1 END) AS graded
-                     FROM {quiz_attempts} qa
-                       INNER JOIN {quiz} q ON q.id = qa.quiz
-                       INNER JOIN {course_modules} c ON c.instance = q.id
-                       INNER JOIN {modules} m ON m.name = 'quiz' AND m.id = c.module
-                    WHERE qa.state = 'finished'
-                      AND q.course = :courseid
-                      AND qa.attempt = (
-                        SELECT CASE WHEN q.grademethod = :gmfirst THEN MIN(qa1.attempt)
-                                    WHEN q.grademethod = :gmlast THEN MAX(qa1.attempt) END
-                        FROM {quiz_attempts} qa1
-                        WHERE qa1.quiz = qa.quiz
-                          AND qa1.userid = qa.userid
-                          AND qa1.state = 'finished'
-                      )
-                      $quizwhere",
-            'params' => [
-                'gmfirst' => 3,
-                'gmlast' => 4,
-            ],
-        ],
-        [
-            // Quizzes with 'maximum' and 'average' grading methods.
-            'module' => 'quiz',
-            'query' => "SELECT " . $DB->sql_concat('qa.userid', "'-'", 'c.id') . " AS id,
-                       qa.userid, c.id AS cmid,
-                       MIN(CASE WHEN qa.sumgrades IS NULL THEN 0 ELSE 1 END) AS graded
-                     FROM {quiz_attempts} qa
-                       INNER JOIN {quiz} q ON q.id = qa.quiz
-                       INNER JOIN {course_modules} c ON c.instance = q.id
-                       INNER JOIN {modules} m ON m.name = 'quiz' AND m.id = c.module
-                    WHERE (q.grademethod = :gmmax OR q.grademethod = :gmavg)
-                      AND qa.state = 'finished'
-                      AND q.course = :courseid
-                      $quizwhere
-                   GROUP BY qa.userid, c.id",
-            'params' => [
-                'gmmax' => 1,
-                'gmavg' => 2,
-            ],
-        ],
-    ];
-
-    // Create user's submissions list in a course.
-    foreach ($queries as $spec) {
-        $results = $DB->get_records_sql($spec['query'], $params + $spec['params']);
-        foreach ($results as $id => $obj) {
-            $submissions[$id] = $obj;
-        }
-    }
-
-    ksort($submissions);
-
-    return $submissions;
-}
-
-/**
- * Checks the progress of the user's activities/resources.
- *
- * @param array $activities The activities with completion in the course
- * @param int $userid The user's id
- * @param stdClass $course The course instance
- * @param array $submissions Submissions information, keyed by 'userid-cmid'
- * @return array   an describing the user's attempts based on module+instance identifiers
- */
-function local_mentor_core_completion_get_progress($activities, $userid, $course, $submissions)
-{
-    $completions = [];
-    // Get completion information for a course.
-    $completioninfo = new completion_info($course);
-    $cm = new stdClass();
-
-    // Creates a list of user's progress for activities/resources.
-    foreach ($activities as $activity) {
-        $cm->id = $activity['id'];
-        $completion = $completioninfo->get_data($cm, true, $userid);
-        $submission = $submissions[$userid . '-' . $cm->id] ?? null;
-
-        if ($completion->completionstate == COMPLETION_INCOMPLETE && $submission) {
-            // The user has not completed this activity.
-            $completions[$cm->id] = 'submitted';
-        } else if ($completion->completionstate == COMPLETION_COMPLETE_FAIL && $submission
-            && !$submission->graded) {
-            // The user has completed this activity but their grade is less than the pass mark.
-            $completions[$cm->id] = 'submitted';
-        } else {
-            // Other completion.
-            $completions[$cm->id] = $completion->completionstate;
-        }
-    }
-
-    return $completions;
-}
-
-/**
  * Calculates an overall percentage of progress
  *
  * @param stdClass $course
@@ -1568,11 +1241,12 @@ function local_mentor_core_completion_get_progress_percentage($course, $userid, 
 
     // Get database interface.
     $db = \local_mentor_core\database_interface::get_instance();
+    $completionservice = new completion_activities_service($course);
 
     // Refresh data.
     if ($refresh) {
         // Calculate course user completion.
-        $usercompletion = local_mentor_core_calculate_completion_get_progress_percentage($course, $userid);
+        $usercompletion = $completionservice->get_course_completion_details($userid)["percentage"];
 
         // Set course user completion data.
         $db->set_user_course_completion($userid, $course->id, $usercompletion);
@@ -1586,7 +1260,7 @@ function local_mentor_core_completion_get_progress_percentage($course, $userid, 
     }
 
     // Calculate course user completion.
-    $usercompletion = local_mentor_core_calculate_completion_get_progress_percentage($course, $userid);
+    $usercompletion = $completionservice->get_course_completion_details($userid)["percentage"];
 
     // Set course user completion data.
     $db->set_user_course_completion($userid, $course->id, $usercompletion);
@@ -1623,42 +1297,6 @@ function local_mentor_core_check_if_completion_enabled($course)
     }
 
     return true;
-}
-
-function local_mentor_core_calculate_completion_get_progress_percentage($course, $userid)
-{
-
-    // Get gradebook exclusions list for students in a course.
-    $exclusions = local_mentor_core_completion_find_exclusions($course->id, $userid);
-
-    // Get activities list with completion set in current course.
-    $activities = local_mentor_core_completion_get_activities($course->id);
-
-    // Filters activities that a user cannot see due to grouping constraints.
-    $activities = local_mentor_core_completion_filter_activities($activities, $userid, $course->id, $exclusions);
-    if (empty($activities)) {
-        return false;
-    }
-
-    // Finds submissions for a user in a course.
-    $submissions = local_mentor_core_completion_get_user_course_submissions($course->id, $userid);
-
-    // Checks the progress of the user's activities/resources.
-    $completions = local_mentor_core_completion_get_progress($activities, $userid, $course, $submissions);
-
-    // Calculates an overall percentage of progress.
-    $completecount = 0;
-    foreach ($activities as $activity) {
-        if (
-            $completions[$activity['id']] == COMPLETION_COMPLETE ||
-            $completions[$activity['id']] == COMPLETION_COMPLETE_PASS
-        ) {
-            $completecount++;
-        }
-    }
-    $progressvalue = $completecount == 0 ? 0 : $completecount / count($activities);
-
-    return (int)floor($progressvalue * 100);
 }
 
 /**
