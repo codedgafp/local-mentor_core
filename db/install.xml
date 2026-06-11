@@ -54,6 +54,7 @@
                 <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="completion" TYPE="int" LENGTH="3" NOTNULL="false" SEQUENCE="false"
                        COMMENT="The user completion percentage calculated for a course "/>
+                <FIELD NAME="processed" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Is this completion has been check by the 'update_users_course_completion' task"/>
                 <FIELD NAME="lastupdate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
             </FIELDS>
             <KEYS>

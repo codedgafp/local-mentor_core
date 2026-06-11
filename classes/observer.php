@@ -91,4 +91,33 @@ class local_mentor_core_observer {
         return;
     }
 
+    /**
+     * When a completion is updated, set the user_completion processed value to 0
+     * 
+     * @param core\event\course_module_completion_updated $event
+     * @return void
+     */
+    public static function make_completion_to_processed(\core\event\course_module_completion_updated $event): void
+    {
+        global $DB;
+
+        $data = $event->get_data();
+
+        try {
+            $usercompletion = $DB->get_record('user_completion', ['userid' => $data['relateduserid'], 'courseid' => $data['courseid']]);
+        } catch(Exception $e) {
+            throw $e;
+        }
+
+        if ($usercompletion) {
+            $usercompletion->lastupdate = time();
+            $usercompletion->processed = 0;
+    
+            try {
+                $DB->update_record('user_completion', $usercompletion);
+            } catch(Exception $e) {
+                throw $e;
+            }
+        }
+    }
 }

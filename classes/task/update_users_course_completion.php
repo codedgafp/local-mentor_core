@@ -23,129 +23,79 @@ class update_users_course_completion extends \core\task\scheduled_task
 
     public function execute(): void
     {
-        global $DB, $CFG;
-
-        $taskdata = \core\task\manager::get_scheduled_task(self::class);
-        $tasklastruntime = $taskdata->get_last_run_time();
+        global $CFG, $DB;
 
         $mcdatabaseinterface = new \local_mentor_core\database_interface();
 
-        $coursearray = [];
-        $courseidscache = [];
         $lastrows = 0;
         $totalprocessed = 0;
 
-        $countcoursemodulescompleted = count($mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastrows, true));
+        $countusercompletion = count($mcdatabaseinterface->get_last_users_completions($lastrows, true));
 
-        if ($countcoursemodulescompleted == 0) {
+        if ($countusercompletion == 0) {
             $this->log("Aucun enregistrement à traiter.");
             return;
         }
 
-        $this->log("Nombre total d'enregistrements à traiter : $countcoursemodulescompleted");
+        $this->log("Nombre total d'enregistrements à traiter : $countusercompletion");
 
-        $iterations = ceil($countcoursemodulescompleted / $CFG->completion_limit_result);
+        $iterations = ceil($countusercompletion / $CFG->completion_limit_result);
+
+        $updates = [];
 
         for ($i = 0; $i < $iterations; $i++) {
-            // Get a batch of "course_modules_completions" determined by the limit
-            $coursemodulescompleted = $mcdatabaseinterface->get_last_course_modules_completions($tasklastruntime, $lastrows);
+            $userscompletionstoprocessed = $mcdatabaseinterface->get_last_users_completions($lastrows);
 
-            // Get unique ids from courses and users (to avoids making new requests for the same values)
-            $courseids = [];
-            $userids = [];
-            $newcourseids = [];
+            foreach ($userscompletionstoprocessed as $usercompletion) {
+                $userid = $usercompletion->userid;
+                $courseid = $usercompletion->courseid;
+                $uniquekey = $usercompletion->uniquekey;
 
-            foreach ($coursemodulescompleted as $coursemodule) {
-                if (!isset($courseidscache[$coursemodule->course])) {
-                    $courseidscache[$coursemodule->course] = true;
-                    $newcourseids[$coursemodule->course] = $coursemodule->course;
-                }
-
-                $courseids[$coursemodule->course] = $coursemodule->course;
-                $userids[$coursemodule->userid] = $coursemodule->userid;
-            }
-
-            // Get all courses we found in "course_modules_completions"
-            if (!empty($newcourseids)) {
-                $newcourses = $DB->get_records_list('course', 'id', array_values($newcourseids));
-                foreach ($newcourses as $newcourse) {
-                    $coursearray[$newcourse->id] = $newcourse;
-                }
-            }
-
-            // Get all "user_completions" with one request
-            [$inuseridssql, $useridsparams] = $DB->get_in_or_equal(array_values($userids), SQL_PARAMS_NAMED);
-            [$incourseidssql, $courseidsparams] = $DB->get_in_or_equal(array_values($courseids), SQL_PARAMS_NAMED);
-            $params = array_merge($useridsparams, $courseidsparams);
-
-            $sql = "SELECT CONCAT(uc.userid, '_', uc.courseid) as uniquekey, uc.completion as completion
-                    FROM {user_completion} uc
-                    INNER JOIN (
-                        SELECT userid, courseid, MAX(lastupdate) AS max_date
-                        FROM {user_completion}
-                        WHERE userid $inuseridssql
-                        AND courseid $incourseidssql
-                        GROUP BY userid, courseid
-                    ) latest ON uc.userid = latest.userid
-                            AND uc.courseid = latest.courseid
-                            AND uc.lastupdate = latest.max_date
-                    ";
-
-            $usercompletions = $DB->get_records_sql($sql, $params);
-
-            $updates = [];
-
-            foreach ($coursemodulescompleted as $coursemodule) {
-                $userid = $coursemodule->userid;
-                $courseid = $coursemodule->course;
-                $uniquekey = $userid . '_' . $courseid;
-
-                $course = $coursearray[$courseid] ?? null;
+                $course = get_course($courseid);
 
                 if (!$course || isset($updates[$uniquekey]))
                     continue;
 
                 $completionservice = new completion_activities_service($course);
+
                 // Get the new completion
                 $newusercompletion = $completionservice->get_course_completion_details($userid)["percentage"];
 
-                $usercompletion = $usercompletions[$uniquekey] ?? null;
+                $updates[$uniquekey] = [
+                    'userid' => $userid,
+                    'courseid' => $courseid,
+                    'oldcompletion' => $usercompletion->completion,
+                    'completion' => $usercompletion->completion
+                ];
 
                 // Check if the completion need to be updated
-                if ($usercompletion && $usercompletion->completion != $newusercompletion) {
-                    $updates[$uniquekey] = [
-                        'userid' => $userid,
-                        'courseid' => $courseid,
-                        'old' => $usercompletion->completion,
-                        'new' => $newusercompletion
-                    ];
+                if ($usercompletion->completion != $newusercompletion) {
+                    $updates[$uniquekey]['completion'] = $newusercompletion;
+
+                    $this->log("Le cours [id: {$updates[$uniquekey]['courseid']}] pour l'utilisateur [id: {$updates[$uniquekey]['userid']}] voit sa complétion mise à jour : {$updates[$uniquekey]['oldcompletion']} => {$updates[$uniquekey]['completion']}");
                 }
             }
 
             // Update all the completions that need it
             if (!empty($updates)) {
                 foreach ($updates as $update) {
-                    $this->log("Le cours [id: {$update['courseid']}] pour l'utilisateur [id: {$update['userid']}] voit sa complétion mise à jour : {$update['old']} => {$update['new']}");
                     $mcdatabaseinterface->set_user_course_completion(
                         $update['userid'],
                         $update['courseid'],
-                        $update['new']
+                        $update['completion'],
                     );
                 }
             }
 
             $lastrows += $CFG->completion_limit_result;
-            $totalprocessed += count($coursemodulescompleted);
+            $totalprocessed += count($userscompletionstoprocessed);
 
             $progress = round(($i + 1) / $iterations * 100, 2);
             $this->log("Progression : $progress% | Itération " . ($i + 1) . "/$iterations | Total traité : $totalprocessed | Complétions mises à jour : " . count($updates));
 
             // Libération mémoire
-            unset($coursemodulescompleted);
-            unset($usercompletions);
+            unset($userscompletionstoprocessed);
             unset($updates);
         }
-
-        $this->log("Traitement terminé : $totalprocessed/$countcoursemodulescompleted enregistrements traités");
     }
 }

@@ -38,4 +38,8 @@ $observers = [
         'eventname' => '\core\event\course_category_deleted',
         'callback' => 'local_mentor_core_observer::sync_mainentity',
     ],
+    [
+        'eventname' => '\core\event\course_module_completion_updated',
+        'callback'  => 'local_mentor_core_observer::make_completion_to_processed',
+    ],
 ];

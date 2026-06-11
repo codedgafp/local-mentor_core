@@ -4548,7 +4548,7 @@ class database_interface
      * @return void
      * @throws \dml_exception
      */
-    public function set_user_course_completion($userid, $courseid, $completion)
+    public function set_user_course_completion(int $userid, int $courseid, int $completion)
     {
         if ($completion === false) {
             $completion = null;
@@ -4557,6 +4557,7 @@ class database_interface
         if ($usercompletion = $this->get_user_course_completion($userid, $courseid)) {
             $usercompletion->completion = $completion;
             $usercompletion->lastupdate = time();
+            $usercompletion->processed = 1;
             $this->db->update_record('user_completion', $usercompletion);
             return;
         }
@@ -4566,6 +4567,7 @@ class database_interface
         $usercompletion->courseid = $courseid;
         $usercompletion->completion = $completion;
         $usercompletion->lastupdate = time();
+        $usercompletion->processed = 0;
         $this->db->insert_record('user_completion', $usercompletion);
     }
 
@@ -4611,35 +4613,34 @@ class database_interface
     }
 
     /**
-     * Get the latest data from “course_modules_completion” after the last execution of the “update_users_course_completion” task
+     * Get all not processed user_completion data
      * 
-     * @param int $tasklastruntime timestamp
      * @param int $lastrows
      * @param bool $count
      * @return array
      */
-    public function get_last_course_modules_completions(int $tasklastruntime, int $lastrows, bool $count = false): array
+    public function get_last_users_completions(int $lastrows, bool $count = false)
     {
         $endsql = "";
-        $params = [
-            'tasklastruntime' => $tasklastruntime,
-        ];
+        $params = [];
 
         if (!$count) {
             global $CFG;
             $endsql = " LIMIT :limit OFFSET :lastrows";
-            $params['limit'] = $CFG->completion_limit_result;
-            $params['lastrows'] = $lastrows;
+            $params = [
+                'limit' => $CFG->completion_limit_result,
+                'lastrows' => $lastrows,
+            ];
         }
 
-        $sql = "SELECT CONCAT(cmc.userid, '_', cm.course), cmc.userid, cm.course
-                FROM {course_modules_completion} cmc
-                INNER JOIN {course_modules} cm
-                    ON cm.id = cmc.coursemoduleid
-                WHERE cmc.timemodified > :tasklastruntime
-                AND cm.visible = 1
-                GROUP BY cm.course, cmc.userid
-                ORDER BY cm.course, cmc.userid
+        $sql = "SELECT
+                    CONCAT(uc.userid, '_', uc.courseid) as uniquekey,
+                    uc.userid,
+                    uc.courseid,
+                    uc.completion
+                FROM {user_completion} uc
+                WHERE uc.processed = 0
+                ORDER BY uc.id ASC
                 $endsql
                 ";
 
