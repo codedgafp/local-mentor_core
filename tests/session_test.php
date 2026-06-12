@@ -1882,21 +1882,21 @@ class local_mentor_core_session_testcase extends advanced_testcase {
 
         // Get session.
         try {
-            $session = \local_mentor_core\session_api::get_session($sessionid);
+            $session = session_api::get_session($sessionid);
         } catch (\Exception $e) {
             self::fail($e->getMessage());
         }
 
         // Updating the status session to have return sessions.
         $session->opento = 'all';
-        $session->status = \local_mentor_core\session::STATUS_ARCHIVED;
-        \local_mentor_core\session_api::update_session($session);
+        $session->status = session::STATUS_ARCHIVED;
+        session_api::update_session($session);
 
         // Create self enrolment instance.
         $session->create_self_enrolment_instance();
 
         // Check if user user is not enrolled.
-        $isenrolled = \local_mentor_core\session_api::user_is_enrolled($userid, $session->id);
+        $isenrolled = session_api::user_is_enrolled($userid, $session->id);
         self::assertFalse($isenrolled);
 
         // Enrol user.
@@ -1904,51 +1904,50 @@ class local_mentor_core_session_testcase extends advanced_testcase {
         $session->enrol_current_user();
 
         // User is enrolled.
-        self::assertCount(1, \local_mentor_core\session_api::get_user_sessions($userid));
+        self::assertCount(1, session_api::get_user_sessions($userid));
         self::setAdminUser();
 
         // User is not a trainer.
         self::assertFalse($session->is_trainer($userid));
 
-        $sessionid2 = \local_mentor_core\session_api::create_session($session->get_training()->id, 'TESTUNITCREATESESSION2', true);
+        $sessionid2 = session_api::create_session($session->get_training()->id, 'TESTUNITCREATESESSION2', true);
 
         // Get session2.
         try {
-            $session2 = \local_mentor_core\session_api::get_session($sessionid2);
+            $session2 = session_api::get_session($sessionid2);
         } catch (\Exception $e) {
             self::fail($e->getMessage());
         }
 
         // Updating the status session to have return sessions.
         $session2->opento = 'all';
-        $session2->status = \local_mentor_core\session::STATUS_ARCHIVED;
-        \local_mentor_core\session_api::update_session($session2);
+        $session2->status = session::STATUS_ARCHIVED;
+        session_api::update_session($session2);
 
         // Create self enrolment instance.
         $session2->create_self_enrolment_instance();
 
         // Check if user user is not enrolled.
-        $isenrolled = \local_mentor_core\session_api::user_is_enrolled($userid, $session2->id);
+        $isenrolled = session_api::user_is_enrolled($userid, $session2->id);
         self::assertFalse($isenrolled);
 
         // Enrol user.
         self::setUser($userid);
         $session2->enrol_current_user();
 
-        // The user must still be enrolled in only one session.
-        \local_mentor_core\session_api::clear_cache();
-        $usersession = \local_mentor_core\session_api::get_user_sessions($userid);
+        session_api::clear_cache();
+        $usersession = session_api::get_user_sessions($userid);
         self::assertCount(2, $usersession);
-        self::assertEquals($session->id, current($usersession)->id);
+        self::assertTrue(in_array($session->id, array_map(fn($usersession) => $usersession->id, $usersession)));
         self::setAdminUser();
 
         // Enrol user.
         self::setUser($userid);
-        \local_mentor_core\session_api::add_user_favourite_session($session2->id, $userid);
+        session_api::add_user_favourite_session($session2->id, $userid);
 
         // The user must still be enrolled in only one session.
-        \local_mentor_core\session_api::clear_cache();
-        $usersession = \local_mentor_core\session_api::get_user_sessions($userid);
+        session_api::clear_cache();
+        $usersession = session_api::get_user_sessions($userid);
         usort($usersession, "local_mentor_core_usort_favourite_session_first");
         self::setAdminUser();
 

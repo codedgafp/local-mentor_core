@@ -669,7 +669,6 @@ class session_api {
      */
     public static function get_user_sessions($userid, $refresh = false, $sortbystatus = true, $searchText = null) {
         global $OUTPUT;
-
         if (!$refresh) {
             if ($sortbystatus && isset(self::$userssessionbystatus[$userid])) {
                 return self::$userssessionbystatus[$userid];
