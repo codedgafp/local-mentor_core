@@ -50,6 +50,7 @@ class update_users_course_completion extends \core\task\scheduled_task
                 $userid = $usercompletion->userid;
                 $courseid = $usercompletion->courseid;
                 $uniquekey = $usercompletion->uniquekey;
+                $actualcompletion = $usercompletion->completion ?? 0;
 
                 $course = get_course($courseid);
 
@@ -64,12 +65,12 @@ class update_users_course_completion extends \core\task\scheduled_task
                 $updates[$uniquekey] = [
                     'userid' => $userid,
                     'courseid' => $courseid,
-                    'oldcompletion' => $usercompletion->completion,
-                    'completion' => $usercompletion->completion
+                    'oldcompletion' => $actualcompletion,
+                    'completion' => $actualcompletion
                 ];
 
                 // Check if the completion need to be updated
-                if ($usercompletion->completion != $newusercompletion) {
+                if ($actualcompletion != $newusercompletion) {
                     $updates[$uniquekey]['completion'] = $newusercompletion;
 
                     $this->log("Le cours [id: {$updates[$uniquekey]['courseid']}] pour l'utilisateur [id: {$updates[$uniquekey]['userid']}] voit sa complétion mise à jour : {$updates[$uniquekey]['oldcompletion']} => {$updates[$uniquekey]['completion']}");
