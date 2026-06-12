@@ -4639,6 +4639,8 @@ class database_interface
                     uc.courseid,
                     uc.completion
                 FROM {user_completion} uc
+                INNER JOIN {course} c
+                    ON uc.courseid = c.id
                 WHERE uc.processed = 0
                 ORDER BY uc.id ASC
                 $endsql
