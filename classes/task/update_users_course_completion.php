@@ -76,7 +76,6 @@ class update_users_course_completion extends \core\task\scheduled_task
                 }
             }
 
-            // Update all the completions that need it
             if (!empty($updates)) {
                 foreach ($updates as $update) {
                     $mcdatabaseinterface->set_user_course_completion(
