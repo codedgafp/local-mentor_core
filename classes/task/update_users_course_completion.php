@@ -41,10 +41,11 @@ class update_users_course_completion extends \core\task\scheduled_task
 
         $iterations = ceil($countusercompletion / $CFG->completion_limit_result);
 
-        $updates = [];
+        $totalupdates = 0;
 
         for ($i = 0; $i < $iterations; $i++) {
             $userscompletionstoprocessed = $mcdatabaseinterface->get_last_users_completions($lastrows);
+            $updates = [];
 
             foreach ($userscompletionstoprocessed as $usercompletion) {
                 $userid = $usercompletion->userid;
@@ -54,6 +55,8 @@ class update_users_course_completion extends \core\task\scheduled_task
 
                 $course = get_course($courseid);
 
+                $this->log("Course id : $course->id");
+
                 if (!$course || isset($updates[$uniquekey]))
                     continue;
 
@@ -61,6 +64,7 @@ class update_users_course_completion extends \core\task\scheduled_task
 
                 // Get the new completion
                 $newusercompletion = $completionservice->get_course_completion_details($userid)["percentage"];
+                $this->log("Nouveau pourcentage : $newusercompletion");
 
                 $updates[$uniquekey] = [
                     'userid' => $userid,
@@ -84,18 +88,20 @@ class update_users_course_completion extends \core\task\scheduled_task
                         $update['courseid'],
                         $update['completion'],
                     );
+                    $key = $update['userid'] . '_' . $update['courseid'];
+                    $this->log("$key a été mis à jour");
                 }
             }
 
             $lastrows += $CFG->completion_limit_result;
             $totalprocessed += count($userscompletionstoprocessed);
+            $totalupdates += count($updates);
 
             $progress = round(($i + 1) / $iterations * 100, 2);
-            $this->log("Progression : $progress% | Itération " . ($i + 1) . "/$iterations | Total traité : $totalprocessed | Complétions mises à jour : " . count($updates));
+            $this->log("Progression : $progress% | Itération " . ($i + 1) . "/$iterations | Total traité : $totalprocessed | Complétions mises à jour : " . $totalupdates);
 
             // Libération mémoire
             unset($userscompletionstoprocessed);
-            unset($updates);
         }
     }
 }
