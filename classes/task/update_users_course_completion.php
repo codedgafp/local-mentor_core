@@ -41,10 +41,11 @@ class update_users_course_completion extends \core\task\scheduled_task
 
         $iterations = ceil($countusercompletion / $CFG->completion_limit_result);
 
-        $updates = [];
+        $totalupdates = 0;
 
         for ($i = 0; $i < $iterations; $i++) {
             $userscompletionstoprocessed = $mcdatabaseinterface->get_last_users_completions($lastrows);
+            $updates = [];
 
             foreach ($userscompletionstoprocessed as $usercompletion) {
                 $userid = $usercompletion->userid;
@@ -89,13 +90,13 @@ class update_users_course_completion extends \core\task\scheduled_task
 
             $lastrows += $CFG->completion_limit_result;
             $totalprocessed += count($userscompletionstoprocessed);
+            $totalupdates += count($updates);
 
             $progress = round(($i + 1) / $iterations * 100, 2);
-            $this->log("Progression : $progress% | Itération " . ($i + 1) . "/$iterations | Total traité : $totalprocessed | Complétions mises à jour : " . count($updates));
+            $this->log("Progression : $progress% | Itération " . ($i + 1) . "/$iterations | Total traité : $totalprocessed | Complétions mises à jour : " . $totalupdates);
 
             // Libération mémoire
             unset($userscompletionstoprocessed);
-            unset($updates);
         }
     }
 }
