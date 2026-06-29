@@ -1,6 +1,5 @@
 <?php
 
-use local_categories_domains\utils\categories_domains_service;
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -26,6 +25,9 @@ use local_categories_domains\utils\categories_domains_service;
  */
 
 defined('MOODLE_INTERNAL') || die();
+
+use block_completion_monitor\service\completion_activities_service;
+use local_categories_domains\utils\categories_domains_service;
 
 require_once($CFG->dirroot . '/local/mentor_core/api/entity.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/profile.php');
@@ -102,22 +104,29 @@ class local_mentor_core_observer {
         global $DB;
 
         $data = $event->get_data();
+        $userid = $data['relateduserid'];
+        $courseid = $data['courseid'];
 
-        try {
-            $usercompletion = $DB->get_record('user_completion', ['userid' => $data['relateduserid'], 'courseid' => $data['courseid']]);
-        } catch(Exception $e) {
-            throw $e;
-        }
+        $usercompletion = $DB->get_record('user_completion', ['userid' => $userid, 'courseid' => $courseid]);
+
+        $completionservice = new completion_activities_service(get_course($courseid));
+        $usercoursecompletion = $completionservice->get_course_completion_details($userid)["percentage"];
 
         if ($usercompletion) {
+            $usercompletion->completion = $usercoursecompletion;
             $usercompletion->lastupdate = time();
             $usercompletion->processed = 0;
-    
-            try {
-                $DB->update_record('user_completion', $usercompletion);
-            } catch(Exception $e) {
-                throw $e;
-            }
+
+            $DB->update_record('user_completion', $usercompletion);
+        } else {
+            $usercompletion = new stdClass();
+            $usercompletion->userid = $userid;
+            $usercompletion->courseid = $courseid;
+            $usercompletion->completion = $usercoursecompletion;
+            $usercompletion->lastupdate = time();
+            $usercompletion->processed = 0;
+
+            $DB->insert_record('user_completion', $usercompletion);
         }
     }
 }
