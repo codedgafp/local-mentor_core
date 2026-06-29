@@ -33,6 +33,8 @@ use local_mentor_specialization\mentor_entity;
 require_once($CFG->dirroot . '/local/mentor_core/lib.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/entity.php');
 require_once($CFG->dirroot . '/mod/assign/tests/fixtures/testable_assign.php');
+require_once($CFG->dirroot . '/completion/criteria/completion_criteria.php');
+require_once($CFG->dirroot . '/completion/criteria/completion_criteria_activity.php');
 
 class local_mentor_core_lib_testcase extends advanced_testcase {
 
@@ -1245,7 +1247,7 @@ class local_mentor_core_lib_testcase extends advanced_testcase {
 
         $defaultentityname = 'DefaultEntity';
         $defaultentityid = \local_mentor_core\entity_api::create_entity(['name' => $defaultentityname, 'shortname' => $defaultentityname]);
-        \local_mentor_specialization\mentor_entity::create_default_entity_option($defaultentityid);
+        mentor_entity::create_default_entity_option($defaultentityid);
 
         $entityid = \local_mentor_core\entity_api::create_entity(['name' => $newentityname, 'shortname' => $newentityname]);
         $entity = \local_mentor_core\entity_api::get_entity($entityid);
@@ -1915,7 +1917,7 @@ test2", $finalcontent);
         self::setAdminUser();
 
         // Main entity=> default entity => auto attachement of main entity
-        $entity =  \local_mentor_specialization\mentor_entity::get_default_entity();
+        $entity =  mentor_entity::get_default_entity();
 
         // Create profile.
         $user = new stdClass();
@@ -2400,7 +2402,7 @@ test2", $finalcontent);
         \core\notification::fetch();
 
         // Main entity.
-        $defaultcategory = \local_mentor_specialization\mentor_entity::get_default_entity();
+        $defaultcategory = mentor_entity::get_default_entity();
         $entity = \local_mentor_core\entity_api::get_entity($defaultcategory->id);
 
         $preview = [];
@@ -3165,7 +3167,7 @@ test2", $finalcontent);
         // Create users and add to entity.
         $notmainenttityname = 'Entity2';
         $notmainentityid = \local_mentor_core\entity_api::create_entity(['name' => $notmainenttityname, 'shortname' => $notmainenttityname]);
-        $notmainentity = new local_mentor_specialization\mentor_entity($notmainentityid);
+        $notmainentity = new mentor_entity($notmainentityid);
         $notmainentity->update_can_be_main_entity(false);
 
         $userlist = [
