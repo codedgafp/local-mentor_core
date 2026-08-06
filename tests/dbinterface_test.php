@@ -6150,68 +6150,6 @@ class local_mentor_core_dbinterface_testcase extends advanced_testcase {
     }
 
     /**
-     * Test get_user_course_completion
-     *
-     * @throws dml_exception
-     * @throws moodle_exception
-     *
-     * @covers  \local_mentor_core\database_interface::get_user_course_completion
-     */
-    public function test_get_user_course_completion() {
-        global $DB;
-
-        $this->resetAfterTest(true);
-
-        $DB->delete_records('user_completion');
-
-        $dbi = \local_mentor_core\database_interface::get_instance();
-        $userid = 10;
-        $courseid = 20;
-
-        self::assertFalse($dbi->get_user_course_completion($userid, $courseid));
-
-        $old = new \stdClass();
-        $old->userid = $userid;
-        $old->courseid = $courseid;
-        $old->completion = 0;
-        $old->lastupdate = time() - 100;
-        $DB->insert_record('user_completion', $old);
-
-        $result = $dbi->get_user_course_completion($userid, $courseid);
-
-        $this->assertNotFalse($result);
-        $this->assertEquals(0, $result->completion);
-
-        $recent = new \stdClass();
-        $recent->id = $result->id;
-        $recent->completion = 75;
-        $recent->lastupdate = time();
-        $DB->update_record('user_completion', $recent);
-
-        $result = $dbi->get_user_course_completion($userid, $courseid);
-
-        $this->assertNotFalse($result);
-        $this->assertEquals(75, $result->completion);
-
-        self::resetAllData();
-    }
-
-    /**
-     * Test get_user_course_completion return false when no record exist
-     *
-     * @throws dml_exception
-     * @throws moodle_exception
-     *
-     * @covers  \local_mentor_core\database_interface::get_user_course_completion
-     */
-    public function test_returns_false_when_no_record() {
-        $dbinterface = new \local_mentor_core\database_interface();
-        $result = $dbinterface->get_user_course_completion(1, 1);
-
-        $this->assertFalse($result);
-    }
-
-    /**
      * Test get_never_logged_user_for_giver_day
      *
      * @throws dml_exception

@@ -35,14 +35,4 @@ $tasks = [
         'dayofweek' => '*',
         'month' => '*',
     ],
-    [
-        'classname' => local_mentor_core\task\update_users_course_completion::class,
-        'blocking' => 0,
-        'disabled' => 1, 
-        'minute' => '*',
-        'hour' => '*',
-        'day' => '*',
-        'dayofweek' => '*',
-        'month' => '*',
-    ],
 ];

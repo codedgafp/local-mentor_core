@@ -101,49 +101,6 @@ function xmldb_local_mentor_core_upgrade($oldversion) {
         ');
     }
 
-    if ($oldversion < 2023101900) {
-        // Define table to store user course completion.
-        $table = new xmldb_table('user_completion');
-
-        // Adding fields to table user_completion.
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('completion', XMLDB_TYPE_INTEGER, '3', null, null, null, 0);
-        $table->add_field('lastupdate', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-
-        // Adding keys to table user_completion.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-        $table->add_key('fk_mdl_user', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
-        $table->add_key('fk_mdl_course', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
-
-        // Adding indexes to table user_completion.
-        $table->add_index('user-course', XMLDB_INDEX_NOTUNIQUE, ['userid', 'courseid']);
-        $table->add_index('user-course-completion', XMLDB_INDEX_NOTUNIQUE, ['userid', 'courseid', 'completion']);
-
-        // Conditionally launch create table for user_completion.
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-    }
-
-    if ($oldversion < 2023101901) {
-        // Define table to store user course completion.
-        $table = new xmldb_table('user_completion');
-
-        // Adding fields to table user_completion.
-        $lastupdatefield = new xmldb_field('lastupdate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        if (!$dbman->field_exists($table, $lastupdatefield)) {
-            $dbman->add_field($table, $lastupdatefield);
-        }
-
-        // Adding indexes to table user_completion.
-        $usercourseindex = new xmldb_index('user-course', XMLDB_INDEX_UNIQUE, ['userid', 'courseid']);
-        if (!$dbman->index_exists($table, $usercourseindex)) {
-            $dbman->add_index($table, $usercourseindex);
-        }
-    }
-
     apply_mentor_core_upgrades_scripts($oldversion);
 
     local_mentor_specialization_init_config();
