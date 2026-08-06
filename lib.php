@@ -26,6 +26,7 @@
 use local_mentor_core\entity;
 use local_mentor_core\profile_api;
 use block_completion_monitor\service\completion_activities_service;
+use block_completion_monitor\repository\completion_monitor_repository;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -1239,31 +1240,30 @@ function local_mentor_core_completion_get_progress_percentage($course, $userid, 
         return false;
     }
 
-    // Get database interface.
-    $db = \local_mentor_core\database_interface::get_instance();
-    $completionservice = new completion_activities_service($course);
+    $completionmonitorrepository = new completion_monitor_repository();
+    $completionmonitorservice = new completion_activities_service($course);
 
     // Refresh data.
     if ($refresh) {
         // Calculate course user completion.
-        $usercompletion = $completionservice->get_course_completion_details($userid)["percentage"];
+        $usercompletion = $completionmonitorservice->get_course_completion_details($userid)["percentage"];
 
         // Set course user completion data.
-        $db->set_user_course_completion($userid, $course->id, $usercompletion);
+        $completionmonitorrepository->set_user_course_completion($userid, $course->id, $usercompletion);
 
         return $usercompletion;
     }
 
     // Get course user completion data.
-    if ($usercompletion = $db->get_user_course_completion($userid, $course->id)) {
+    if ($usercompletion = $completionmonitorrepository->get_user_course_completion($userid, $course->id)) {
         return !is_null($usercompletion->completion) ? $usercompletion->completion : false;
     }
 
     // Calculate course user completion.
-    $usercompletion = $completionservice->get_course_completion_details($userid)["percentage"];
+    $usercompletion = $completionmonitorservice->get_course_completion_details($userid)["percentage"];
 
     // Set course user completion data.
-    $db->set_user_course_completion($userid, $course->id, $usercompletion);
+    $completionmonitorrepository->set_user_course_completion($userid, $course->id, $usercompletion);
 
     return $usercompletion;
 }

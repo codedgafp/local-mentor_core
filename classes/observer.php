@@ -26,7 +26,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-use block_completion_monitor\service\completion_activities_service;
 use local_categories_domains\utils\categories_domains_service;
 
 require_once($CFG->dirroot . '/local/mentor_core/api/entity.php');
@@ -91,42 +90,5 @@ class local_mentor_core_observer {
 
         $cds->link_categories_to_users([$user], $entity);
         return;
-    }
-
-    /**
-     * When a completion is updated, set the user_completion processed value to 0
-     * 
-     * @param core\event\course_module_completion_updated $event
-     * @return void
-     */
-    public static function make_completion_to_processed(\core\event\course_module_completion_updated $event): void
-    {
-        global $DB;
-
-        $data = $event->get_data();
-        $userid = $data['relateduserid'];
-        $courseid = $data['courseid'];
-
-        $usercompletion = $DB->get_record('user_completion', ['userid' => $userid, 'courseid' => $courseid]);
-
-        $completionservice = new completion_activities_service(get_course($courseid));
-        $usercoursecompletion = $completionservice->get_course_completion_details($userid)["percentage"];
-
-        if ($usercompletion) {
-            $usercompletion->completion = $usercoursecompletion;
-            $usercompletion->lastupdate = time();
-            $usercompletion->processed = 0;
-
-            $DB->update_record('user_completion', $usercompletion);
-        } else {
-            $usercompletion = new stdClass();
-            $usercompletion->userid = $userid;
-            $usercompletion->courseid = $courseid;
-            $usercompletion->completion = $usercoursecompletion;
-            $usercompletion->lastupdate = time();
-            $usercompletion->processed = 0;
-
-            $DB->insert_record('user_completion', $usercompletion);
-        }
     }
 }

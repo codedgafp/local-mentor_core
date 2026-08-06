@@ -4292,30 +4292,6 @@ class database_interface {
     }
 
     /**
-     * Note: Moodle allowing to have multiple complation for a same course + user.
-     * We ensure to get only one result by taking the last updated.
-     * 
-     * @param int $userid
-     * @param int $courseid
-     * @return false|\stdClass
-     *
-     * @throws \dml_exception
-     */
-    public function get_user_course_completion($userid, $courseid)
-    {
-        $records = $this->db->get_records(
-            'user_completion',
-            ['userid' => $userid, 'courseid' => $courseid],
-            'lastupdate DESC',
-            '*',
-            0,
-            1
-        );
-
-        return !empty($records) ? reset($records) : false;
-    }
-
-    /**
      * Get main category idnumber from a path string
      *
      * @param string $path
@@ -4326,36 +4302,6 @@ class database_interface {
         $categories = explode('/', $path);
         $maincategory = $this->db->get_record('course_categories', ['id' => $categories[1]]);
         return $maincategory->idnumber;
-    }
-
-    /**
-     * @param int $userid
-     * @param int $courseid
-     * @param int $completion
-     * @return void
-     * @throws \dml_exception
-     */
-    public function set_user_course_completion(int $userid, int $courseid, int $completion)
-    {
-        if ($completion === false) {
-            $completion = null;
-        }
-
-        if ($usercompletion = $this->get_user_course_completion($userid, $courseid)) {
-            $usercompletion->completion = $completion;
-            $usercompletion->lastupdate = time();
-            $usercompletion->processed = 1;
-            $this->db->update_record('user_completion', $usercompletion);
-            return;
-        }
-
-        $usercompletion = new stdClass();
-        $usercompletion->userid = $userid;
-        $usercompletion->courseid = $courseid;
-        $usercompletion->completion = $completion;
-        $usercompletion->lastupdate = time();
-        $usercompletion->processed = 0;
-        $this->db->insert_record('user_completion', $usercompletion);
     }
 
     /**
@@ -4395,43 +4341,6 @@ class database_interface {
             WHERE
                 uc.userid = :userid
         ', ['userid' => $userid]);
-    }
-
-    /**
-     * Get all not processed user_completion data
-     * 
-     * @param int $lastrows
-     * @param bool $count
-     * @return array
-     */
-    public function get_last_users_completions(int $lastrows, bool $count = false)
-    {
-        $endsql = "";
-        $params = [];
-
-        if (!$count) {
-            global $CFG;
-            $endsql = " LIMIT :limit OFFSET :lastrows";
-            $params = [
-                'limit' => $CFG->completion_limit_result,
-                'lastrows' => $lastrows,
-            ];
-        }
-
-        $sql = "SELECT
-                    CONCAT(uc.userid, '_', uc.courseid) as uniquekey,
-                    uc.userid,
-                    uc.courseid,
-                    uc.completion
-                FROM {user_completion} uc
-                INNER JOIN {course} c
-                    ON uc.courseid = c.id
-                WHERE uc.processed = 0
-                ORDER BY uc.id ASC
-                $endsql
-                ";
-
-        return $this->db->get_records_sql($sql, $params);
     }
 
     /**
