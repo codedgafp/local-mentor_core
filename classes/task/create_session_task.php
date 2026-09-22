@@ -26,7 +26,7 @@
 namespace local_mentor_core\task;
 
 use local_mentor_core;
-
+use local_mentor_core\helper\coursereminder_helper;
 class create_session_task extends \core\task\adhoc_task {
 
     /**
@@ -167,6 +167,11 @@ class create_session_task extends \core\task\adhoc_task {
             $restoretarget);
         $rc->execute_precheck();
         $rc->execute_plan();
+
+        coursereminder_helper::duplicate_rules(
+            $training->courseid,
+            $courseid
+        );
 
         $CFG->backuptempdir = $oldbackuptempdir;
 
