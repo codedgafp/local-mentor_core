@@ -39,7 +39,7 @@ require_once($CFG->dirroot . '/local/mentor_core/classes/model/model.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/profile.php');
 require_once($CFG->dirroot . '/local/mentor_core/lib.php');
 require_once($CFG->dirroot . '/local/mentor_core/classes/backup_controller_edu.class.php');
-
+use local_mentor_core\helper\coursereminder_helper;
 class session extends model {
 
     public const STATUS_IN_PREPARATION = 'inpreparation';
@@ -2063,6 +2063,12 @@ class session extends model {
 
         // Get the new training.
         $newtraining = training_api::get_training($newtraining->id);
+
+        // Duplicate course reminders.
+        coursereminder_helper::duplicate_rules(
+            $this->courseid,
+            $newtraining->courseid
+        );
 
         // Restore the course backup into the new training course.
         if (!$newtraining->restore_backup($backupfile)) {
