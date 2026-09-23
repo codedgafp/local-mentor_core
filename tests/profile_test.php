@@ -744,6 +744,45 @@ class local_mentor_core_profile_testcase extends advanced_testcase {
     }
 
     /**
+     * Test create and add user with forbidden characters in lastname or firstname
+     *
+     * @covers \local_mentor_core\profile_api::create_and_add_user
+     * @covers \local_mentor_core\profile_api::create_user
+     * @covers ::local_mentor_core_name_has_forbidden_chars
+     */
+    public function test_create_and_add_user_forbidden_chars_nok() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+        $this->reset_singletons();
+        $this->init_role();
+
+        self::setAdminUser();
+
+        $entityid = \local_mentor_core\entity_api::create_entity(['name' => 'New Entity 1', 'shortname' => 'New Entity 1']);
+        $region = 'Corse';
+        $auth = 'manual';
+        $email = "user1@gouv.fr";
+
+        foreach ([['Dupont<script>', 'Jean'], ['Dupont', 'Jean§'], ['Du\\pont', 'Jean'], ["Dupont\x0B", 'Jean']] as [$lastname, $firstname]) {
+            try {
+                \local_mentor_core\profile_api::create_and_add_user($lastname, $firstname, $email, $entityid, $region, $auth);
+                self::fail('A moodle_exception was expected for "' . $lastname . '" / "' . $firstname . '"');
+            } catch (\moodle_exception $e) {
+                self::assertEquals('invalidcharsinname', $e->errorcode);
+            }
+
+            // No user must have been created.
+            self::assertFalse($DB->record_exists('user', ['email' => $email]));
+        }
+
+        // Legitimate names are still accepted.
+        self::assertTrue(\local_mentor_core\profile_api::create_and_add_user("O'Neil-Dupont", 'Émilie', $email, $entityid, $region, $auth));
+
+        $this->resetAllData();
+    }
+
+    /**
      * Test create and add user with not allowed mail
      *
      * @covers \local_mentor_core\profile_api::create_and_add_user

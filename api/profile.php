@@ -284,10 +284,6 @@ class profile_api {
         global $DB;
         $dbi = database_interface::get_instance();
 
-        // Clear lastname and firstname.
-        $lastname = str_replace(['<', '>'], '', $lastname);
-        $firstname = str_replace(['<', '>'], '', $firstname);
-
         // Check if lastname is empty.
         if (empty($lastname)) {
             throw new \moodle_exception('emptylastname', 'local_mentor_core', '');
@@ -388,6 +384,13 @@ class profile_api {
     {
         global $CFG;
         require_once($CFG->dirroot . '/user/lib.php');
+
+        // Keycloak rejects these characters: block before creating anything.
+        foreach (['lastname', 'firstname'] as $field) {
+            if (local_mentor_core_name_has_forbidden_chars($user->$field ?? '')) {
+                throw new \moodle_exception('invalidcharsinname', 'local_mentor_core');
+            }
+        }
 
         $user->email = strtolower($user->email);
         $user->username = local_mentor_core_mail_to_username($user->email);
