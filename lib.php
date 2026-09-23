@@ -42,6 +42,18 @@ require_once($CFG->dirroot . '/local/mentor_core/classes/helper/entity_helper.ph
 require_once($CFG->dirroot . '/local/mentor_specialization/classes/models/mentor_entity.php');
 
 /**
+ * Check if a user firstname or lastname contains a character rejected by Keycloak.
+ *
+ * Forbidden: < > & " $ % ! # ? § ; * ~ / \ ^ = [ ] { } ( ) and control characters.
+ *
+ * @param string $name
+ * @return bool
+ */
+function local_mentor_core_name_has_forbidden_chars(string $name): bool {
+    return preg_match('/[<>&"$%!#?§;*~\/\\\\\^=\[\]{}()\p{Cc}]/u', $name) === 1;
+}
+
+/**
  * Set a moodle config
  *
  * @param $name

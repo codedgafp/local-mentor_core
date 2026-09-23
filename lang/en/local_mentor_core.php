@@ -408,6 +408,7 @@ $string['entityshortnamelimit'] = 'Le nom abrégé de l\'espace ne doit pas dép
 
 $string['erroremailused'] = 'Cette adresse est déjà enregistrée.';
 $string['erroreother'] = 'Un problème est survenu';
+$string['invalidcharsinname'] = 'Le nom et le prénom ne doivent pas contenir de caractères spéciaux (< > & " $ % ! # ? § ; * ~ / \\ ^ = [ ] { } ( )).';
 
 $string['none'] = 'Aucune';
 $string['copylinktext'] = 'Le lien a été copié dans le presse-papier';
