@@ -385,7 +385,6 @@ class profile_api {
         global $CFG;
         require_once($CFG->dirroot . '/user/lib.php');
 
-        // Keycloak rejects these characters: block before creating anything.
         foreach (['lastname', 'firstname'] as $field) {
             if (local_mentor_core_name_has_forbidden_chars($user->$field ?? '')) {
                 throw new \moodle_exception('invalidcharsinname', 'local_mentor_core');

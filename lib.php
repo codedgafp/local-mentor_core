@@ -44,13 +44,24 @@ require_once($CFG->dirroot . '/local/mentor_specialization/classes/models/mentor
 /**
  * Check if a user firstname or lastname contains a character rejected by Keycloak.
  *
- * Forbidden: < > & " $ % ! # ? § ; * ~ / \ ^ = [ ] { } ( ) and control characters.
+ * Forbidden: < > & " $ % ! # ? § ; * ~ / \ ^ = [ ] { } ( ) @ , and every
+ * Unicode "Other" character (control, format, private use, unassigned).
+ *
+ * @see auth_plugin_oidc_sync::FORBIDDEN_NAME_CHARS
  *
  * @param string $name
  * @return bool
  */
 function local_mentor_core_name_has_forbidden_chars(string $name): bool {
-    return preg_match('/[<>&"$%!#?§;*~\/\\\\\^=\[\]{}()\p{Cc}]/u', $name) === 1;
+    global $CFG;
+
+    $authfile = $CFG->dirroot . '/auth/oidc_sync/auth.php';
+    if (!file_exists($authfile)) {
+        return false;
+    }
+    require_once($authfile);
+
+    return auth_plugin_oidc_sync::has_forbidden_name_chars($name);
 }
 
 /**

@@ -408,7 +408,7 @@ $string['entityshortnamelimit'] = 'Le nom abrégé de l\'espace ne doit pas dép
 
 $string['erroremailused'] = 'Cette adresse est déjà enregistrée.';
 $string['erroreother'] = 'Un problème est survenu';
-$string['invalidcharsinname'] = 'Présence de caractères interdits dans le nom ou le prénom. Caractères interdits : < > & " $ % ! # ? § ; * ~ / \\ ^ = [ ] { } ( ) ainsi que les caractères de contrôle.';
+$string['invalidcharsinname'] = 'Présence de caractères interdits dans le nom ou le prénom. Caractères interdits : < > & " $ % ! # ? § ; * ~ / \\ ^ = [ ] { } ( ) @ , ainsi que les caractères de contrôle.';
 
 $string['none'] = 'Aucune';
 $string['copylinktext'] = 'Le lien a été copié dans le presse-papier';
